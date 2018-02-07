@@ -1,0 +1,144 @@
+/*
+ * Copyright 2012 arvato systems GmbH
+ *
+ */
+import api.media.*
+import t9t.base.types.*
+import t9t.base.api.*
+import t9t.base.entities.*
+import t9t.base.output.*
+import t9t.base.search.*
+import t9t.base.crud.*
+import t9t.io.*
+
+package (com.arvatosystems) t9t.io.request {
+    default private unsigned trim noControlChars;
+
+    class CsvConfigurationCrudRequest           extends CrudSurrogateKeyRequest<CsvConfigurationRef, CsvConfigurationDTO, FullTrackingWithVersion> {}
+    class CsvConfigurationSearchRequest         extends SearchRequest<CsvConfigurationDTO, FullTrackingWithVersion> {}
+    class LeanCsvConfigurationSearchRequest     extends LeanSearchRequest {}
+
+    class FilePathPrefixRequest                 extends RequestParameters return FilePathPrefixResponse {}
+    class FilePathPrefixResponse                extends ServiceResponse {
+        required Unicode(255)                   prefix;
+    }
+
+
+    class SinkReadAllRequest                    extends ReadAllRequest              <SinkDTO, FullTracking> {}
+    class SinkCrudRequest                       extends CrudSurrogateKeyRequest     <SinkRef, SinkDTO, FullTracking> {}
+    class SinkSearchRequest                     extends SearchRequest               <SinkDTO, FullTracking> {}
+    class SinkResolverRequest                   extends RefResolverRequest          <SinkRef> {}
+
+    class DataSinkReadAllRequest                extends ReadAllRequest              <DataSinkDTO,FullTrackingWithVersion> {}
+    class DataSinkCrudRequest                   extends CrudSurrogateKeyRequest     <DataSinkRef, DataSinkDTO, FullTrackingWithVersion> {}
+    class DataSinkSearchRequest                 extends SearchRequest               <DataSinkDTO, FullTrackingWithVersion> {}
+    class LeanDataSinkSearchRequest             extends LeanSearchRequest {}
+
+    /** Stores a pre-filled sinkDTO. Technical support method, only required because input data processing is done from outside request scope. */
+    class StoreSinkRequest                      extends RequestParameters return SinkCreatedResponse {
+        required (SinkDTO...)                       dataSink;                   // only used internally to store the result of an import
+    }
+
+    /** Invocation allows to output a simple header/footer document with no data items included.
+     * In some cases it will be an empty file, but still useful to see generated filenames or test connectivity.
+     * Intended to be used from the configuration UI, but also for remote tests.
+     */
+    class DataSinkTestRequest extends RequestParameters return SinkCreatedResponse {
+        required dataSinkId                         dataSinkId;                  // every data output is assigned a name
+        required int                                numDataRecords;              // number of data records to send (0..n)
+    }
+
+    /** Request which can be used to download a file.
+     * Updated API: A limit of 0 means unlimited size download. Before, it requested the file information only.
+     * The file information retrieval can be done by the following requests
+     * <ul>
+     * <li>The Sink CRUD request with CRUD.READ</li>
+     * <li>The Sink Search request with objectRef = (sink)</li>
+     * </ul>
+     *
+     * Actual file data will be returned (or an error message, if the sink does not represent a file but went to a queue or JMS topic instead).
+     */
+    class FileDownloadRequest extends RequestParameters return FileDownloadResponse {
+        required f42Ref                             sinkRef;                        // references some existing Sink
+        required unsigned long                      offset;                         // offset from start
+        required unsigned int                       limit;                          // max number of bytes to transfer
+    }
+
+    class FileDownloadResponse extends ServiceResponse {
+        required (SinkDTO...)                       sink;                           // file information
+        required boolean                            hasMore;                        // if this data does not reach EOF
+        required Binary(11500000)                   data;                           // must be less than maxMessage size in length, when base64 encoded,
+        // which is FortytwoConstants.MAXIMUM_MESSAGE_LENGTH = 16 MB
+    }
+
+    /** The file upload request allows to create a sink entry for given upload data.
+     * It returns a sink reference in case of success.
+     */
+    class FileUploadRequest extends RequestParameters return SinkCreatedResponse {
+        required (OutputSessionParameters...)       parameters;                     // any input, most important is DATA_SINK_ID
+        required Binary(11500000)                   data;                           // must be less than maxMessage size in length, when base64 encoded,
+        // which is FortytwoConstants.MAXIMUM_MESSAGE_LENGTH = 16 MB
+    }
+
+    /** Test data record which is used for output tests. */
+    class DemoRecord {
+        required int                                recordNo;
+        required Decimal(5,2)                       minusPi;
+        required Unicode(20)                        hello;
+        required Day                                today;
+        required Timestamp(0)                       now;
+        optional Ascii(10)                          none;
+        required boolean                            yes;
+        required boolean                            no;
+    }
+
+
+
+    abstract class AbstractImportData {}
+
+    /** Import source string */
+    final class ImportFromString extends AbstractImportData {
+        required Unicode(8000000)                   text;
+    }
+
+    /** Import source byte array */
+    final class ImportFromRaw extends AbstractImportData {
+        required Binary(8000000)                    data;
+    }
+
+    /** Import source file */
+    final class ImportFromFile extends AbstractImportData {
+        required Unicode(255)                       pathname;     // external file or resource
+        required boolean                            isResource;   // true for testing
+    }
+
+    /** Triggers an import via web service. */
+    class ImportInputSessionRequest extends ContextlessRequestParameters {
+        required dataSinkId                         dataSinkId;
+        required uuid                               apiKey;
+        required Unicode(255)                       sourceName;
+        optional Json                               additionalParameters;
+        required (AbstractImportData...)            data;
+    }
+
+    /** Stores data via sink (for example a customer document). */
+    class StoreMediaDataRequest extends RequestParameters return SinkCreatedResponse {
+        required dataSinkId                         dataSinkId;
+        required (MediaData...)                     mediaData;   // the data
+        optional f42Ref                             originatorRef;
+        optional f42Ref                             configurationRef;
+        optional f42Ref                             genericRefs1;
+        optional f42Ref                             genericRefs2;
+    }
+
+    /** Used to asynchronously transfer a file via Camel route. */
+    class ProcessCamelRouteRequest extends RequestParameters {
+        required f42Ref                             sinkRef;
+    }
+
+    /** Used to transfer all pending files via Camel route. */
+    class ProcessAllCamelTransfersRequest extends RequestParameters {
+        optional dataSinkId                         onlySinkId;  // if null, all pending processes will be transferred, else only the ones for the specified ID
+        optional Integer                            minimumAge;  // minimum age of the sink in minutes (if blank, 60 minutes are assumed to avoid race conditions)
+    }
+}

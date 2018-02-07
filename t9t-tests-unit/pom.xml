@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.arvato-systems.t9t</groupId>
+        <artifactId>t9t-settings-xtend</artifactId>
+        <version>3.2.1</version>
+        <relativePath>../t9t-settings-xtend</relativePath>
+    </parent>
+
+    <artifactId>t9t-tests-unit</artifactId>
+    <description>tests library for isolated unit tests using junit and mockito</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>de.jpaw</groupId>
+            <artifactId>jdp-core</artifactId>
+        </dependency>
+    </dependencies>
+
+</project>

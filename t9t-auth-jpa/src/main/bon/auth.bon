@@ -1,0 +1,10 @@
+import api.auth.*
+
+/** External API - Authentication requests for initial login - requests declared in this package do not require a valid JWT. */
+package (com.arvatosystems) t9t.auth.jpa {
+    /** Class to store cached permissions. */
+    final class PermissionEntryInt {
+        required resourceId                                 resourceId;
+        required int                                        permissions;        // permissions - only entries <> 0 are stored
+    }
+}

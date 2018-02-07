@@ -1,0 +1,31 @@
+import t9t.setups.*
+import t9t.base.entities.*
+import t9t.rep.*
+
+@Generator(noMapper)
+package (com.arvatosystems) t9t.rep.jpa.entities owner fortytwo prefix p28 {
+
+    entity ReportConfigEntity category cfg is ReportConfigDTO
+      tablename p42_cfg_report_config historytablename p42_his_report_config
+      inheritance join discriminator customization_ref int {
+        tenantClass InternalTenantRef42
+        pk (objectRef)
+        index unique (tenantRef, reportConfigId)
+    }
+
+    entity ReportParamsEntity category cfg is ReportParamsDTO
+      tablename p42_cfg_report_params historytablename p42_his_report_params
+      inheritance tablePerClass {
+        tenantClass InternalTenantRef42
+        pk (objectRef)
+        index unique (tenantRef, reportParamsId)
+        @ManyToOne ReportConfigEntity reportConfigEntity EAGER for ( reportConfigRef )
+        @ManyToOne ReportMailingEntity mailingList EAGER for ( mailingGroupRef )
+    }
+
+    entity ReportMailingEntity category cfg is ReportMailingDTO {
+        tenantClass InternalTenantRef42
+        pk (objectRef)
+        index unique (mailingGroupId)
+    }
+}

@@ -1,0 +1,15 @@
+import t9t.setups.*
+import t9t.ssm.*
+import t9t.core.jpa.entities.*
+import t9t.base.entities.*
+
+@Generator(noMapper)
+package (com.arvatosystems) t9t.ssm.jpa.entities owner fortytwo prefix p28 {
+
+    entity SchedulerSetupEntity category cfg is SchedulerSetupDTO inheritance tablePerClass {
+        tenantClass InternalTenantRef42
+        pk (objectRef)
+        index unique(tenantRef, schedulerId)
+        @ManyToOne  CannedRequestEntity cannedRequest EAGER for (request)
+    }
+}

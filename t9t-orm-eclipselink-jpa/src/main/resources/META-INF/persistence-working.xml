@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<persistence xmlns="http://java.sun.com/xml/ns/persistence" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://java.sun.com/xml/ns/persistence
+    http://java.sun.com/xml/ns/persistence/persistence_2_0.xsd"
+    version="2.0">
+    <persistence-unit name="t9t-EL-RL-PG" transaction-type="RESOURCE_LOCAL">
+        <provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>
+        <jar-file>t9t-server.jar</jar-file>
+        <exclude-unlisted-classes>false</exclude-unlisted-classes>
+        <shared-cache-mode>ENABLE_SELECTIVE</shared-cache-mode>
+        <properties>
+            <property name="javax.persistence.jdbc.driver"              value="org.postgresql.Driver" />
+            <property name="javax.persistence.jdbc.url"                 value="jdbc:postgresql://t9t.cxxssfrkkvid.eu-central-1.rds.amazonaws.com:5432/t9tdb" />
+            <property name="javax.persistence.jdbc.user"                value="fortytwo" />
+            <property name="javax.persistence.jdbc.password"            value="xx+G3uMM" />
+
+            <!-- Properties for Eclipselink -->
+
+<!--        http://eclipse.org/eclipselink/documentation/2.5/jpa/extensions/p_target_server.htm  default is none
+            <property name="eclipselink.target-server" value="JBoss"/>
+ -->
+            <property name="eclipselink.target-database"                value="PostgreSQL" />
+            <!-- <property name="eclipselink.ddl-generation" value="create-tables"/>  --> <!-- create-tables vs. drop-and-create-tables.  Does not work for columns modified by sessionCustomizer  -->
+<!--
+            <property name="eclipselink.weaving" value="dynamic" />
+ -->
+            <property name="eclipselink.session.customizer"             value="de.jpaw.bonaparte.jpa.BonaparteSessionCustomizer" />
+            <property name="eclipselink.jdbc.allow-native-sql-query"    value="true" />
+            <property name="eclipselink.allow-zero-id"                  value="true" />
+            <property name="eclipselink.logging.level"                  value="FINE" />
+            <property name="eclipselink.logging.logger"                 value="JavaLogger"/>  <!-- set logging to JUL so it can be redirected to slf4j -->
+            <!-- next 2 are required only to see the generated SQLs -->
+            <property name="eclipselink.logging.level.sql"              value="FINE"/>
+            <property name="eclipselink.logging.parameters"             value="true"/>
+        </properties>
+    </persistence-unit>
+
+
+    <persistence-unit name="t9t-HIB-RL-PG" transaction-type="RESOURCE_LOCAL">
+        <!-- this one is for standalone environment / Java SE -->
+        <jta-data-source>java:jboss/datasources/fortytwo-SEDS</jta-data-source>
+        <exclude-unlisted-classes>false</exclude-unlisted-classes>
+        <properties>
+            <!-- Properties for Hibernate -->
+            <!-- <property name="hibernate.dialect" value="org.hibernate.dialect.Oracle10gDialect" /> -->
+            <property name="hibernate.dialect" value="org.hibernate.dialect.PostgreSQLDialect" />
+            <property name="hibernate.connection.autocommit" value="false" />
+            <property name="hibernate.archive.autodetection" value="class" />  <!-- default in EE environments -->
+            <property name="jadira.usertype.autoRegisterUserTypes" value="true" />
+
+            <!-- the transaction platform - required for standalone mode using bitronix -->
+<!--
+            <property name="hibernate.transaction.jta.platform" value="org.hibernate.service.jta.platform.internal.BitronixJtaPlatform" />
+ -->
+            <!-- the following settings control hibernate's log output -->
+            <!-- we don't want any for unit tests -->
+            <property name="hibernate.show_sql" value="false" />
+            <property name="hibernate.generate_statistics" value="false" />
+            <property name="hibernate.use_sql_comments" value="false" />
+        </properties>
+    </persistence-unit>
+
+</persistence>

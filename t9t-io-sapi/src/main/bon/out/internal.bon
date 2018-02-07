@@ -1,0 +1,12 @@
+import t9t.core.types.*
+import t9t.core.api.*
+import t9t.out.*
+
+package (com.arvatosystems) t9t.out.be.impl {
+    default private unsigned trim noControlChars;
+
+    /** Used to write field headers into output file */
+    class OutputHeading {
+        required Unicode(80) required List <>     headers;
+    }
+}

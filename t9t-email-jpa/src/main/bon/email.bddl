@@ -1,0 +1,33 @@
+ /*
+  * Copyright 2012 arvato systems GmbH
+  *
+  */
+import t9t.setups.*
+import t9t.base.types.*
+import t9t.base.jpa.entities.*
+import t9t.core.jpa.entities.*
+import t9t.base.entities.*
+import t9t.email.*
+
+// entries are sorted such that references only go to entities listed before.
+
+package (com.arvatosystems) t9t.email.jpa.entities owner fortytwo prefix p28 {
+    fields private;
+
+    entity EmailModuleCfgEntity is EmailModuleCfgDTO inherits ModuleConfigEntity {
+        cacheable
+    }
+
+    entity EmailEntity category datv is EmailDTO {
+        tenantClass InternalTenantRef42
+        pk (objectRef)
+        index unique (messageId)
+        index (emailStatus)
+    }
+
+    entity EmailAttachmentsEntity category datv is EmailAttachmentsDTO {
+        tenantClass InternalTenantRef42
+        pk is EmailAttachmentsKey
+        @Embeddable MediaEmbeddable for document
+    }
+}

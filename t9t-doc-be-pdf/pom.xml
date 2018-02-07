@@ -1,0 +1,31 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.arvato-systems.t9t</groupId>
+        <artifactId>t9t-settings-be</artifactId>
+        <version>3.2.1</version>
+        <relativePath>../t9t-settings-be</relativePath>
+    </parent>
+
+    <artifactId>t9t-doc-be-pdf</artifactId>
+
+    <description>backend for the docs module - HTML 2 PDF conversion</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.arvato-systems.t9t</groupId>
+            <artifactId>t9t-doc-sapi</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.xhtmlrenderer</groupId>
+            <artifactId>flying-saucer-pdf</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.arvato-systems.t9t</groupId>
+            <artifactId>t9t-jdp</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+</project>

@@ -1,0 +1,21 @@
+ /*
+  * Copyright 2016 arvato systems GmbH
+  *
+  */
+import t9t.core.jpa.entities.*
+import t9t.base.entities.*
+import t9t.setups.*
+import t9t.uiprefsv3.*
+
+// entries are sorted such that references only go to entities listed before.
+
+@Generator(noMapper)
+package (com.arvatosystems) t9t.uiprefsv3.jpa.entities owner fortytwo prefix p28 {
+    fields private;
+
+    entity LeanGridConfigEntity category cfg is LeanGridConfigDTO {
+        tenantClass InternalTenantRef42
+        pk (objectRef)
+        index unique (tenantRef, gridId, variant, userRef)
+    }
+}

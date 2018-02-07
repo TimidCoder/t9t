@@ -1,0 +1,39 @@
+ /*
+  * Copyright 2012 arvato systems GmbH
+  *
+  */
+import api.*
+import t9t.base.types.*
+import t9t.base.api.*
+import t9t.base.entities.*
+import t9t.base.crud.*
+import t9t.base.search.*
+import t9t.base.request.*
+import t9t.core.*
+
+package (com.arvatosystems) t9t.core.request {
+    default private unsigned trim noControlChars;
+
+    class CannedRequestCrudRequest      extends CrudSurrogateKeyRequest <CannedRequestRef, CannedRequestDTO, FullTrackingWithVersion> {
+        optional Boolean                suppressResponseParameters;     // if set and a DTO is returned, then request will be null in the response (desired in case of uplink requests)
+    }
+    class CannedRequestSearchRequest    extends SearchRequest           <CannedRequestDTO, FullTrackingWithVersion> {
+        optional Boolean                suppressResponseParameters;     // if set and a DTO is returned, then request will be null in the response (desired in case of uplink requests)
+    }
+    class CannedRequestResolverRequest  extends RefResolverRequest      <CannedRequestRef> {}
+
+    class ExecuteCannedRequest          extends RequestParameters {
+        required (CannedRequestRef...)  requestRef;
+    }
+    /** Similar to ExecuteCannedRequest, but uses a specific permission request. (Intended for external callers via JAX-RS) */
+    class ExecutePreparedRequest        extends RequestParameters {
+        required cannedRequestId        requestId;                      // the logical key for this record
+    }
+    class LeanCannedRequestSearchRequest extends LeanSearchRequest {}
+
+    /** Wrapper for the ProcessStatusRequest, to allow the UI to access it as a standard search request. */
+    class ProcessStatusSearchRequest     extends SearchRequest<ProcessStatusDTO, NoTracking> {}
+
+    /** Wrapper for the RetrieveComponentInfoRequest, to allow the UI to access it as a standard search request. */
+    class ComponentInfoSearchRequest     extends SearchRequest<ComponentInfoDTO, NoTracking> {}
+}

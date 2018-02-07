@@ -1,0 +1,112 @@
+package com.arvatosystems.t9t.all.stdsetup
+
+import com.arvatosystems.t9t.auth.ApiKeyDTO
+import com.arvatosystems.t9t.auth.PermissionsDTO
+import com.arvatosystems.t9t.auth.UserDTO
+import com.arvatosystems.t9t.auth.UserKey
+import com.arvatosystems.t9t.base.ITestConnection
+import com.arvatosystems.t9t.io.CommunicationTargetChannelType
+import com.arvatosystems.t9t.io.DataSinkCategoryType
+import com.arvatosystems.t9t.io.DataSinkDTO
+import com.arvatosystems.t9t.voice.VoiceApplicationDTO
+import de.jpaw.annotations.AddLogger
+import de.jpaw.bonaparte.pojos.api.OperationType
+import de.jpaw.bonaparte.pojos.api.auth.Permissionset
+import de.jpaw.bonaparte.pojos.api.auth.UserLogLevelType
+import de.jpaw.bonaparte.pojos.api.media.MediaType
+import java.util.UUID
+import org.eclipse.xtend.lib.annotations.Data
+
+import static extension com.arvatosystems.t9t.auth.extensions.AuthExtensions.*
+import static extension com.arvatosystems.t9t.misc.extensions.MiscExtensions.*
+import static extension com.arvatosystems.t9t.misc.extensions.VoiceExtensions.*
+import com.arvatosystems.t9t.auth.tests.setup.SetupUserTenantRole
+
+@AddLogger
+@Data
+class StandardSetup {
+    ITestConnection dlg
+    val USER_ID = "voiceBase"
+
+    def void setupUIDownloadDataSink() {
+        new DataSinkDTO => [
+            dataSinkId              = "UIExport"
+            isActive                = true
+            description             = "Data sink for UI triggered user downloads"
+            commFormatType          = MediaType.UNDEFINED
+            commTargetChannelType   = CommunicationTargetChannelType.FILE
+            fileOrQueueNamePattern  = "UIExports/${gridId}-${userId}-${asOf}.${fileExt}"
+            category                = DataSinkCategoryType.USER_DATA
+            merge(dlg)
+        ]
+    }
+
+    /** Creates a user and API key for the global tenant. */
+    def void setupVoiceBaseUser(UUID uuid) {
+        new UserDTO => [
+            userId                  = USER_ID
+            name                    = "voice access root user"
+            isTechnical             = true
+            isActive                = true
+            emailAddress            = "aro_3rdLevel@Bertelsmann.de"  // unused
+            permissions             = new PermissionsDTO => [
+                minPermissions      = Permissionset.of(OperationType.EXECUTE)
+                maxPermissions      = Permissionset.of(OperationType.EXECUTE)
+                logLevel            = UserLogLevelType.REQUESTS
+                logLevelErrors      = UserLogLevelType.REQUESTS
+            ]
+            merge(dlg)
+        ]
+        new ApiKeyDTO => [
+            apiKey                  = uuid
+            name                    = "API-Key for voice access root user"
+            isActive                = true
+            userRef                 = new UserKey(USER_ID)
+            permissions             = new PermissionsDTO => [
+                minPermissions      = Permissionset.of(OperationType.EXECUTE)
+                maxPermissions      = Permissionset.of(OperationType.EXECUTE)
+                logLevel            = UserLogLevelType.REQUESTS
+                logLevelErrors      = UserLogLevelType.REQUESTS
+                resourceIsWildcard  = true
+                resourceRestriction = "B.t9t.voice.api.ProvideSession"
+            ]
+            merge(dlg)
+        ]
+    }
+
+    /** Creates an application and a user for the current tenant. The user is named as the applicationId */
+    def void setupVoiceApplication(VoiceApplicationDTO application, String resources) {
+        new UserDTO => [
+            userId                  = application.applicationId
+            name                    = application.name
+            isTechnical             = true
+            isActive                = application.isActive
+            emailAddress            = "aro_3rdLevel@Bertelsmann.de"  // unused
+            permissions             = new PermissionsDTO => [
+                minPermissions      = Permissionset.of(OperationType.EXECUTE)
+                maxPermissions      = SetupUserTenantRole.ALL_PERMISSIONS
+                logLevel            = UserLogLevelType.REQUESTS
+                logLevelErrors      = UserLogLevelType.REQUESTS
+            ]
+            merge(dlg)
+        ]
+        new ApiKeyDTO => [
+            apiKey                  = application.apiKey
+            name                    = "API-Key for voice application " + application.name
+            isActive                = true
+            userRef                 = new UserKey(application.applicationId)
+            permissions             = new PermissionsDTO => [
+                minPermissions      = Permissionset.of(OperationType.EXECUTE)
+                maxPermissions      = SetupUserTenantRole.ALL_PERMISSIONS
+                logLevel            = UserLogLevelType.REQUESTS
+                logLevelErrors      = UserLogLevelType.REQUESTS
+                resourceIsWildcard  = true
+                resourceRestriction = resources
+            ]
+            merge(dlg)
+        ]
+
+        // finally, create the application itself
+        application.merge(dlg)
+    }
+}

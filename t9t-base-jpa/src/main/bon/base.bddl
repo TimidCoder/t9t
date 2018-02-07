@@ -1,0 +1,13 @@
+ /*
+  * Copyright 2012 arvato systems GmbH
+  *
+  */
+import api.media.*
+
+// entries are sorted such that references only go to entities listed before.
+
+package (com.arvatosystems) t9t.base.jpa.entities owner fortytwo prefix p42 {
+    fields private;
+
+    embeddable MediaEmbeddable is MediaData {}
+}

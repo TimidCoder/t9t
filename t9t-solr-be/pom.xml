@@ -1,0 +1,40 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.arvato-systems.t9t</groupId>
+        <artifactId>t9t-settings-be</artifactId>
+        <version>3.2.1</version>
+        <relativePath>../t9t-settings-be</relativePath>
+    </parent>
+
+    <artifactId>t9t-solr-be</artifactId>
+    <description>backend for the SOLR module</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.arvato-systems.t9t</groupId>
+            <artifactId>t9t-solr-sapi</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.arvato-systems.t9t</groupId>
+            <artifactId>t9t-base-be</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.solr</groupId>
+            <artifactId>solr-solrj</artifactId>
+            <exclusions>
+                <!-- SOLRJ pulls in woodstox, which are really old and unmaintained libraries, also they break 4 unit tests in a28, so kick them out! -->
+                <!--They should be optional according to http://mail-archives.apache.org/mod_mbox/lucene-dev/201508.mbox/%3CCABEwPvGrUHxamoBpn1BVVKDBkD4-2v593r127RvCwqAsXUWMAg@mail.gmail.com%3E -->
+                <exclusion>
+                    <groupId>org.codehaus.woodstox</groupId>
+                    <artifactId>stax2-api</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.codehaus.woodstox</groupId>
+                    <artifactId>woodstox-core-asl</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+    </dependencies>
+</project>

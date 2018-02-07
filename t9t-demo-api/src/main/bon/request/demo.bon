@@ -1,0 +1,26 @@
+ /*
+  * Copyright 2014 arvato systems GmbH
+  *
+  */
+import t9t.base.types.*
+import t9t.base.api.*
+
+// intentionally have some different prefix...
+package (com.arvatosystems.t9t) demo.request {
+    default private unsigned trim noControlChars;
+    properties bpmId;
+
+    /** Standard CRUD and search requests... */
+    class DoComplicatedWorkRequest extends RequestParameters return ComplicatedWorkResponse {
+        int a;
+        int b;
+    }
+
+    class ComplicatedWorkResponse extends ServiceResponse {
+        int sum;
+    }
+
+    class DemoProcessResponse extends ServiceResponse {
+        boolean processed;
+    }
+}

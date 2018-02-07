@@ -1,0 +1,23 @@
+ /*
+  * Copyright 2015 arvato systems GmbH
+  *
+  */
+import t9t.base.entities.*
+import t9t.base.search.*
+import t9t.base.crud.*
+import t9t.solr.*
+
+package (com.arvatosystems) t9t.solr.request {
+    default private unsigned trim noControlChars;
+    properties inherited,
+        tenantCategory is com.arvatosystems.t9t.annotations.TenantCategory(),
+        searchprefix is com.arvatosystems.t9t.annotations.SearchPrefix(),
+        serialized is com.arvatosystems.t9t.annotations.StoreSerialized,
+        noAutoMap is com.arvatosystems.t9t.annotations.NoAutoMap,
+        notupdatable is com.arvatosystems.t9t.annotations.NotUpdatable,
+        ref is com.arvatosystems.t9t.annotations.IsObjectRef;
+
+    // standard CRUD and search requests
+    class SolrModuleCfgCrudRequest                  extends CrudModuleCfgRequest<SolrModuleCfgDTO> {}
+    class SolrModuleCfgSearchRequest                extends SearchRequest<SolrModuleCfgDTO, FullTrackingWithVersion> {}
+}

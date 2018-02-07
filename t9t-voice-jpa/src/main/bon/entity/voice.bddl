@@ -1,0 +1,39 @@
+/*
+  * Copyright 2015 arvato systems GmbH
+  *
+  */
+import t9t.setups.*
+import t9t.base.types.*
+import t9t.base.jpa.entities.*
+import t9t.core.jpa.entities.*
+import t9t.base.entities.*
+import t9t.voice.*
+
+package(com.arvatosystems) t9t.voice.jpa.entities owner fortytwo prefix p28 {
+
+    entity VoiceModuleCfgEntity is VoiceModuleCfgDTO inherits ModuleConfigEntity {
+        cacheable
+    }
+
+    entity VoiceApplicationEntity category cfg is VoiceApplicationDTO inheritance tablePerClass {
+        cacheable
+        tenantClass InternalTenantRef42
+        pk (objectRef)
+        index unique (tenantRef, applicationId)
+    }
+
+    entity VoiceUserEntity category cfg is VoiceUserDTO inheritance tablePerClass {
+        tenantClass InternalTenantRef42
+        pk (objectRef)
+        index (providerIdHash)
+        index unique (tenantRef, applicationRef, providerId)
+        @ManyToOne VoiceApplicationEntity application EAGER for (applicationRef)
+    }
+
+    entity VoiceResponseEntity category cfg is VoiceResponseDTO inheritance tablePerClass {
+        tenantClass InternalTenantRef42
+        pk (objectRef)
+        index unique (tenantRef, applicationRef, languageCode, key)
+        @ManyToOne VoiceApplicationEntity application EAGER for (applicationRef)
+    }
+}

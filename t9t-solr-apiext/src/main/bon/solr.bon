@@ -1,0 +1,15 @@
+ /*
+  * Copyright 2016 arvato systems GmbH
+  *
+  */
+
+package (com.arvatosystems) t9t.solr.api {
+    default private unsigned trim noControlChars;
+    properties inherited,
+        tenantCategory is com.arvatosystems.t9t.annotations.TenantCategory(),
+        searchprefix is com.arvatosystems.t9t.annotations.SearchPrefix(),
+        serialized is com.arvatosystems.t9t.annotations.StoreSerialized,
+        noAutoMap is com.arvatosystems.t9t.annotations.NoAutoMap,
+        notupdatable is com.arvatosystems.t9t.annotations.NotUpdatable,
+        ref is com.arvatosystems.t9t.annotations.IsObjectRef;
+}

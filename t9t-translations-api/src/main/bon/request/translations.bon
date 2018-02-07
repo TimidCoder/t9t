@@ -1,0 +1,39 @@
+ /*
+  * Copyright 2013 arvato Systems GmbH
+  *
+  */
+import api.*
+import t9t.base.api.*
+import t9t.base.trns.*
+import t9t.base.entities.*
+import t9t.base.search.*
+import t9t.base.crud.*
+import t9t.trns.*
+
+package (com.arvatosystems) t9t.trns.request {
+    default private unsigned trim noControlChars;
+    properties noJava, simpleref,
+        tenantCategory is com.arvatosystems.t9t.annotations.TenantCategory(),
+        searchprefix is com.arvatosystems.t9t.annotations.SearchPrefix(),
+        serialized is com.arvatosystems.t9t.annotations.StoreSerialized,
+        noAutoMap is com.arvatosystems.t9t.annotations.NoAutoMap,
+        notupdatable is com.arvatosystems.t9t.annotations.NotUpdatable,
+        ref is com.arvatosystems.t9t.annotations.IsObjectRef;
+
+    // standard CRUD and search requests
+    class TrnsModuleCfgCrudRequest                  extends CrudModuleCfgRequest<TrnsModuleCfgDTO> {}
+    class TranslationsCrudRequest                   extends CrudSuperclassKeyRequest<TranslationsKey, TranslationsKey, TranslationsDTO, FullTrackingWithVersion> {}
+
+    class TrnsModuleCfgSearchRequest                extends SearchRequest<TrnsModuleCfgDTO,  FullTrackingWithVersion> {}
+    class TranslationsSearchRequest                 extends SearchRequest<TranslationsDTO, FullTrackingWithVersion> {}
+
+    // special method to select translations for multiple languages for the maintenance UI
+    class MultiTranslationsReadRequest extends RequestParameters {
+        required (TranslationsPartialKey)           key;
+        required languageTag List<>                 languages;      // no list means to provide all which are there
+    }
+
+    class MultiTranslationsReadResponse extends ServiceResponse {
+        required translation required Map<String>   translations;
+    }
+}

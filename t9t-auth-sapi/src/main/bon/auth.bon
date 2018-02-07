@@ -1,0 +1,28 @@
+import t9t.base.types.*
+import t9t.auth.*
+
+/** Data types which are relevant for stored entities on the database, such as auditing data related.
+ * All DTOs in this package are final, because Customization is not supported for them (they are needed before we have the environment
+ * for customization built).
+ *
+ * <p>
+ * The following RTTIs are define here:
+ * <li> 1 - session
+ * <li> 2 - message
+ * <li> 3 - user
+ * <li> 4 - tenant
+ * <li> 5 - role
+ */
+package (com.arvatosystems) t9t.auth.services {
+    default private unsigned trim noControlChars;
+
+    class AuthIntermediateResult {
+        int                              returnCode;        // 0 = success, anything else is an error
+        optional f42Ref                  tenantRef;
+        optional (ApiKeyDTO)             apiKey;
+        optional (UserDTO)               user;
+        optional (TenantDTO)             tenant;
+        optional (UserStatusDTO)         userStatus;
+        optional Instant                 authExpires;
+    }
+}

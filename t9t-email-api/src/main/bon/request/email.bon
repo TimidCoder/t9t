@@ -1,0 +1,29 @@
+ /*
+  * Copyright 2015 arvato systems GmbH
+  *
+  */
+import t9t.base.entities.*
+import t9t.base.entities.*
+import t9t.base.search.*
+import t9t.base.crud.*
+import t9t.email.*
+
+package (com.arvatosystems) t9t.email.request {
+    default private unsigned trim noControlChars;
+    properties inherited,
+        tenantCategory is com.arvatosystems.t9t.annotations.TenantCategory(),
+        searchprefix is com.arvatosystems.t9t.annotations.SearchPrefix(),
+        serialized is com.arvatosystems.t9t.annotations.StoreSerialized,
+        noAutoMap is com.arvatosystems.t9t.annotations.NoAutoMap,
+        notupdatable is com.arvatosystems.t9t.annotations.NotUpdatable,
+        ref is com.arvatosystems.t9t.annotations.IsObjectRef;
+
+
+    // standard CRUD and search requests
+    class EmailModuleCfgCrudRequest                   extends CrudModuleCfgRequest<EmailModuleCfgDTO> {}
+    class EmailCrudRequest                            extends CrudSurrogateKeyRequest<EmailRef, EmailDTO, FullTrackingWithVersion> {}
+
+    class EmailModuleCfgSearchRequest                 extends SearchRequest<EmailModuleCfgDTO,     FullTrackingWithVersion> {}
+    class EmailSearchRequest                          extends SearchRequest<EmailDTO,              FullTrackingWithVersion> {}
+    class EmailAttachmentsSearchRequest               extends SearchRequest<EmailAttachmentsDTO,   FullTrackingWithVersion> {}
+}

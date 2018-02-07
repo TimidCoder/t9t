@@ -1,0 +1,24 @@
+ /*
+  * Copyright 2016 arvato Systems GmbH
+  *
+  */
+import t9t.auth.*
+import t9t.doc.*
+import t9t.email.*
+import t9t.solr.*
+
+package (com.arvatosystems) t9t.all {
+    default private unsigned trim noControlChars;
+
+    /** This class contains all known module configurations.
+     * All components are optional. For read requests, all modules will be popuplated,
+     * but for write requests, the caller can omit unrequired ones.
+     */
+    class T9tModuleConfigs {
+        optional (AuthModuleCfgDTO...)          authModuleConfig;
+        optional (DocModuleCfgDTO...)           docModuleConfig;
+        optional (EmailModuleCfgDTO...)         emailModuleConfig;
+        optional (SolrModuleCfgDTO...)          solrModuleConfig;
+        // optional (TrnsModuleCfgDTO...)          authModuleConfig;  // not yet used
+    }
+}

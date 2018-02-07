@@ -1,0 +1,15 @@
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans   http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <!--
+        DataSource configuration is done programmatically (to avoid duplication of configuration)
+        hence we don't need to configure it here
+    -->
+    <bean id="processEngineConfiguration" class="org.activiti.engine.impl.cfg.JtaProcessEngineConfiguration">
+        <property name="databaseSchemaUpdate" value="true" />
+
+        <!-- we don't use any history feature here. change it to "audit" to enable the feature -->
+        <property name="history" value="none" />
+    </bean>
+</beans>

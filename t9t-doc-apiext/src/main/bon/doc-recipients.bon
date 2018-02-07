@@ -1,0 +1,41 @@
+ /*
+  * Copyright 2015 arvato systems GmbH
+  *
+  */
+import api.media.*
+import t9t.base.types.*
+import t9t.base.output.*
+
+package (com.arvatosystems) t9t.doc.recipients {
+    default private unsigned trim noControlChars;
+
+    /** Derived class for the recipient type "generic asynchronous message" */
+    class RecipientGenericTarget extends Recipient {
+        required XEnum XTargetChannelType           channel;            // channel specification
+        required eventTarget                        address;            // channel specific address
+    }
+
+    /** Derived class which is required for RecipientType.PRINTED_LETTER */
+    class RecipientLetter extends Recipient {
+        required addressPart required List<7>       addressLines;       // if omitted, the document itself must contain the address lines and a window envelope used
+    }
+
+    /** Derived class for the recipient type "archive" */
+    class RecipientArchive extends Recipient {
+        required dataSinkId                         dataSinkId;         // every data output is assigned a name
+        optional f42Ref                             originatorRef;
+        optional f42Ref                             configurationRef;
+        optional f42Ref                             genericRefs1;
+        optional f42Ref                             genericRefs2;
+        required Unicode(80) Map<String>            outputSessionParameters;  // additional key/value pairs for creation of file names
+    }
+
+    /** Derived class for the recipient type "SMS" */
+    class RecipientSms extends Recipient {
+        required phoneNumber                        phoneNumber;        // number to send the SMS to
+    }
+
+    /** Derived class for the recipient type "Response" (return it in the response itself). */
+    class RecipientResponse extends Recipient {                // no further data, just the desired format specifier from the superclass
+    }
+}

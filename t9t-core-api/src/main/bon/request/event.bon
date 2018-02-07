@@ -1,0 +1,24 @@
+ /*
+  * Copyright 2012 arvato systems GmbH
+  *
+  */
+import apiw.*
+import t9t.base.types.*
+import t9t.base.api.*
+import t9t.base.entities.*
+import t9t.base.event.*
+import t9t.base.search.*
+import t9t.base.crud.*
+import t9t.event.*
+
+package (com.arvatosystems) t9t.event.request {
+    default private unsigned trim noControlChars;
+    properties inherited, serialized, ref, active,
+        tenantCategory is com.arvatosystems.t9t.annotations.TenantCategory();
+
+    class SubscriberConfigCrudRequest           extends CrudSurrogateKeyRequest     <SubscriberConfigRef, SubscriberConfigDTO, FullTrackingWithVersion> {}
+    class SubscriberConfigSearchRequest         extends SearchRequest               <SubscriberConfigDTO, FullTrackingWithVersion> {}
+
+    class ListenerConfigCrudRequest             extends CrudSurrogateKeyRequest     <ListenerConfigRef, ListenerConfigDTO, FullTrackingWithVersion> {}
+    class ListenerConfigSearchRequest           extends SearchRequest               <ListenerConfigDTO, FullTrackingWithVersion> {}
+}

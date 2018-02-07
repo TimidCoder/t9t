@@ -1,0 +1,31 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.arvato-systems.t9t</groupId>
+        <artifactId>t9t-settings-api</artifactId>
+        <version>3.2.1</version>
+        <relativePath>../t9t-settings-api/</relativePath>
+    </parent>
+
+    <artifactId>t9t-client-complex</artifactId>
+    <description>Remote client for t9t connections, complex variant (including dependency injection)</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.arvato-systems.t9t</groupId>
+            <artifactId>t9t-base-apiext</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.arvato-systems.t9t</groupId>
+            <artifactId>t9t-jdp</artifactId>
+        </dependency>
+        <!-- temporarily add t9t-httppool-be - this should be configurable -->
+        <!--
+        <dependency>
+            <groupId>com.arvato-systems.t9t</groupId>
+            <artifactId>t9t-httppool-be</artifactId>
+        </dependency> -->
+    </dependencies>
+
+</project>

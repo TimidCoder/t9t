@@ -1,0 +1,47 @@
+import api.*
+import apiw.*
+import t9t.base.types.*
+import t9t.base.api.*
+
+
+package (com.arvatosystems) t9t.core {
+    default private unsigned trim noControlChars;
+    properties noJava, simpleref, compact,
+        tenantCategory is com.arvatosystems.t9t.annotations.TenantCategory(),
+        searchprefix is com.arvatosystems.t9t.annotations.SearchPrefix(),
+        serialized is com.arvatosystems.t9t.annotations.StoreSerialized,
+        noAutoMap is com.arvatosystems.t9t.annotations.NoAutoMap,
+        notupdatable is com.arvatosystems.t9t.annotations.NotUpdatable,
+        ref is com.arvatosystems.t9t.annotations.IsObjectRef;
+
+//    /** A database table based key counter. */
+//    final class RefGeneratorKey extends CompositeKeyRef {
+//        required Integer                            rtti;
+//    }
+//    final class RefGeneratorDTO RTTI 6 extends CompositeKeyBase {
+//        required Integer                            rtti;
+//        required Long                               nextValue;
+//        required Integer                            requestsPerHour;    // dynamic adjustment attempts to allocate sufficient ids for 1 minute ahead, at minimum 10 units
+//        required instant                            mTimestamp;
+//        optional Instant                            prevTimestamp;
+//        optional Integer                            allocatedLast;      // allows to verify the prealloc: use rate = (mTimestamp - prevTimestamp) / allocatedLast
+//        optional Integer                            allocatedNow;       // how many have been allocated at mTimestamp?
+//    }
+
+
+    /** CannedRequest lists all available handlers for a given category. */
+    class CannedRequestRef RTTI 11 extends Ref {}
+
+    final class CannedRequestKey extends CannedRequestRef {
+        required cannedRequestId                    requestId           properties notupdatable;    // the logical key for this record
+    }
+
+    class CannedRequestDTO extends CannedRequestRef {
+        properties tenantCategory="D";
+        required cannedRequestId                    requestId           properties notupdatable;    // the logical key for this record
+        required Unicode(80)                        name;                                       // explanation / purpose in primary language
+        optional Unicode(255)                       jobRequestObjectName;                       // the PQON of the object extending RequestParameters (if null, then request itself must be populated)
+        optional Json                               jobParameters;                              // readable JSOn format of the parameters
+        optional (RequestParameters...)             request             properties serialized, compact;  // filled by backend (for CRUD C and U operations), the canned request including parameters
+    }
+}

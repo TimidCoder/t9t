@@ -1,0 +1,10 @@
+import t9t.base.types.*
+
+package (com.arvatosystems) t9t.doc.services {
+    default private unsigned trim noControlChars;
+
+    final class DocArchiveResult {
+        required f42Ref            sinkRef;
+        optional Unicode(1024)     fileOrQueueName;
+    }
+}

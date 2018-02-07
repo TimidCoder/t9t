@@ -1,0 +1,27 @@
+ /*
+  * Copyright 2012 arvato systems GmbH
+  *
+  */
+import t9t.base.types.*
+import t9t.msglog.*
+import t9t.setups.*
+import t9t.base.entities.*
+import com.arvatosystems.t9t.base.jpa.entityListeners.*
+
+// entries are sorted such that references only go to entities listed before.
+
+package (com.arvatosystems) t9t.msglog.jpa.entities owner fortytwo prefix p28 {
+    fields private;
+
+    category datmessage {
+        trackinggroup api.NoTracking
+        tablenamepattern "(prefix)_int_(entity)" dropSuffix "_entity" tablespacepattern "rts42dat0(DI)"
+        grants apprw  // share tablespaces with dat tables
+    }
+
+    // use the default mapper here for more flexibility (less requirements on injection) in the log writers
+    entity MessageEntity category datmessage is MessageDTO {
+        pk (objectRef)
+        index (messageId)
+    }
+}

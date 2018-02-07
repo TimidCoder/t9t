@@ -1,0 +1,29 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.arvato-systems.t9t</groupId>
+        <artifactId>t9t-settings-be</artifactId>
+        <version>3.2.1</version>
+        <relativePath>../t9t-settings-be</relativePath>
+    </parent>
+
+    <artifactId>t9t-io-be-poi</artifactId>
+
+    <dependencies>
+        <!-- compile dependencies -->
+        <dependency>
+            <groupId>com.arvato-systems.t9t</groupId>
+            <artifactId>t9t-io-be</artifactId>
+        </dependency>
+
+        <!-- anything below should be pluggable -->
+        <dependency>
+            <groupId>de.jpaw</groupId>
+            <artifactId>bonaparte-poi</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>de.jpaw</groupId>
+            <artifactId>bonaparte-poix</artifactId>
+        </dependency>
+    </dependencies>
+</project>

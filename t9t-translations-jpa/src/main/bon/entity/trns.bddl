@@ -1,0 +1,23 @@
+/*
+  * Copyright 2015 arvato systems GmbH
+  *
+  */
+import t9t.setups.*
+import t9t.base.types.*
+import t9t.trns.*
+import t9t.core.jpa.entities.*
+import t9t.base.entities.*
+
+package (com.arvatosystems) t9t.trns.jpa.entities owner fortytwo prefix p28 {
+
+    entity TrnsModuleCfgEntity is TrnsModuleCfgDTO inherits ModuleConfigEntity {
+        cacheable
+    }
+
+    entity TranslationsEntity category cfg is TranslationsDTO inheritance tablePerClass {
+        cacheable
+        tenantClass InternalTenantRef42
+        pk is TranslationsKey
+//        index unique (tenantRef, ^category, id, qualifier, languageCode)
+    }
+}

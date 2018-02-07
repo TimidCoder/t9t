@@ -1,0 +1,50 @@
+ /*
+  * Copyright 2015 arvato systems GmbH
+  *
+  */
+import api.*
+import api.media.*
+import t9t.base.types.*
+import t9t.base.api.*
+
+package (com.arvatosystems) t9t.barcode.api {
+    default private unsigned trim noControlChars;
+
+    enum FlipMode {
+        NO_FLIPPING, FLIP_HORIZONTALLY, FLIP_VERTICALLY
+    }
+
+    enum BarcodeFormat {
+        AZTEC           = "AZTEC",          // Aztec 2D barcode format.
+        CODABAR         = "CODABAR",        // CODABAR 1D format.
+        CODE_39         = "CODE39",         // Code 39 1D format.
+//        CODE_93         = "CODE93",         // Code 39 1D format.
+        CODE_128        = "CODE128",        // Code 128 1D format.
+        DATA_MATRIX     = "DATAMAT",        // Data Matrix 2D barcode format.
+        EAN_8           = "EAN8",           // EAN-8 1D format.
+        EAN_13          = "EAN13",          // EAN-13 1D format.
+        ITF             = "ITF",            // ITF (Interleaved Two of Five) 1D format.
+//        MAXICODE        = "MAXICODE",       // MaxiCode 2D barcode format.
+        PDF_417         = "PDF417",         // PDF417 format.
+        QR_CODE         = "QRCODE",         // QR Code 2D barcode format.
+//        RSS_14          = "RSS14",          // RSS 14
+//        RSS_EXPANDED    = "RSSEXP",         // RSS EXPANDED
+        UPC_A           = "UPCA"            // UPC-A 1D format.
+//        UPC_E           = "UPCE"            // UPC-E 1D format.
+//        UPC_EAN_EXTENSION = "UPCEANXT"      // UPC/EAN extension format. Not a stand-alone format.
+    }
+
+    class GenerateBarcodeRequest extends RequestParameters return GenerateBarcodeResponse {
+        required Enum BarcodeFormat             barcodeFormat;
+        required Unicode(512)                   text;
+        required int                            width;
+        required int                            height;
+        optional Integer                        rotation; // angle in degrees
+        optional Enum FlipMode                  flipMode;
+        optional Double                         scale;    // may be required in case of some rotation
+    }
+
+    class GenerateBarcodeResponse extends ServiceResponse {
+        required (MediaData)                    barcode;
+    }
+}

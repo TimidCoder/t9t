@@ -1,0 +1,21 @@
+ /*
+  * Copyright 2012 arvato systems GmbH
+  *
+  */
+import t9t.base.types.*
+import t9t.auth.*
+import t9t.setups.*
+import t9t.base.entities.*
+import t9t.base.moduleCfg.*
+
+@Generator(noMapper)
+package (com.arvatosystems) t9t.core.jpa.entities owner fortytwo prefix p42 {
+    fields private;
+
+    /** Base entity (mapped superclass) for all module configurations. Use of this superclass allows a common caching. */
+    abstract entity ModuleConfigEntity category cfg is ModuleConfigDTO inheritance tablePerClass {
+        cacheable
+        tenantClass InternalTenantRef42
+        pk (tenantRef)
+    }
+}

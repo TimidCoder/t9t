@@ -1,0 +1,21 @@
+import t9t.setups.*
+import t9t.bpmn.*
+import t9t.base.entities.*
+
+@Generator(noMapper)
+package (com.arvatosystems) t9t.bpmn.jpa.entities owner fortytwo prefix p28 {
+
+    entity ProcessDefinitionEntity category cfg is ProcessDefinitionDTO {
+        tenantClass InternalTenantRef42
+        pk (objectRef)
+        index unique (tenantRef, processDefinitionId)
+    }
+
+    // workflow status
+    entity ProcessExecStatusEntity category datv is ProcessExecutionStatusDTO {
+        tenantClass InternalTenantRef42
+        pk (objectRef)
+        index (tenantRef, yieldUntil, processDefinitionId)
+        index unique (targetObjectRef, processDefinitionId)
+    }
+}

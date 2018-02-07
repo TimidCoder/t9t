@@ -1,0 +1,43 @@
+ /*
+  * Copyright 2012 arvato systems GmbH
+  *
+  */
+import t9t.setups.*
+import t9t.base.entities.*
+import t9t.io.*
+
+// entries are sorted such that references only go to entities listed before.
+
+@Generator(noMapper)
+package (com.arvatosystems) t9t.io.jpa.entities owner fortytwo prefix p28 {
+    fields private;
+
+    entity CsvConfigurationEntity category cfg is CsvConfigurationDTO {
+        tenantClass InternalTenantRef42
+        pk (objectRef)
+
+        index unique (tenantRef, csvConfigurationId)
+    }
+
+    entity DataSinkEntity category cfg is DataSinkDTO tablename p42_cfg_data_sinks historytablename p42_his_data_sinks {
+        tenantClass InternalTenantRef42
+        pk (objectRef)
+        index unique (tenantRef, dataSinkId)
+        @ManyToOne CsvConfigurationEntity csvConfiguration EAGER for (csvConfigurationRef)
+    }
+
+    entity SinkEntity category datrw is SinkDTO tablename p42_dat_sinks {
+        tenantClass InternalTenantRef42
+        pk (objectRef)
+        index (dataSinkRef, tenantRef, cTimestamp)
+        index (camelTransferStatus)
+        @ManyToOne DataSinkEntity dataSink LAZY for (dataSinkRef)
+    }
+
+    entity OutboundMessageEntity category ^int is OutboundMessageDTO tablename p42_int_outbound_messages {
+        tenantClass InternalTenantRef42
+        pk (objectRef)
+        index unique (sinkRef, mappedRecordNo)
+//        @ManyToOne SinkEntity sink LAZY for (sinkRef)
+    }
+}
