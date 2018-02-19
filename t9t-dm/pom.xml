@@ -190,6 +190,11 @@
             </dependency>
             <dependency>
                 <groupId>com.arvato-systems.t9t</groupId>
+                <artifactId>t9t-base-jpa-st</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.arvato-systems.t9t</groupId>
                 <artifactId>t9t-base-sapi</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -241,7 +246,12 @@
 
             <dependency>
                 <groupId>com.arvato-systems.t9t</groupId>
-                <artifactId>t9t-bpmn2-be</artifactId>
+                <artifactId>t9t-bpmn2-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.arvato-systems.t9t</groupId>
+                <artifactId>t9t-bpmn2-camunda-be</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
@@ -654,6 +664,12 @@
             <dependency>
                 <groupId>com.arvato-systems.t9t</groupId>
                 <artifactId>t9t-bpmn-jpa</artifactId>
+                <version>${project.version}</version>
+                <classifier>sql</classifier>
+            </dependency>
+            <dependency>
+                <groupId>com.arvato-systems.t9t</groupId>
+                <artifactId>t9t-bpmn2-camunda-be</artifactId>
                 <version>${project.version}</version>
                 <classifier>sql</classifier>
             </dependency>

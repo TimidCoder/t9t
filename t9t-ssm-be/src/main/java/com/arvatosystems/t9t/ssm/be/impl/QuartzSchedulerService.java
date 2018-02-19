@@ -274,8 +274,12 @@ public class QuartzSchedulerService implements ISchedulerService {
             // interval > 1 -> interval = current recurrency interval
             if (setup.getIntervalMinutes() != null && setup.getIntervalMinutes() > 1) {
                 validateByDateBuilder("HOUR", setup.getIntervalMinutes());
-                if (hour.toString().equals("*"))
+                if (hour.toString().equals("*") && setup.getIntervalOffset() != null && setup.getIntervalOffset() < setup.getIntervalMinutes()) {
+                    hour = new StringBuilder();
+                    hour.append(setup.getIntervalOffset().toString());
+                } else if (hour.toString().equals("*")) {
                     hour = new StringBuilder("0");
+                }
                 hour.append("/").append(setup.getIntervalMinutes());
 
             } else if (setup.getIntervalMinutes() != null && setup.getIntervalMinutes() == 1 && setup.getIntervalOffset() != null) {

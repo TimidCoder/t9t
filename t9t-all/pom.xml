@@ -85,7 +85,7 @@
 
         <dependency>
             <groupId>com.arvato-systems.t9t</groupId>
-            <artifactId>t9t-base-jpa-rl</artifactId>
+            <artifactId>t9t-base-jpa</artifactId>
         </dependency>
 
         <dependency>

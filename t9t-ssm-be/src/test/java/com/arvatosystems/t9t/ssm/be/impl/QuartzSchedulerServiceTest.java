@@ -174,7 +174,7 @@ public class QuartzSchedulerServiceTest {
     }
 
     @Test
-    public void testHourlyWithIntervalAndOffset() {
+    public void testHourlyWithIntervalAndWrongOffset() {
         SchedulerSetupDTO setup = new SchedulerSetupDTO();
         setup.setRecurrencyType(SchedulerSetupRecurrenceType.HOURLY);
         setup.setIntervalMinutes(3);
@@ -182,6 +182,17 @@ public class QuartzSchedulerServiceTest {
 
         String cronExpression = service.determineCronExpression(setup);
         Assert.assertEquals("0 0 0/3 ? * *", cronExpression);
+    }
+
+    @Test
+    public void testHourlyWithIntervalAndOffset() {
+        SchedulerSetupDTO setup = new SchedulerSetupDTO();
+        setup.setRecurrencyType(SchedulerSetupRecurrenceType.HOURLY);
+        setup.setIntervalMinutes(10);
+        setup.setIntervalOffset(3);
+
+        String cronExpression = service.determineCronExpression(setup);
+        Assert.assertEquals("0 0 3/10 ? * *", cronExpression);
     }
 
     @Test

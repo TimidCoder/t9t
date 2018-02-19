@@ -114,6 +114,7 @@
                 <module>t9t-base-jpa</module>
                 <module>t9t-base-jpa-rl</module>
                 <module>t9t-base-jpa-jta</module>
+                <module>t9t-base-jpa-st</module>
                 <module>t9t-activeannotations-jpa</module>
                 <module>t9t-core-sapi</module>
                 <module>t9t-core-be</module>
@@ -160,8 +161,9 @@
                 <module>t9t-bpmn-be</module>
                 <module>t9t-bpmn-jpa</module>
 
-                <!-- Activiti BPMN Engine -->
-                <module>t9t-bpmn2-be</module>
+                <!-- BPMN 2.0 Engine -->
+                <module>t9t-bpmn2-api</module>
+                <module>t9t-bpmn2-camunda-be</module>
 
                 <!-- AWS cloud integration -->
                 <module>t9t-base-be-aws</module>
@@ -182,6 +184,7 @@
 
                 <!-- <module>t9t-server-build-vertx-eclipselink</module> not used right now, skip in build to save time -->
                 <module>t9t-server-build-vertx-hibernate</module>
+                <module>t9t-server-build-vertx-hibernate-st</module>
                 <module>t9t-tests-auth</module>
                 <module>t9t-tests-misc</module>
                 <module>t9t-tests-doc</module>
@@ -238,5 +241,4 @@
             </plugin>
         </plugins>
     </build>
-
 </project>

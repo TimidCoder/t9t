@@ -58,9 +58,6 @@ class ConfigProvider {
             strategy                = "asynchronous"
             queueSize               = 1000  // currently ignore
         ]
-        bpmConfiguration            = new BpmExecutionConfiguration => [
-            strategy                = "noop"                   // for now...
-        ]
         awsConfiguration            = new AWSConfiguration => [
             snsEndpoint             = "https://sns.eu-central-1.amazonaws.com"
             sqsEndpoint             = "https://sqs.eu-central-1.amazonaws.com"
@@ -120,7 +117,7 @@ class ConfigProvider {
             logWriterConfiguration  = a.logWriterConfiguration  ?: b.logWriterConfiguration
             applicationConfiguration= a.applicationConfiguration?: b.applicationConfiguration
             serverConfiguration     = a.serverConfiguration     ?: b.serverConfiguration
-            bpmConfiguration        = a.bpmConfiguration        ?: b.bpmConfiguration
+            bpm2Configuration       = a.bpm2Configuration       ?: b.bpm2Configuration
             awsConfiguration        = a.awsConfiguration        ?: b.awsConfiguration
             uplinkConfiguration     = a.uplinkConfiguration     ?: b.uplinkConfiguration
             searchConfiguration     = a.searchConfiguration     ?: b.searchConfiguration

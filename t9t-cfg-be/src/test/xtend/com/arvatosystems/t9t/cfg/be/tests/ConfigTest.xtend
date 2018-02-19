@@ -60,7 +60,7 @@ public class ConfigTest {
         assertEquals(T9tServerConfiguration, cfg.class)
         assertNotNull(cfg.databaseConfiguration)
         assertNotNull(cfg.awsConfiguration)
-        assertNull(cfg.bpmConfiguration)
+        assertNull(cfg.bpm2Configuration)
 
         assertEquals("secret", cfg.databaseConfiguration.password)
     }

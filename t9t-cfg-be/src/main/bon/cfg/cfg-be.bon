@@ -43,7 +43,7 @@ package (com.arvatosystems) t9t.cfg.be XML PROPERTY {
         optional (LogWriterConfiguration...)        logWriterConfiguration;
         optional (ApplicationConfiguration...)      applicationConfiguration;
         optional (ServerConfiguration...)           serverConfiguration;
-        optional (BpmExecutionConfiguration...)     bpmConfiguration;
+        optional (Bpm2Configuration...)             bpm2Configuration;
         optional (AWSConfiguration...)              awsConfiguration;
         optional (UplinkConfiguration...)           uplinkConfiguration;
         optional (SearchConfiguration...)           searchConfiguration;
@@ -80,9 +80,12 @@ package (com.arvatosystems) t9t.cfg.be XML PROPERTY {
         //required Int required Map<Integer>          prefetchByRtti;         // how many key values to prefetch for a given RTTI?
     }
 
-    class BpmExecutionConfiguration {
-        optional namedQualifier                     strategy;               // select the implementation
-        optional namedQualifier                     engine;                 // select the BPM engine to use i.e. "activiti" OR "camunda" at the moment
+    class Bpm2Configuration {
+        optional Boolean                            jobExecutorEnabled;     // Enable background BPMN job execution on this node? (default=true)
+        optional Integer                            jobExecutorQueueSize;   // Job executor queue size (default=3)
+        optional Integer                            jobExecutorMinWorker;   // Job executor thread pool min size (default=3)
+        optional Integer                            jobExecutorMaxWorker;   // Job executor thread pool max size (default=10)
+        optional Ascii(255)                         jobExecutorLockId;      // ID use to lock jobs for this node in DB. MUST BE UNIQUE IN CLUSTER SETUP! (default=random UUID)
     }
 
     class AWSConfiguration {

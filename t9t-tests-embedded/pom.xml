@@ -36,6 +36,10 @@
         </dependency>
         <dependency>
             <groupId>com.arvato-systems.t9t</groupId>
+            <artifactId>t9t-base-jpa-rl</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.arvato-systems.t9t</groupId>
             <artifactId>t9t-orm-hibernate-jpa</artifactId>
         </dependency>
 
