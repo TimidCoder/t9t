@@ -41,6 +41,7 @@ import de.jpaw.dp.Singleton
 import de.jpaw.util.ApplicationException
 import de.jpaw.util.ExceptionUtil
 import java.util.Set
+import org.slf4j.MDC
 
 /**
  * Class serving as key entry point for intra-module communication.
@@ -74,7 +75,10 @@ class Executor implements IExecutor, T9tConstants {
         var ServiceResponse response = null
         var BonaPortableClass<?> bp = params.ret$BonaPortableClass()
         // LOGGER.debug("FT-2454: isForeignCheck({}) (= {}?)", bp.pqon, params.ret$PQON)
+
+        val oldMdcRequestPqon = MDC.get(T9tConstants.MDC_REQUEST_PQON)
         try {
+            MDC.put(T9tConstants.MDC_REQUEST_PQON, bp.pqon)
             // check for alien requests
             if (!bp.pqon.startsWith("t9t.")) {
                 // call out to external system
@@ -118,8 +122,9 @@ class Executor implements IExecutor, T9tConstants {
             val causeChain = ExceptionUtil.causeChain(e)
             LOGGER.error("Execution problem: General error cause is: ", e) // create a service response that reports about the problem
             return T9tResponses.createServiceResponse(T9tException.GENERAL_EXCEPTION, causeChain)
+        } finally {
+            MDC.put(T9tConstants.MDC_REQUEST_PQON, oldMdcRequestPqon)
         }
-
     }
 
 

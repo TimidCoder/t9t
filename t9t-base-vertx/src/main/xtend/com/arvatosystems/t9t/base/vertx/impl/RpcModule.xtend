@@ -38,6 +38,9 @@ import io.vertx.ext.web.Router
 import static io.vertx.core.http.HttpHeaders.*
 
 import static extension com.arvatosystems.t9t.base.vertx.impl.HttpUtils.*
+import com.arvatosystems.t9t.base.T9tConstants
+import org.slf4j.MDC
+import java.util.Objects
 
 /** This is a pseudo module in the sense that rather than contributing a specific set of methods,
  * it provides a dispatcher.
@@ -96,6 +99,9 @@ abstract class AbstractRpcModule implements IServiceModule {
         router.post("/" + moduleName).handler [
             val start = System.currentTimeMillis
 
+            // Clear all old MDC data, since complete new request if processed
+            MDC.clear
+
             val origin = request.headers.get(ORIGIN)
             val ct = request.headers.get(CONTENT_TYPE).stripCharset
             if (ct === null) {
@@ -114,6 +120,9 @@ abstract class AbstractRpcModule implements IServiceModule {
             val jwtInfo = info as JwtInfo
             val encodedJwt = user?.principal?.map?.get("jwt")
 
+            MDC.put(T9tConstants.MDC_USER_ID, jwtInfo.getUserId)
+            MDC.put(T9tConstants.MDC_TENANT_ID, jwtInfo.getTenantId)
+            MDC.put(T9tConstants.MDC_SESSION_REF, Objects.toString(jwtInfo.getSessionRef, null))
 
             // decode the payload
             val decoder = coderFactory.getDecoderInstance(ct)
@@ -124,18 +133,22 @@ abstract class AbstractRpcModule implements IServiceModule {
             }
             val srq = new WrappedResponse  // space to store the response for this request, defaulting to a "fast ping" response
             val ctx = it
+            val mdcContext = MDC.copyOfContextMap
             vertx.<byte []>executeBlocking([
                 try {
+                    MDC.setContextMap(mdcContext)
                     val body = ctx.body?.bytes
                     if (LOGGER.isTraceEnabled())
                         LOGGER.trace("Request is:\n" + ByteUtil.dump(body, 1024))  // dump up to 1 KB of data
                     val request = if (body === null) PING_REQUEST else {
                         if (withServiceRequest) {
                             val rq = decoder.decode(body, ServiceRequest.meta$$this) as ServiceRequest;
+                            MDC.put(T9tConstants.MDC_REQUEST_PQON, rq.ret$PQON)
                             srq.response = requestProcessor.execute(rq, jwtInfo, encodedJwt as String, skipAuthorization);
                             rq.requestParameters
                         } else {
                             val rq = decoder.decode(body, ServiceRequest.meta$$requestParameters) as RequestParameters;
+                            MDC.put(T9tConstants.MDC_REQUEST_PQON, rq.ret$PQON)
                             srq.response = requestProcessor.execute(rq, jwtInfo, encodedJwt as String, skipAuthorization);
                             rq
                         }
@@ -160,6 +173,7 @@ abstract class AbstractRpcModule implements IServiceModule {
                     fail(e)
                 }
             ], false, [
+                MDC.setContextMap(mdcContext)
                 if (succeeded) {
                     if (origin !== null)
                         ctx.response.putHeader(ACCESS_CONTROL_ALLOW_ORIGIN, origin)

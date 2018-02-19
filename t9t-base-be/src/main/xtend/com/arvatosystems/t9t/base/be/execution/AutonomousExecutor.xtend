@@ -26,6 +26,7 @@ import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicInteger
 import com.arvatosystems.t9t.base.services.RequestContext
 import com.arvatosystems.t9t.base.api.RequestParameters
+import org.slf4j.MDC
 
 @AddLogger
 @Singleton
@@ -49,7 +50,9 @@ class AutonomousExecutor implements IAutonomousExecutor {
     }
 
     override execute(RequestContext ctx, RequestParameters rp) {
+        val mdcContext = MDC.copyOfContextMap
         val f = executorService.submit [
+            MDC.setContextMap(mdcContext) // Inherit MDC context and ensure old MDC of this worker is reset
             requestProcessor.execute(rp, ctx.internalHeaderParameters.jwtInfo, ctx.internalHeaderParameters.encodedJwt, true)
         ]
         return f.get

@@ -15,10 +15,13 @@
  */
 package com.arvatosystems.t9t.out.be.impl.output.camel;
 
+import com.arvatosystems.t9t.base.T9tConstants;
+import org.apache.camel.Exchange;
 import org.apache.camel.builder.RouteBuilder;
 
 import com.arvatosystems.t9t.base.services.IFileUtil;
 import com.arvatosystems.t9t.io.DataSinkDTO;
+import org.slf4j.MDC;
 
 public class GenericT9tRoute extends RouteBuilder {
 
@@ -40,15 +43,18 @@ public class GenericT9tRoute extends RouteBuilder {
 
                 from(dataSinkDTO.getFileOrQueueNamePattern())
                     .routeId("DataSink-" + dataSinkDTO.getDataSinkId() + "-" + dataSinkDTO.getObjectRef() + "-QueueIn")
+                    .process(exchange -> initMDC(exchange, dataSinkDTO))
                     .to("file://"+queueDirectory+"?autoCreate=true&tempFileName=${file:name}.intrans&flatten=true");
 
                 from("file://"+queueDirectory+"?initialDelay=1000&delay=10000&delete=true&moveFailed=.failed&antExclude=*.intrans&sortBy=${file:modified}")
                     .routeId("DataSink-" + dataSinkDTO.getDataSinkId() + "-" + dataSinkDTO.getObjectRef() + "-QueueOut")
+                    .process(exchange -> initMDC(exchange, dataSinkDTO))
                     .setProperty("dataSinkDTO", constant(dataSinkDTO))
                     .to(dataSinkDTO.getCamelRoute());
             } else {
                 from(dataSinkDTO.getFileOrQueueNamePattern())
                     .routeId("DataSink-" + dataSinkDTO.getDataSinkId() + "-" + dataSinkDTO.getObjectRef())
+                    .process(exchange -> initMDC(exchange, dataSinkDTO))
                     .setProperty("dataSinkDTO", constant(dataSinkDTO))
                     .to(dataSinkDTO.getCamelRoute());
             }
@@ -56,4 +62,10 @@ public class GenericT9tRoute extends RouteBuilder {
             throw new UnsupportedOperationException("Output Route with t9t: component is currently not supported!");
         }
     }
+
+    private void initMDC(Exchange exchange, DataSinkDTO dataSinkDTO) {
+        MDC.clear();
+        MDC.put(T9tConstants.MDC_IO_DATA_SINK_ID, dataSinkDTO.getDataSinkId());
+    }
+
 }

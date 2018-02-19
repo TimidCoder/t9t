@@ -49,6 +49,8 @@ import com.arvatosystems.t9t.base.be.impl.DefaultRequestHandlerResolver
 import com.arvatosystems.t9t.server.services.IAuthorize
 import com.arvatosystems.t9t.base.T9tConstants
 import com.arvatosystems.t9t.base.services.IBucketWriter
+import java.util.Objects
+import org.slf4j.MDC
 
 // process requests once the user has been authenticated
 @Singleton
@@ -89,92 +91,105 @@ class RequestProcessor implements IRequestProcessor {
         val now                     = new Instant
         val millis                  = now.millis
 
-        // check if we are just shutting down - only for external requests
-        if (!skipAuthorization && StatusProvider.isShutdownInProgress) {
-            LOGGER.info("Denying processing of {}@{}:{}, shutdown is in progress", jwtInfo.userId, jwtInfo.tenantId, pqon)
-            return new ServiceResponse() => [
-                returnCode          = T9tException.SHUTDOWN_IN_PROGRESS
-                tenantId            = jwtInfo.tenantId
-                errorMessage        = ApplicationException.codeToString(returnCode)
-            ]
-        }
+        val oldMdcRequestPqon = MDC.get(T9tConstants.MDC_REQUEST_PQON)
+        try {
+            MDC.put(T9tConstants.MDC_REQUEST_PQON, pqon)
+            MDC.put(T9tConstants.MDC_TENANT_ID, jwtInfo.tenantId)
+            MDC.put(T9tConstants.MDC_USER_ID, jwtInfo.userId)
+            MDC.put(T9tConstants.MDC_SESSION_REF, Objects.toString(jwtInfo.sessionRef, null))
+            MDC.put(T9tConstants.MDC_PROCESS_REF, null)
 
-        // check if JWT is still valid
-        if (jwtInfo.expiresAt !== null) {
-            val expiredBy = millis - jwtInfo.expiresAt.millis
-            if (expiredBy > 100L) {  // allow some millis to avoid race conditions
-                LOGGER.info("Denying processing of {}@{}:{}, JWT has expired {} ms ago",
-                    jwtInfo.userId, jwtInfo.tenantId, pqon, expiredBy)
+            // check if we are just shutting down - only for external requests
+            if(!skipAuthorization && StatusProvider.isShutdownInProgress) {
+                LOGGER.info("Denying processing of {}@{}:{}, shutdown is in progress", jwtInfo.userId, jwtInfo.tenantId, pqon)
                 return new ServiceResponse() => [
-                    returnCode          = T9tException.JWT_EXPIRED
+                    returnCode          = T9tException.SHUTDOWN_IN_PROGRESS
                     tenantId            = jwtInfo.tenantId
-                    errorDetails        = Long.toString(expiredBy)
                     errorMessage        = ApplicationException.codeToString(returnCode)
                 ]
             }
-        }
-        if (jwtInfo.userId === null || jwtInfo.userRef === null || jwtInfo.tenantId === null || jwtInfo.tenantRef === null || jwtInfo.sessionId === null || jwtInfo.sessionRef === null) {
-            LOGGER.info("Denying processing of {}@{}:{}, JWT is missing some fields", jwtInfo.userId, jwtInfo.tenantId, pqon)
-            return new ServiceResponse() => [
-                returnCode          = T9tException.JWT_INCOMPLETE
-                tenantId            = jwtInfo.tenantId
-                errorMessage        = ApplicationException.codeToString(returnCode)
-            ]
-        }
 
-        // 1. create a request context
-        val ihdr                    = new InternalHeaderParameters
-        ihdr.executionStartedAt     = now
-        ihdr.encodedJwt             = encodedJwt
-        ihdr.jwtInfo                = jwtInfo
-        ihdr.processRef             = refGenerator.generateRef(RTTI_MESSAGE_LOG)
-        ihdr.languageCode           = jwtInfo.locale
-        ihdr.requestParameterPqon   = pqon
-        ihdr.requestHeader          = optHdr
-        ihdr.priorityRequest        = optHdr?.priorityRequest
-        if (optHdr?.languageCode !== null)
-            ihdr.languageCode   = optHdr.languageCode
-        ihdr.freeze
+            // check if JWT is still valid
+            if(jwtInfo.expiresAt !== null) {
+                val expiredBy = millis - jwtInfo.expiresAt.millis
+                if(expiredBy > 100L) {  // allow some millis to avoid race conditions
+                    LOGGER.info("Denying processing of {}@{}:{}, JWT has expired {} ms ago",
+                    jwtInfo.userId, jwtInfo.tenantId, pqon, expiredBy)
+                    return new ServiceResponse() => [
+                        returnCode          = T9tException.JWT_EXPIRED
+                        tenantId            = jwtInfo.tenantId
+                        errorDetails        = Long.toString(expiredBy)
+                        errorMessage        = ApplicationException.codeToString(returnCode)
+                    ]
+                }
+            }
+            if(jwtInfo.userId === null || jwtInfo.userRef === null || jwtInfo.tenantId === null || jwtInfo.tenantRef === null || jwtInfo.sessionId === null || jwtInfo.sessionRef === null) {
+                LOGGER.info("Denying processing of {}@{}:{}, JWT is missing some fields", jwtInfo.userId, jwtInfo.tenantId, pqon)
+                return new ServiceResponse() => [
+                    returnCode          = T9tException.JWT_INCOMPLETE
+                    tenantId            = jwtInfo.tenantId
+                    errorMessage        = ApplicationException.codeToString(returnCode)
+                ]
+            }
 
-        val prioText = if (Boolean.TRUE == ihdr.priorityRequest) "priority" else "regular"
-        LOGGER.info("Starting {} request {}@{}:{}, S/R = {}/{}, need authorization={}",
+            // 1. create a request context
+            val ihdr                    = new InternalHeaderParameters
+            ihdr.executionStartedAt     = now
+            ihdr.encodedJwt             = encodedJwt
+            ihdr.jwtInfo                = jwtInfo
+            ihdr.processRef             = refGenerator.generateRef(RTTI_MESSAGE_LOG)
+            ihdr.languageCode           = jwtInfo.locale
+            ihdr.requestParameterPqon   = pqon
+            ihdr.requestHeader          = optHdr
+            ihdr.priorityRequest        = optHdr?.priorityRequest
+            if(optHdr?.languageCode !== null)
+                ihdr.languageCode   = optHdr.languageCode
+            ihdr.freeze
+
+            MDC.put(T9tConstants.MDC_PROCESS_REF, Objects.toString(ihdr.processRef, null))
+
+            val prioText = if(Boolean.TRUE == ihdr.priorityRequest) "priority" else "regular"
+            LOGGER.info("Starting {} request {}@{}:{}, S/R = {}/{}, need authorization={}",
             prioText, jwtInfo.userId, jwtInfo.tenantId, pqon, jwtInfo.sessionRef, ihdr.processRef, !skipAuthorization)
 
-        val resp                    = executeSynchronous(rp, ihdr, skipAuthorization)
-        val endOfProcessing         = new Instant
-        val processingDuration      = endOfProcessing.millis - ihdr.executionStartedAt.millis
-        resp.tenantId               = jwtInfo.tenantId
-        resp.processRef             = ihdr.processRef
-        resp.messageId              = optHdr?.messageId
+            val resp                    = executeSynchronous(rp, ihdr, skipAuthorization)
+            val endOfProcessing         = new Instant
+            val processingDuration      = endOfProcessing.millis - ihdr.executionStartedAt.millis
+            resp.tenantId               = jwtInfo.tenantId
+            resp.processRef             = ihdr.processRef
+            resp.messageId              = optHdr?.messageId
 
-        val logLevel = if (ApplicationException.isOk(resp.returnCode))
-            jwtInfo.logLevel ?: UserLogLevelType.MESSAGE_ENTRY
-        else
-            jwtInfo.logLevelErrors ?: jwtInfo.logLevel ?: UserLogLevelType.REQUESTS
+            val logLevel = if(ApplicationException.isOk(resp.returnCode))
+                jwtInfo.logLevel ?: UserLogLevelType.MESSAGE_ENTRY
+            else
+                jwtInfo.logLevelErrors ?: jwtInfo.logLevel ?: UserLogLevelType.REQUESTS
 
-        val logged = logLevel.ordinal >= UserLogLevelType.MESSAGE_ENTRY.ordinal
-        val returnCodeAsString = if (ApplicationException.isOk(resp.returnCode)) "OK" else ApplicationException.codeToString(resp.returnCode)
+            val logged = logLevel.ordinal >= UserLogLevelType.MESSAGE_ENTRY.ordinal
+            val returnCodeAsString = if(ApplicationException.isOk(resp.returnCode)) "OK" else ApplicationException.codeToString(resp.returnCode)
 
-        LOGGER.info("Finished {} request {}@{}:{} with return code {} ({}) in {} ms {}, S/R = {}/{} ({})",
+            LOGGER.info("Finished {} request {}@{}:{} with return code {} ({}) in {} ms {}, S/R = {}/{} ({})",
             prioText, jwtInfo.userId, jwtInfo.tenantId, pqon, resp.returnCode,
             resp.errorDetails ?: "",
-            processingDuration, if (logged) "(LOGGED)" else "(unlogged)",
+            processingDuration, if(logged) "(LOGGED)" else "(unlogged)",
             jwtInfo.sessionRef, ihdr.processRef, returnCodeAsString
-        )
-
-        if (logged) {
-            // prepare the message for transition
-            val summary = new ExecutionSummary => [
-                processingTimeInMillisecs   = processingDuration
-                returnCode                  = resp.returnCode
-                errorDetails                = resp.errorDetails
-            ]
-            messageLogger.logRequest(ihdr, summary,
-                if (logLevel.ordinal >= UserLogLevelType.REQUESTS.ordinal) rp else null,
-                if (logLevel.ordinal >= UserLogLevelType.FULL.ordinal) resp else null
             )
+
+            if(logged) {
+                // prepare the message for transition
+                val summary = new ExecutionSummary => [
+                    processingTimeInMillisecs   = processingDuration
+                    returnCode                  = resp.returnCode
+                    errorDetails                = resp.errorDetails
+                ]
+                messageLogger.logRequest(ihdr, summary,
+                if(logLevel.ordinal >= UserLogLevelType.REQUESTS.ordinal) rp else null,
+                if(logLevel.ordinal >= UserLogLevelType.FULL.ordinal) resp else null
+                )
+            }
+            return resp
+        } finally {
+            MDC.put(T9tConstants.MDC_REQUEST_PQON, oldMdcRequestPqon)
         }
-        return resp
     }
 
     // migrated from IExecutor, because the only callers are in this class
@@ -302,18 +317,29 @@ class RequestProcessor implements IRequestProcessor {
      * This method is called for the login process.
      */
     override <T extends ServiceResponse> T executeSynchronousAndCheckResult(RequestParameters params, InternalHeaderParameters ihdr, Class<T> requiredType, boolean skipAuthorization) {
-        var ServiceResponse response = executeSynchronous(params, ihdr, skipAuthorization)
-        if ((response.returnCode > T9tConstants.MAX_OK_RETURN_CODE)) {
-            LOGGER.error("Error during request handler execution for {} (returnCode={}, errorMsg={}, errorDetails={})",
-                params.ret$PQON(), response.returnCode, response.errorMessage, response.errorDetails)
-            throw new T9tException(response.returnCode)
+        val oldMdcRequestPqon = MDC.get(T9tConstants.MDC_REQUEST_PQON)
+        try {
+            MDC.put(T9tConstants.MDC_REQUEST_PQON, params.ret$PQON)
+            MDC.put(T9tConstants.MDC_TENANT_ID, ihdr.jwtInfo.tenantId)
+            MDC.put(T9tConstants.MDC_USER_ID, ihdr.jwtInfo.userId)
+            MDC.put(T9tConstants.MDC_SESSION_REF, Objects.toString(ihdr.jwtInfo.sessionRef, null))
+            MDC.put(T9tConstants.MDC_PROCESS_REF, Objects.toString(ihdr.processRef, null))
+
+            var ServiceResponse response = executeSynchronous(params, ihdr, skipAuthorization)
+            if ((response.returnCode > T9tConstants.MAX_OK_RETURN_CODE)) {
+                LOGGER.error("Error during request handler execution for {} (returnCode={}, errorMsg={}, errorDetails={})",
+                    params.ret$PQON(), response.returnCode, response.errorMessage, response.errorDetails)
+                throw new T9tException(response.returnCode)
+            }
+            // the response must be a subclass of the expected one
+            if (!requiredType.isAssignableFrom(response.class)) {
+                LOGGER.error("Error during request handler execution for {}, expected response class {} but got {}",
+                    params.ret$PQON(), requiredType.simpleName, response.ret$PQON())
+                throw new T9tException(T9tException.INCORRECT_RESPONSE_CLASS, requiredType.simpleName)
+            }
+            return requiredType.cast(response) // all OK
+        } finally {
+            MDC.put(T9tConstants.MDC_REQUEST_PQON, oldMdcRequestPqon)
         }
-        // the response must be a subclass of the expected one
-        if (!requiredType.isAssignableFrom(response.class)) {
-            LOGGER.error("Error during request handler execution for {}, expected response class {} but got {}",
-                params.ret$PQON(), requiredType.simpleName, response.ret$PQON())
-            throw new T9tException(T9tException.INCORRECT_RESPONSE_CLASS, requiredType.simpleName)
-        }
-        return requiredType.cast(response) // all OK
     }
 }

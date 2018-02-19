@@ -118,4 +118,13 @@ public interface T9tConstants {
     public static final Integer BUCKET_DELETED = Integer.valueOf(4);
 
     public static final long DEFAULT_JVM_LOCK_TIMEOUT   = 5000L;  //JVM Lock in milliseconds
+
+    // MDC keys
+    public static final String MDC_SESSION_REF = "sessionRef";
+    public static final String MDC_PROCESS_REF = "processRef";
+    public static final String MDC_REQUEST_PQON = "requestPqon";
+    public static final String MDC_USER_ID = "userId";
+    public static final String MDC_TENANT_ID = "tenantId";
+    public static final String MDC_SSM_JOB_ID = "ssmJobId";
+    public static final String MDC_IO_DATA_SINK_ID = "ioDataSinkId";
 }

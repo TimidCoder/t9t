@@ -33,6 +33,8 @@ import org.quartz.JobDataMap
 import org.quartz.JobDetail
 import org.quartz.JobExecutionContext
 import org.quartz.JobExecutionException
+import org.slf4j.MDC
+import com.arvatosystems.t9t.base.T9tConstants
 
 /**
  * This class implements the Quartz {@link Job} interface and therefore the method {@link Job#execute(JobExecutionContext)}.
@@ -70,6 +72,8 @@ class PerformScheduledJob implements Job {
         srq.requestParameters   = requestParameters
         srq.authentication      = new ApiKeyAuthentication(UUID.fromString(apiKey))
 
+        MDC.clear
+        MDC.put(T9tConstants.MDC_SSM_JOB_ID, context.getJobDetail?.getKey?.getName)
         if (FIRE_ASYNCHRONOUSLY) {
             sessionFactory.submitTask(srq)
         } else {
