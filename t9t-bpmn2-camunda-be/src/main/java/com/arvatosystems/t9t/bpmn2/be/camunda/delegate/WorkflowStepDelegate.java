@@ -12,12 +12,12 @@
  */
 package com.arvatosystems.t9t.bpmn2.be.camunda.delegate;
 
-import static com.arvatosystems.t9t.bpmn2.be.camunda.utils.ExpressionUtils.getValueAsString;
 import static java.util.Objects.requireNonNull;
+
+import java.util.Objects;
 
 import org.camunda.bpm.engine.delegate.BpmnError;
 import org.camunda.bpm.engine.delegate.DelegateExecution;
-import org.camunda.bpm.engine.delegate.Expression;
 import org.camunda.bpm.engine.delegate.JavaDelegate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,6 +30,7 @@ import com.arvatosystems.t9t.bpmn2.T9tBPMNConstants;
 import com.arvatosystems.t9t.bpmn2.be.camunda.utils.WorkflowStepParameterMapAdapter;
 
 import de.jpaw.dp.Jdp;
+import de.jpaw.dp.Singleton;
 import de.jpaw.util.ApplicationException;
 
 /**
@@ -53,19 +54,15 @@ import de.jpaw.util.ApplicationException;
  *
  * @author TWEL006
  */
+@Singleton
 public class WorkflowStepDelegate implements JavaDelegate {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(WorkflowStepDelegate.class);
 
-    /** Name of workflow step to be used */
-    private Expression name;
-
-    /** Name of variable to assign workflow step return code to (only used, if set) */
-    private Expression returnCodeVariable;
-
     @Override
     public void execute(DelegateExecution execution) throws Exception {
-        final String nameString = requireNonNull(getValueAsString(name, execution, null), "Parameter 'name' must not be empty");
+        final String nameString = requireNonNull(Objects.toString(execution.getVariable("workflowStepName"), null),
+                                                 "Variable 'workflowStepName' must not be empty");
 
         LOGGER.debug("Start execute workflow step '{}'", nameString);
         final IWorkflowStep<Object> workflowStep = Jdp.getRequired(IWorkflowStep.class, nameString);
@@ -117,11 +114,7 @@ public class WorkflowStepDelegate implements JavaDelegate {
             errorMessage = e.getMessage();
         }
 
-        final String returnCodeVariableString = getValueAsString(returnCodeVariable, execution, null);
-        if (returnCodeVariableString != null) {
-            LOGGER.debug("Publish workflow step return code {} as variable '{}'", returnCode, returnCodeVariableString);
-            execution.setVariable(returnCodeVariableString, returnCode);
-        }
+        execution.setVariableLocal("resultValue", returnCode);
 
         LOGGER.debug("End execute workflow step '{}' - return code is {}", nameString, returnCode);
 
@@ -132,22 +125,6 @@ public class WorkflowStepDelegate implements JavaDelegate {
 
             throw new BpmnError(errorCode, errorMessage);
         }
-    }
-
-    public Expression getName() {
-        return name;
-    }
-
-    public void setName(Expression name) {
-        this.name = name;
-    }
-
-    public Expression getReturnCodeVariable() {
-        return returnCodeVariable;
-    }
-
-    public void setReturnCodeVariable(Expression returnCodeVariable) {
-        this.returnCodeVariable = returnCodeVariable;
     }
 
 }

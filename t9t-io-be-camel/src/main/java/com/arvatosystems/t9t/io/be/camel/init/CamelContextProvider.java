@@ -22,14 +22,15 @@ import org.apache.camel.impl.DefaultCamelContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.arvatosystems.t9t.base.services.IFileUtil;
+import com.arvatosystems.t9t.base.services.IAsyncRequestProcessor;
 import com.arvatosystems.t9t.cfg.be.ConfigProvider;
 import com.arvatosystems.t9t.io.DataSinkDTO;
+import com.arvatosystems.t9t.io.be.camel.service.CamelDataSinkChangeListener;
+import com.arvatosystems.t9t.io.be.camel.service.CamelService;
+import com.arvatosystems.t9t.io.event.DataSinkChangedEvent;
 import com.arvatosystems.t9t.out.be.impl.output.camel.AbstractExtensionCamelRouteBuilder;
-import com.arvatosystems.t9t.out.be.impl.output.camel.GenericT9tRoute;
 import com.arvatosystems.t9t.out.services.IOutPersistenceAccess;
 
-import de.jpaw.bonaparte.pojos.api.media.MediaType;
 import de.jpaw.dp.Jdp;
 import de.jpaw.dp.Provider;
 import de.jpaw.dp.Singleton;
@@ -46,10 +47,10 @@ public class CamelContextProvider implements StartupShutdown, Provider<CamelCont
 
     private CamelContext camelContext = null;
     private static final Logger LOGGER = LoggerFactory.getLogger(CamelContextProvider.class);
-    public static final String DEFAULT_ENVIRONMENT = "t9t";
 
     protected final IOutPersistenceAccess iOutPersistenceAccess = Jdp.getRequired(IOutPersistenceAccess.class);
-    protected final IFileUtil fileUtil = Jdp.getRequired(IFileUtil.class);
+    protected final CamelService camelService = Jdp.getRequired(CamelService.class);
+    protected final IAsyncRequestProcessor asyncProcessor = Jdp.getRequired(IAsyncRequestProcessor.class);
 
     @Override
     public void onStartup() {
@@ -75,22 +76,21 @@ public class CamelContextProvider implements StartupShutdown, Provider<CamelCont
         // After initializing these static routes there are additional routes
         try {
             String environment = ConfigProvider.getConfiguration().getImportEnvironment();
-            if (environment == null)
-                environment = DEFAULT_ENVIRONMENT;
+            if (environment == null) {
+                environment = CamelService.DEFAULT_ENVIRONMENT;
+            }
             List<DataSinkDTO> dataSinkDTOList = iOutPersistenceAccess.getDataSinkDTOsForEnvironment(environment);
             LOGGER.info("Looking for Camel import routes for environment {}: {} routes found", environment, dataSinkDTOList.size());
             for (DataSinkDTO dataSinkDTO : dataSinkDTOList) {
-                if (validateT9TCamelComponent(dataSinkDTO)) { // only add the route if the validateT9tCamelComponent returns true
-                    camelContext.addRoutes(new GenericT9tRoute(dataSinkDTO, fileUtil));
-                } else {
-                    LOGGER.error("There have been problems while configuring route with dataSinkID: {} ", dataSinkDTO.getDataSinkId());
-                }
+                camelService.addRoutes(dataSinkDTO);
             }
             camelContext.start();
 
         } catch (Exception e) {
             LOGGER.error("CamelContext could not be started... ", e);
         }
+        // Register listener to receive data sink changes
+        asyncProcessor.registerSubscriber(DataSinkChangedEvent.BClass.INSTANCE.getPqon(), Jdp.getRequired(CamelDataSinkChangeListener.class, "IOCamelDataSinkChange"));
     }
 
     @Override
@@ -98,31 +98,6 @@ public class CamelContextProvider implements StartupShutdown, Provider<CamelCont
         return camelContext;
     }
 
-    /**
-     * Does a short validation of important fields like camelRoute, InputFormatConverter.
-     * @param dataSink
-     * @return True if the DataSink contains a camelRoute, commFormatName, preTransformerName and baseClassPqon. Otherwise false!
-     *
-     */
-    private boolean validateT9TCamelComponent(DataSinkDTO dataSink) {
-        if (dataSink.getCamelRoute() == null || dataSink.getCamelRoute().isEmpty()) {
-            LOGGER.error("dataSink {} does not contain a camelRoute field.", dataSink.getDataSinkId());
-            return false;
-        }
-        if (dataSink.getCommFormatType().getBaseEnum() == MediaType.USER_DEFINED && (dataSink.getCommFormatName() == null || dataSink.getCommFormatName().isEmpty())) {
-            LOGGER.error("dataSink {} does not contain a commFormatName for an InputFormatConverter.", dataSink.getDataSinkId());
-            return false;
-        }
-        if (dataSink.getPreTransformerName() == null || dataSink.getPreTransformerName().isEmpty()) {
-            LOGGER.error("dataSink {} does not contain a preTransformerName for an InputDataTransformer.", dataSink.getDataSinkId());
-            return false;
-        }
-        if (dataSink.getBaseClassPqon() == null || dataSink.getBaseClassPqon().isEmpty()) {
-            LOGGER.error("dataSink {} does not contain a baseClassPqon.", dataSink.getDataSinkId());
-            return false;
-        }
-        return true;
-    }
 
     @Override
     public void onShutdown() {

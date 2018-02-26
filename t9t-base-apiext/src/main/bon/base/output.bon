@@ -43,8 +43,8 @@ package (com.arvatosystems) t9t.base.output {
         optional Boolean                            smartMappingForDataWithTracking;// optionally prepend field names with data. or tracking., if DataWithTracking is passed (set internally)
         optional Boolean                            variantFilter;                  // use variant filter for output (OMS history & alike)
         optional resourceId                         requiredPermission;             // non-null if access to this resource requires this permission (for reports, for example, the report permission is copied into this field)
-        optional f42Ref                             genericRefs1;                   // additional reference which have been used for this Sink (for OMS reports: entityRef / org unit). This may be used for further filtering, or restrict permissions to this record
-        optional f42Ref                             genericRefs2;                   // additional reference which have been used for this Sink (for OMS reports: locationRef). This may be used for further filtering, or restrict permissions to this record
+        optional f42Ref                             genericRefs1;                   // additional reference which have been used for this sink (for OMS reports: org unit). This may be used for further filtering, or restrict permissions to this record
+        optional f42Ref                             genericRefs2;                   // additional reference which have been used for this sink (for OMS reports: locationRef). This may be used for further filtering, or restrict permissions to this record
         optional Object                             formatGeneratorParameters;      // any additional parameters - define your own object, for example for extra mappings
         optional Boolean                            unwrapTracking;                 // removes the tracking columns - only for export
     }

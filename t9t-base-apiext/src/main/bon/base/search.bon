@@ -80,7 +80,7 @@ package (com.arvatosystems) t9t.base.search {
         required int                                offset;                                 // skip rows
         optional (SearchFilter...)                  searchFilter;                           // optional restriction of the result set
         required (SortColumn) List<>                sortColumns;                            // optional list of sorting columns
-        optional (OutputSessionParameters...)       searchOutputTarget;                     // if supplied, then the results will be redirected to a dataSink
+        optional (OutputSessionParameters...)       searchOutputTarget;                     // if supplied, then the results will be redirected to a data sink
         optional queryString                        expression;                             // Lucene / SOLR query expression (requires property documentName)
         optional Boolean                            applyDistinct;                          // return distinct results (apply SQL SELECT DISTINCT)
     }

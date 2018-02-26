@@ -85,4 +85,9 @@ public abstract class AbstractCamelProcessor {
         return camelProps.getProperty(endpointTag);
     }
 
+    public static synchronized void flushConfig() {
+        camelPropsInitiated = false;
+        camelProps.clear();
+    }
+
 }

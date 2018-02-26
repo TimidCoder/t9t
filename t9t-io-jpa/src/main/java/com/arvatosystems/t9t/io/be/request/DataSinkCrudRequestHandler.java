@@ -21,20 +21,24 @@ import java.nio.charset.UnsupportedCharsetException;
 
 import com.arvatosystems.t9t.base.T9tException;
 import com.arvatosystems.t9t.base.api.ServiceResponse;
+import com.arvatosystems.t9t.base.crud.CrudSurrogateKeyResponse;
 import com.arvatosystems.t9t.base.entities.FullTrackingWithVersion;
 import com.arvatosystems.t9t.base.jpa.impl.AbstractCrudSurrogateKey42RequestHandler;
+import com.arvatosystems.t9t.base.services.IExecutor;
 import com.arvatosystems.t9t.io.CamelPostProcStrategy;
 import com.arvatosystems.t9t.io.CommunicationTargetChannelType;
 import com.arvatosystems.t9t.io.DataSinkCategoryType;
 import com.arvatosystems.t9t.io.DataSinkDTO;
 import com.arvatosystems.t9t.io.DataSinkRef;
 import com.arvatosystems.t9t.io.T9tIOException;
+import com.arvatosystems.t9t.io.event.DataSinkChangedEvent;
 import com.arvatosystems.t9t.io.jpa.entities.DataSinkEntity;
 import com.arvatosystems.t9t.io.jpa.mapping.IDataSinkDTOMapper;
 import com.arvatosystems.t9t.io.jpa.persistence.IDataSinkEntityResolver;
 import com.arvatosystems.t9t.io.request.DataSinkCrudRequest;
 
 import de.jpaw.bonaparte.api.media.MediaTypeInfo;
+import de.jpaw.bonaparte.pojos.api.OperationType;
 import de.jpaw.bonaparte.pojos.api.media.MediaCategory;
 import de.jpaw.bonaparte.pojos.api.media.MediaType;
 import de.jpaw.bonaparte.pojos.api.media.MediaTypeDescriptor;
@@ -50,6 +54,8 @@ public class DataSinkCrudRequestHandler extends AbstractCrudSurrogateKey42Reques
 //  @Inject
     private final IDataSinkDTOMapper sinksMapper = Jdp.getRequired(IDataSinkDTOMapper.class);
 
+    private final IExecutor executor = Jdp.getRequired(IExecutor.class);
+
     @Override
     public ServiceResponse execute(DataSinkCrudRequest crudRequest) throws Exception {
         DataSinkDTO data = crudRequest.getData();
@@ -57,7 +63,32 @@ public class DataSinkCrudRequestHandler extends AbstractCrudSurrogateKey42Reques
             // normalize by tenantId
             // not required ATM, since no object ref specified ... if (data.getTenantRef()...)
         }
-        return execute(sinksMapper, sinksResolver, crudRequest);
+
+        DataSinkDTO dataSinkDTO = null;
+        if (crudRequest.getCrud() == OperationType.DELETE) {
+            // In case of delete, we need to save the key to allow providing a DataSinkKey (with dataSinkId) in the event later on
+            dataSinkDTO = sinksMapper.mapToDto(sinksResolver.findActive(crudRequest.getKey(), false));
+        }
+
+        final CrudSurrogateKeyResponse<DataSinkDTO, FullTrackingWithVersion> response = execute(sinksMapper, sinksResolver, crudRequest);
+
+        if (response.getReturnCode() == 0
+            && (crudRequest.getCrud() == OperationType.ACTIVATE
+                || crudRequest.getCrud() == OperationType.INACTIVATE
+                || crudRequest.getCrud() == OperationType.CREATE
+                || crudRequest.getCrud() == OperationType.DELETE
+                || crudRequest.getCrud() == OperationType.MERGE
+                || crudRequest.getCrud() == OperationType.PATCH
+                || crudRequest.getCrud() == OperationType.UPDATE)) {
+
+            if (dataSinkDTO == null) {
+                dataSinkDTO = response.getData();
+            }
+
+            executor.publishEvent(new DataSinkChangedEvent(dataSinkDTO, crudRequest.getCrud()));
+        }
+
+        return response;
     }
 
     // do a plausibility check to prevent the creation of incorrect data
@@ -87,8 +118,9 @@ public class DataSinkCrudRequestHandler extends AbstractCrudSurrogateKey42Reques
                 default:
                     throw new T9tException(T9tException.INVALID_CONFIGURATION, "Invalid channel type for reports");
                 }
-                if (baseType == null)
+                if (baseType == null) {
                     throw new T9tException(T9tException.INVALID_CONFIGURATION, "Invalid format type for reports");
+                }
                 switch (baseType) {
                 case CSV:
                 case PDF:

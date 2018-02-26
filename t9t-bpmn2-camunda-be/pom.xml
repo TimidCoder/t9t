@@ -129,6 +129,7 @@
                 <configuration>
                     <descriptors>
                         <descriptor>src/assembly/sql.xml</descriptor>
+                        <descriptor>src/assembly/camundaModelerTemplates.xml</descriptor>
                     </descriptors>
                 </configuration>
                 <executions>

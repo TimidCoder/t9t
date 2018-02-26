@@ -1,17 +1,14 @@
 /*
  * Copyright (c) 2012 - 2018 Arvato Systems GmbH
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
  */
 package com.arvatosystems.t9t.bpmn2.be.camunda.utils;
 
@@ -46,7 +43,7 @@ public class WorkflowStepParameterMapAdapter implements Map<String, Object> {
     @Override
     public int size() {
         LOGGER.warn(
-                "Requesting size() of workflow parameter map will load all available parameters, which is a performance impact! Consider not using this call.");
+                    "Requesting size() of workflow parameter map will load all available parameters, which is a performance impact! Consider not using this call.");
         return variables.getVariables()
                         .size();
     }
@@ -64,7 +61,7 @@ public class WorkflowStepParameterMapAdapter implements Map<String, Object> {
     @Override
     public boolean containsValue(Object value) {
         LOGGER.warn(
-                "Requesting containsValue() of workflow parameter map will load all available parameters, which is a performance impact! Consider not using this call.");
+                    "Requesting containsValue() of workflow parameter map will load all available parameters, which is a performance impact! Consider not using this call.");
         return variables.getVariables()
                         .containsValue(value);
     }
@@ -80,7 +77,7 @@ public class WorkflowStepParameterMapAdapter implements Map<String, Object> {
         // But this would break the interface contract of java.util.Map.
         final Object oldValue = variables.getVariable(key);
 
-        variables.setVariable(key, value);
+        variables.setVariableLocal(key, value);
 
         return oldValue;
     }
@@ -91,25 +88,25 @@ public class WorkflowStepParameterMapAdapter implements Map<String, Object> {
         // But this would break the interface contract of java.util.Map.
         final Object oldValue = variables.getVariable((String) key);
 
-        variables.removeVariable((String) key);
+        variables.removeVariableLocal((String) key);
 
         return oldValue;
     }
 
     @Override
     public void putAll(Map<? extends String, ? extends Object> m) {
-        variables.setVariables((Map<String, Object>) m);
+        variables.setVariablesLocal((Map<String, Object>) m);
     }
 
     @Override
     public void clear() {
-        variables.removeVariables();
+        variables.removeVariablesLocal();
     }
 
     @Override
     public Set<String> keySet() {
         LOGGER.warn(
-                "Requesting keySet() of workflow parameter map will load all available parameters, which is a performance impact! Consider not using this call.");
+                    "Requesting keySet() of workflow parameter map will load all available parameters, which is a performance impact! Consider not using this call.");
         return unmodifiableSet(variables.getVariables()
                                         .keySet());
     }
@@ -117,7 +114,7 @@ public class WorkflowStepParameterMapAdapter implements Map<String, Object> {
     @Override
     public Collection<Object> values() {
         LOGGER.warn(
-                "Requesting values() of workflow parameter map will load all available parameters, which is a performance impact! Consider not using this call.");
+                    "Requesting values() of workflow parameter map will load all available parameters, which is a performance impact! Consider not using this call.");
         return unmodifiableCollection(variables.getVariables()
                                                .values());
     }
@@ -125,7 +122,7 @@ public class WorkflowStepParameterMapAdapter implements Map<String, Object> {
     @Override
     public Set<Entry<String, Object>> entrySet() {
         LOGGER.warn(
-                "Requesting entrySet() of workflow parameter map will load all available parameters, which is a performance impact! Consider not using this call.");
+                    "Requesting entrySet() of workflow parameter map will load all available parameters, which is a performance impact! Consider not using this call.");
         return unmodifiableSet(variables.getVariables()
                                         .entrySet());
     }

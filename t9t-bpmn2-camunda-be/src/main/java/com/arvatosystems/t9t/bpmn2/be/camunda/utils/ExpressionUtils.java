@@ -27,7 +27,7 @@ import de.jpaw.util.ByteArray;
 public abstract class ExpressionUtils {
 
     private static final IMessageCoderFactory<BonaPortable, BonaPortable, byte[]> coderFactory = new MessageCoderFactory<>(BonaPortable.class,
-            BonaPortable.class);
+                                                                                                                           BonaPortable.class);
 
     public static String getValueAsString(Expression expression, DelegateExecution variableScope, String defaultValue) {
         if (expression == null) {
@@ -44,8 +44,21 @@ public abstract class ExpressionUtils {
             return defaultValue;
         }
 
+        return unmarshalJson(json);
+    }
+
+    public static <T extends BonaPortable> T getValueAsBonaPortable(DelegateExecution variableScope, String variableName, T defaultValue) {
+        final String json = Objects.toString(variableScope.getVariable(variableName), null);
+
+        if (json == null) {
+            return defaultValue;
+        }
+
+        return unmarshalJson(json);
+    }
+
+    public static <T extends BonaPortable> T unmarshalJson(String json) {
         return (T) coderFactory.getDecoderInstance(MimeTypes.MIME_TYPE_JSON)
                                .decode(json.getBytes(ByteArray.CHARSET_UTF8), StaticMeta.OUTER_BONAPORTABLE_FOR_JSON);
     }
-
 }

@@ -15,13 +15,16 @@
  */
 package com.arvatosystems.t9t.out.be.impl.output.camel;
 
-import com.arvatosystems.t9t.base.T9tConstants;
+import java.util.LinkedList;
+import java.util.List;
+
 import org.apache.camel.Exchange;
 import org.apache.camel.builder.RouteBuilder;
+import org.slf4j.MDC;
 
+import com.arvatosystems.t9t.base.T9tConstants;
 import com.arvatosystems.t9t.base.services.IFileUtil;
 import com.arvatosystems.t9t.io.DataSinkDTO;
-import org.slf4j.MDC;
 
 public class GenericT9tRoute extends RouteBuilder {
 
@@ -42,18 +45,18 @@ public class GenericT9tRoute extends RouteBuilder {
                 final String queueDirectory = fileUtil.getAbsolutePath(".import-queue/" + dataSinkDTO.getImportQueueName()).replace('\\', '/');
 
                 from(dataSinkDTO.getFileOrQueueNamePattern())
-                    .routeId("DataSink-" + dataSinkDTO.getDataSinkId() + "-" + dataSinkDTO.getObjectRef() + "-QueueIn")
+                    .routeId(getQueueInRouteId(dataSinkDTO))
                     .process(exchange -> initMDC(exchange, dataSinkDTO))
                     .to("file://"+queueDirectory+"?autoCreate=true&tempFileName=${file:name}.intrans&flatten=true");
 
                 from("file://"+queueDirectory+"?initialDelay=1000&delay=10000&delete=true&moveFailed=.failed&antExclude=*.intrans&sortBy=${file:modified}")
-                    .routeId("DataSink-" + dataSinkDTO.getDataSinkId() + "-" + dataSinkDTO.getObjectRef() + "-QueueOut")
+                    .routeId(getQueueOutRouteId(dataSinkDTO))
                     .process(exchange -> initMDC(exchange, dataSinkDTO))
                     .setProperty("dataSinkDTO", constant(dataSinkDTO))
                     .to(dataSinkDTO.getCamelRoute());
             } else {
                 from(dataSinkDTO.getFileOrQueueNamePattern())
-                    .routeId("DataSink-" + dataSinkDTO.getDataSinkId() + "-" + dataSinkDTO.getObjectRef())
+                    .routeId(getDirectRouteId(dataSinkDTO))
                     .process(exchange -> initMDC(exchange, dataSinkDTO))
                     .setProperty("dataSinkDTO", constant(dataSinkDTO))
                     .to(dataSinkDTO.getCamelRoute());
@@ -61,6 +64,32 @@ public class GenericT9tRoute extends RouteBuilder {
         } else {
             throw new UnsupportedOperationException("Output Route with t9t: component is currently not supported!");
         }
+    }
+
+
+    private static String getDirectRouteId(DataSinkDTO dataSinkDTO) {
+        return "DataSink-" + dataSinkDTO.getDataSinkId() + "-" + dataSinkDTO.getObjectRef();
+    }
+
+    private static String getQueueInRouteId(DataSinkDTO dataSinkDTO) {
+        return "DataSink-" + dataSinkDTO.getDataSinkId() + "-" + dataSinkDTO.getObjectRef() + "-QueueIn";
+    }
+
+    private static String getQueueOutRouteId(DataSinkDTO dataSinkDTO) {
+        return "DataSink-" + dataSinkDTO.getDataSinkId() + "-" + dataSinkDTO.getObjectRef() + "-QueueOut";
+    }
+
+    /**
+     * Provide all route ids, which might be configured by this Builder.
+     */
+    public static List<String> getPossibleRouteIds(DataSinkDTO dataSinkDTO) {
+        final List<String> result = new LinkedList<>();
+
+        result.add(getQueueInRouteId(dataSinkDTO));
+        result.add(getQueueOutRouteId(dataSinkDTO));
+        result.add(getDirectRouteId(dataSinkDTO));
+
+        return result;
     }
 
     private void initMDC(Exchange exchange, DataSinkDTO dataSinkDTO) {
