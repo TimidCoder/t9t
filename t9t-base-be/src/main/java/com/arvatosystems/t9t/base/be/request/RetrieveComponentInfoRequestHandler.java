@@ -25,8 +25,6 @@ import java.util.regex.Pattern;
 
 import org.reflections.Reflections;
 import org.reflections.scanners.ResourcesScanner;
-import org.reflections.util.ClasspathHelper;
-import org.reflections.util.ConfigurationBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,8 +40,7 @@ public class RetrieveComponentInfoRequestHandler extends AbstractRequestHandler<
     private final List<ComponentInfoDTO> componentInfos;
 
     public RetrieveComponentInfoRequestHandler() {
-        final Reflections reflections = new Reflections(new ConfigurationBuilder().addUrls(ClasspathHelper.forJavaClassPath())
-                                                                                  .addScanners(new ResourcesScanner()));
+        final Reflections reflections = new Reflections("META-INF/maven", new ResourcesScanner());
 
         LOGGER.info("scanning classpath to detect component infos");
         componentInfos = reflections.getResources(Pattern.compile("pom\\.properties"))
