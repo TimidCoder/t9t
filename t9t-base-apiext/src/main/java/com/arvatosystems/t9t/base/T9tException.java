@@ -232,6 +232,7 @@ public class T9tException extends ApplicationException {
     public static final int IOF_READ_RECIPIENTS_ERROR = OFFSET + 973;
     public static final int IOF_CREATE_NOTIFICATION_EMAIL_ERROR = OFFSET + 974;
     public static final int IOF_TIME_WINDOW_UPDATE_ERROR = OFFSET + 975;
+    public static final int IOF_DUPLICATE = OFFSET + 976;
 
     public static final int FILE_PATH_PREFIX_NOT_AVAILABLE = OFFSET + 250;
     public static final int UNKNOWN_SYSTEM_PROPERTY_USER_HOME = OFFSET + 251;
@@ -444,6 +445,7 @@ public class T9tException extends ApplicationException {
             codeToDescription.put(IOF_READ_RECIPIENTS_ERROR, "Failed to read IO failure recipients list.");
             codeToDescription.put(IOF_CREATE_NOTIFICATION_EMAIL_ERROR, "Failed to create IO failure notification email.");
             codeToDescription.put(IOF_TIME_WINDOW_UPDATE_ERROR, "Failed to update time window for checking IO failures.");
+            codeToDescription.put(IOF_DUPLICATE, "Duplicate import/export");
             codeToDescription.put(PICKUP_DATE_VALIDATION_ERROR, "Failed to validate Pickup date notification");
             codeToDescription.put(UNEXPECTED_FILTER_VALUE, "Unexpected filter value is found");
 
@@ -468,7 +470,9 @@ public class T9tException extends ApplicationException {
 
         if ((detailParameters != null) && (detailParameters.length > 0)) {
             if (detailParameters.length == 1)
+             {
                 return detailParameters[0].toString();  // shortcut in case a single parameter exists: avoid GC due to object creation
+            }
 
             StringBuilder paramsSb = new StringBuilder();
             paramsSb.append("[ ");

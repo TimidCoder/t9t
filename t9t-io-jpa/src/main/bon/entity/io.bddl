@@ -42,6 +42,7 @@ package (com.arvatosystems) t9t.io.jpa.entities owner fortytwo prefix p28 {
         pk (objectRef)
         index (dataSinkRef, tenantRef, cTimestamp)
         index (camelTransferStatus)
+        index (fileOrQueueName, tenantRef)
         @ManyToOne DataSinkEntity dataSink LAZY for (dataSinkRef)
     }
 

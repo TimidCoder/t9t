@@ -49,6 +49,8 @@ import java.util.Map
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicInteger
 import org.joda.time.Instant
+import com.arvatosystems.t9t.io.request.CheckSinkFilenameUsedRequest
+import com.arvatosystems.t9t.io.request.CheckSinkFilenameUsedResponse
 
 // this class operates outside of a RequestContext!
 @AddLogger
@@ -66,6 +68,7 @@ class InputSession implements IInputSession {
     protected IInputFormatConverter inputFormatConverter
     protected final Map<String, Object> headerData = new HashMap<String, Object>();
     protected String sourceReference = null;
+    protected boolean isDuplicateImport = false;
 
     override open(String dataSourceId, UUID apiKey, String sourceURI, Map<String, Object> params) {
         LOGGER.info("Opening input session for dataSource ID {}, source URI {}", dataSourceId, sourceURI)
@@ -86,6 +89,20 @@ class InputSession implements IInputSession {
             dataSinkCfg = (resp as CrudSurrogateKeyResponse<DataSinkDTO, FullTrackingWithVersion>).data
         } else {
             throw new T9tException(T9tException.RECORD_DOES_NOT_EXIST, "DataSink " + dataSourceId)
+        }
+
+        if (Boolean.TRUE.equals(dataSinkCfg.checkDuplicateFilename)) {
+            val checkResponse = session.execute(new CheckSinkFilenameUsedRequest => [
+                                                  fileOrQueueName = sourceURI
+                                                ]) as CheckSinkFilenameUsedResponse
+
+            if (checkResponse.isUsed) {
+                isDuplicateImport = true
+                session.execute(new ErrorRequest => [
+                    returnCode      = T9tException.IOF_DUPLICATE
+                    errorDetails    = "Duplicate import file " + sourceURI + " for data sink " + dataSinkCfg.dataSinkId
+                ])
+            }
         }
 
         if (dataSinkCfg.baseClassPqon !== null) {
@@ -145,6 +162,12 @@ class InputSession implements IInputSession {
     override process(BonaPortable dto) {
         val recordNo = numSource.incrementAndGet
 
+        // Fast fail in case of duplicates
+        if (isDuplicateImport) {
+            numError.incrementAndGet
+            return
+        }
+
         var RequestParameters rp = null
 
         // validate the first step's output
@@ -168,6 +191,14 @@ class InputSession implements IInputSession {
     }
 
     override ServiceResponse process(RequestParameters rp) {
+        if (isDuplicateImport) {
+            numError.incrementAndGet
+            return new ServiceResponse => [
+                returnCode      = T9tException.IOF_DUPLICATE
+                errorDetails    = "Duplicate import file " + sinkDTO.fileOrQueueName + " for data sink " + dataSinkCfg.dataSinkId
+            ]
+        }
+
         numProcessed.incrementAndGet
         val result = session.execute(rp)
         if (!ApplicationException.isOk(result.returnCode))
@@ -197,6 +228,9 @@ class InputSession implements IInputSession {
             sinkDTO.processingTime,
             sinkDTO.numberOfErrorRecords
         )
+
+        if (isDuplicateImport)
+            throw new T9tException(T9tException.IOF_DUPLICATE, "Duplicate import file " + sourceURI + " for data sink " + dataSinkCfg.dataSinkId)
     }
 
     override getHeaderData(String name) {

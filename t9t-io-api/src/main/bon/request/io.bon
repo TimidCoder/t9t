@@ -152,4 +152,12 @@ package (com.arvatosystems) t9t.io.request {
         optional dataSinkId                         onlySinkId;  // if null, all pending processes will be transferred, else only the ones for the specified ID
         optional Integer                            minimumAge;  // minimum age of the sink in minutes (if blank, 60 minutes are assumed to avoid race conditions)
     }
+
+    /** Check if a given sink file name has been used for the tenant */
+    class CheckSinkFilenameUsedRequest extends RequestParameters return CheckSinkFilenameUsedResponse {
+        required Unicode(255)                       fileOrQueueName;        // Filename to check
+    }
+    class CheckSinkFilenameUsedResponse extends ServiceResponse {
+        required boolean                            isUsed;
+    }
 }

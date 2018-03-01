@@ -24,7 +24,7 @@ import t9t.io.*
 import t9t.base.event.*
 
 
-/** 
+/**
  * IO events
  */
 package (com.arvatosystems) t9t.io.event {
@@ -38,7 +38,7 @@ package (com.arvatosystems) t9t.io.event {
         dropdown is com.arvatosystems.t9t.annotations.UseDropDownInUI(),
         ref is com.arvatosystems.t9t.annotations.IsObjectRef;
 
-    
+
     class DataSinkChangedEvent extends EventParameters {
         required (DataSinkDTO)                          dataSink;           // Data sink which has changed
         required enum OperationType                     operation;          // Operation done on data sink

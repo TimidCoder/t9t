@@ -214,6 +214,8 @@ package (com.arvatosystems) t9t.io {
         optional Boolean                                unwrapTracking;             // indicates a data transformer is used which does not accept DataWithTracking, but only the DTO
         optional Json                                   z;                          // custom parameters
         optional Enum CamelExecutionScheduleType        camelExecution;             // defines when a camel route should be triggered
+        optional Boolean                                checkDuplicateFilename;     // reject sending/receiving duplicate filenames on tenant level
+        optional Unicode(255)                           xmlNamespaceMappings;       // xml name space mappings: <namespace-prefix>=<namespace-url> {(; NEWLINE) [namespace-prefix]=[namespace-url]}
     }
 
     /** Records all asynchronous outgoing communication. For every file created, there is one entry of this type.

@@ -15,8 +15,16 @@
  */
 package com.arvatosystems.t9t.out.be.impl.formatgenerator;
 
+import static java.util.Collections.emptyMap;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.split;
+import static org.apache.commons.lang3.StringUtils.substring;
+import static org.apache.commons.lang3.StringUtils.trimToNull;
+
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.xml.bind.JAXBContext;
@@ -44,7 +52,7 @@ import de.jpaw.util.ExceptionUtil;
 public class AbstractFormatGeneratorXml extends AbstractFormatGenerator {
     private static final Logger LOGGER = LoggerFactory.getLogger(FormatGeneratorXml.class);
     protected final IStandardNamespaceWriter namespaceWriter = Jdp.getRequired(IStandardNamespaceWriter.class);
-    protected static ConcurrentHashMap<String, JAXBContext> jaxbContexts = new ConcurrentHashMap<String, JAXBContext>(16);
+    protected static ConcurrentHashMap<String, JAXBContext> jaxbContexts = new ConcurrentHashMap<>(16);
 
     protected JAXBContext context = null;
     protected Marshaller m = null;
@@ -54,10 +62,11 @@ public class AbstractFormatGeneratorXml extends AbstractFormatGenerator {
     protected String xmlNamespacePrefix;
     protected String xmlRecordName;
     protected String xmlRootElementName;
+    protected Map<String, String> xmlNamespaceMapping = emptyMap();
     protected Boolean writeTenantId;
 
     protected void doWriteTenantId() throws XMLStreamException, JAXBException {
-        JAXBElement<String> element = new JAXBElement<String>(new QName(xmlDefaultNamespace, "tenantId", xmlNamespacePrefix), String.class, tenantId);
+        JAXBElement<String> element = new JAXBElement<>(new QName(xmlDefaultNamespace, "tenantId", xmlNamespacePrefix), String.class, tenantId);
         m.marshal(element, writer);
         nl();
     }
@@ -67,7 +76,7 @@ public class AbstractFormatGeneratorXml extends AbstractFormatGenerator {
         if (map != null) {
             Object value = map.get(id);
             if (value != null && value instanceof String) {
-                JAXBElement<String> element = new JAXBElement<String>(new QName(xmlDefaultNamespace, id, xmlNamespacePrefix), String.class, (String)value);
+                JAXBElement<String> element = new JAXBElement<>(new QName(xmlDefaultNamespace, id, xmlNamespacePrefix), String.class, (String)value);
                 m.marshal(element, writer);
                 nl();
             }
@@ -76,7 +85,16 @@ public class AbstractFormatGeneratorXml extends AbstractFormatGenerator {
 
     protected void writeNamespaces() throws XMLStreamException {
         writer.setPrefix("bon", "http://www.jpaw.de/schema/bonaparte.xsd");
-        namespaceWriter.writeApplicationNamespaces(writer);
+
+        if (xmlNamespaceMapping.isEmpty()) {
+            LOGGER.debug("Define namespace prefix using namespace writer {}", writer);
+            namespaceWriter.writeApplicationNamespaces(writer);
+        } else {
+            for (Entry<String, String> nsMapping : xmlNamespaceMapping.entrySet()) {
+                LOGGER.debug("Define namespace prefix from data sink config: {}={}", nsMapping.getKey(), nsMapping.getValue());
+                writer.setPrefix(nsMapping.getKey(), nsMapping.getValue());
+            }
+        }
     }
 
     protected void nl() throws XMLStreamException {
@@ -90,6 +108,7 @@ public class AbstractFormatGeneratorXml extends AbstractFormatGenerator {
         final String path   = sinkCfg.getJaxbContextPath();
         xmlDefaultNamespace = sinkCfg.getXmlDefaultNamespace();         // http:something
         xmlNamespacePrefix  = sinkCfg.getXmlNamespacePrefix();
+        xmlNamespaceMapping = parseNamespaceMapping(sinkCfg.getXmlNamespaceMappings());
         xmlRecordName       = sinkCfg.getXmlRecordName();               // records, instance field name or List element
         xmlRootElementName  = sinkCfg.getXmlRootElementName();          // simple name of xml root element class
         writeTenantId       = sinkCfg.getWriteTenantId();               // write the tenantId field?
@@ -121,8 +140,9 @@ public class AbstractFormatGeneratorXml extends AbstractFormatGenerator {
             factory.setProperty(XMLOutputFactory.IS_REPAIRING_NAMESPACES, Boolean.TRUE);
 
             writer = factory.createXMLStreamWriter(outputResource.getOutputStream());
-            if (xmlDefaultNamespace != null)
+            if (xmlDefaultNamespace != null) {
                 writer.setDefaultNamespace(xmlDefaultNamespace);
+            }
 
             writer.writeStartDocument();
             nl();
@@ -131,8 +151,9 @@ public class AbstractFormatGeneratorXml extends AbstractFormatGenerator {
 
             writer.writeStartElement(xmlDefaultNamespace, sinkCfg.getXmlRootElementName());
             nl();
-            if (Boolean.TRUE.equals(writeTenantId))
+            if (Boolean.TRUE.equals(writeTenantId)) {
                 doWriteTenantId();
+            }
         } catch (XMLStreamException | FactoryConfigurationError | JAXBException e1) {
             LOGGER.error(e1.getMessage(), e1);
             throw new T9tIOException(T9tIOException.XML_MARSHALLING_ERROR, e1.getClass().getSimpleName() + ": " + e1.getMessage());
@@ -142,7 +163,7 @@ public class AbstractFormatGeneratorXml extends AbstractFormatGenerator {
     @Override
     public void generateData(int recordNo, int mappedRecordNo, long recordId, BonaPortable record) throws IOException, ApplicationException {
         try {
-            JAXBElement<BonaPortable> element = new JAXBElement<BonaPortable>(new QName(xmlDefaultNamespace, xmlRecordName, xmlNamespacePrefix), (Class<BonaPortable>) record.getClass(), record);
+            JAXBElement<BonaPortable> element = new JAXBElement<>(new QName(xmlDefaultNamespace, xmlRecordName, xmlNamespacePrefix), (Class<BonaPortable>) record.getClass(), record);
             m.marshal(element, writer);
             nl();
         } catch (JAXBException | XMLStreamException e) {
@@ -161,5 +182,37 @@ public class AbstractFormatGeneratorXml extends AbstractFormatGenerator {
             LOGGER.error(e.getMessage(), e);
             throw new T9tIOException(T9tIOException.XML_MARSHALLING_ERROR, ExceptionUtil.causeChain(e));
         }
+    }
+
+    private static Map<String, String> parseNamespaceMapping(String mappingString) {
+        final Map<String, String> result = new HashMap<>();
+
+        if (mappingString != null) {
+            int counter = 0;
+            for (String namespaceEntry : split(mappingString, ";\n\r")) {
+                if (isBlank(namespaceEntry)) {
+                    continue;
+                }
+
+                final int firstDelimiter = namespaceEntry.indexOf('=');
+                String key;
+                String value;
+
+                if (firstDelimiter > 0) {
+                    key = trimToNull(substring(namespaceEntry, 0, firstDelimiter));
+                    value = trimToNull(substring(namespaceEntry, firstDelimiter+1));
+                } else if (firstDelimiter == 0) {
+                    key = "ns" + counter++;
+                    value = trimToNull(substring(namespaceEntry, firstDelimiter+1));
+                } else {
+                    key = "ns" + counter++;
+                    value = trimToNull(namespaceEntry);
+                }
+
+                result.put(key, value);
+            }
+        }
+
+        return result;
     }
 }

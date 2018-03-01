@@ -55,6 +55,8 @@ import java.util.List
 import com.arvatosystems.t9t.io.CamelExecutionScheduleType
 import com.arvatosystems.t9t.base.output.ExportStatusEnum
 import com.arvatosystems.t9t.io.request.ProcessCamelRouteRequest
+import com.arvatosystems.t9t.io.request.CheckSinkFilenameUsedRequest
+import com.arvatosystems.t9t.io.request.CheckSinkFilenameUsedResponse
 
 @AddLogger
 @Dependent
@@ -199,6 +201,17 @@ class OutputSession implements IOutputSession {
         LOGGER.debug("Opening output session for tenant {} / user {} using sink configuration (name={}, channel={}, format={}) to gridId {} / target {}",
                 ctx.tenantId, ctx.userId, params.dataSinkId, communicationTargetChannelType, communicationFormatType,
                 gridId ?: "(null)", expandedName);
+
+        if (Boolean.TRUE.equals(sinkCfg.checkDuplicateFilename)) {
+            val checkResponse = messaging.executeSynchronousAndCheckResult(new CheckSinkFilenameUsedRequest => [
+                                                                                fileOrQueueName = expandedName
+                                                                           ],
+                                                                           CheckSinkFilenameUsedResponse)
+
+            if (checkResponse.isUsed) {
+                throw new T9tException(T9tException.IOF_DUPLICATE, "Duplicate export file " + expandedName + " for data sink " + sinkCfg.dataSinkId)
+            }
+        }
 
         if (gridId !== null)
             foldableParams = getFoldableParams(gridId, params, communicationFormatType)
