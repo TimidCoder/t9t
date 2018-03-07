@@ -245,7 +245,13 @@ class AuthPersistenceAccess implements IAuthPersistenceAccess, T9tConstants {
                 resp.userStatus                = userStatus.ret$Data
                 return resp
             } else {
-                resp.returnCode = 1  // must change password
+                // password has expired and no new one was supplied
+                userStatus.numberOfIncorrectAttempts   = 0;  // reset attempt counter
+                userStatus.lastLogin           = now
+                userStatus.lastLoginByPassword = now
+                resp.authExpires               = passwordEntity.passwordExpiry
+                resp.userStatus                = userStatus.ret$Data
+                resp.returnCode                = T9tException.PASSWORD_EXPIRED;  // must change password
                 return resp
             }
         } else {

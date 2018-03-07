@@ -152,7 +152,7 @@ public class T9tException extends ApplicationException {
     public static final int ACCOUNT_TEMPORARILY_FROZEN = OFFSET + 205;
     public static final int PASSWORD_NOT_FOUND = OFFSET + 206;
     public static final int PASSWORD_EXPIRED_DUE_TO_USER_INACTIVITY = OFFSET + 207;
-    public static final int PASSWORD_EXPIRED = OFFSET + 208;
+    public static final int PASSWORD_EXPIRED = OFFSET_DENIED + 208;   // this must be a denied code, because the login was correct and must be recorded
     public static final int WRONG_PASSWORD = OFFSET + 209;
     public static final int NEW_PASSWORD_MATCHES_ONE_OF_THE_LAST = OFFSET + 210;
     public static final int NEW_PASSWORD_MATCHES_ONE_AND_CANT_BE_REUSED_YET = OFFSET + 211;
