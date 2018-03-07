@@ -47,7 +47,7 @@ package (com.arvatosystems) t9t.email {
         optional Unicode(100)                       smtpServerAddress;
         optional Integer                            smtpServerPort;
         optional Unicode(32)                        smtpServerUserId;
-        optional Unicode(32)                        smtpServerPassword;
+        optional Unicode(64)                        smtpServerPassword;
         optional Boolean                            smtpServerTls;
     }
 

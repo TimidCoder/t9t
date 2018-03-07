@@ -86,6 +86,12 @@ package (com.arvatosystems) t9t.base.auth {
         optional Integer                                    numberOfIncorrentAttempts;  // for password authentication; how often has the user tried to log in before?
     }
 
+    class ChangePasswordUI {
+        required Unicode(32)                                oldPassword;                   // password
+        required Unicode(32)                                newPassword;                // if set, then this is a change password request
+        optional Unicode(32)                                retypePassword;                // if set, then this is a change password request
+    }
+
 // currently not needed - implemented via internal interface IAuthorize
 //    class AuthorizationRequest extends RequestParameters return AuthorizationResponse {
 //        required auth.resourceId                            resourceId;                 // the web service which should be invoked

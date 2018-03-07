@@ -198,7 +198,7 @@
                 <module>t9t-test-server</module>
 
                 <module>t9t-alexa</module>
-                
+
                 <module>t9t-manual</module>
             </modules>
         </profile>
