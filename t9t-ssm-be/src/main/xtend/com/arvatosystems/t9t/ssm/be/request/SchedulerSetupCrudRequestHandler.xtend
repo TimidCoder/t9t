@@ -34,6 +34,7 @@ import com.arvatosystems.t9t.ssm.be.impl.Workarounds
 import com.arvatosystems.t9t.ssm.request.SchedulerSetupCrudRequest
 import com.arvatosystems.t9t.ssm.services.ISchedulerService
 import com.arvatosystems.t9t.ssm.services.ISchedulerSetupResolver
+import com.google.common.base.Joiner
 import de.jpaw.bonaparte.pojos.api.OperationType
 import de.jpaw.dp.Inject
 import java.util.UUID
@@ -91,7 +92,14 @@ class SchedulerSetupCrudRequestHandler extends AbstractCrudSurrogateKeyBERequest
 
     def void createApiKey(RequestContext ctx, SchedulerSetupDTO dto) {
         val jwt = ctx.internalHeaderParameters.jwtInfo
+
         if (dto !== null && dto.apiKey === null) {
+            // merge default permission and additional permissions
+            var permissions = MessagingUtil.toPerm((dto.request as CannedRequestDTO).jobRequestObjectName);
+            if (dto.additionalPermissions !== null) {
+                 permissions = Joiner.on(",").join(permissions, dto.additionalPermissions)
+            }
+             
             // create an API key. Use the current user's effective permissions
             val apiKeyDTO = new ApiKeyDTO => [
                 userRef         = new UserKey(dto.userId)
@@ -103,10 +111,11 @@ class SchedulerSetupCrudRequestHandler extends AbstractCrudSurrogateKeyBERequest
                     maxPermissions      = jwt.permissionsMax
                     logLevel            = jwt.logLevel
                     logLevelErrors      = jwt.logLevelErrors
-                    resourceRestriction = MessagingUtil.toPerm((dto.request as CannedRequestDTO).jobRequestObjectName)  // jwt.resource
                     resourceIsWildcard  = true
                 ]
             ]
+            apiKeyDTO.permissions.resourceRestriction = permissions
+
             val rq      = new ApiKeyCrudRequest
             rq.crud     = OperationType.CREATE
             rq.data     = apiKeyDTO

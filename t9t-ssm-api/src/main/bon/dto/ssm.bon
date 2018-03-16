@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 import api.*
+import api.auth.*
 import apiw.*
 import t9t.base.types.*
 import t9t.base.api.*
@@ -125,5 +126,6 @@ package (com.arvatosystems) t9t.ssm {
         optional Long                               intervalMilliseconds;   // only for "FAST": how fast should it repeat?
         optional Json                               z;                      // custom parameters
         optional Ascii(200)                         cronExpression;
+        optional resourceId                         additionalPermissions;  //additional permissions that required by report scheduler
     }
 }
