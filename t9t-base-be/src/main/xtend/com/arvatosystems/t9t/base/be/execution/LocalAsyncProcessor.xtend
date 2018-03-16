@@ -15,8 +15,12 @@
  */
 package com.arvatosystems.t9t.base.be.execution
 
+import com.arvatosystems.t9t.base.T9tConstants
 import com.arvatosystems.t9t.base.api.ServiceRequest
+import com.arvatosystems.t9t.base.event.EventData
 import com.arvatosystems.t9t.base.services.IAsyncRequestProcessor
+import com.arvatosystems.t9t.base.services.IEventHandler
+import com.arvatosystems.t9t.cfg.be.ConfigProvider
 import com.arvatosystems.t9t.server.services.IUnauthenticatedServiceRequestExecutor
 import de.jpaw.annotations.AddLogger
 import de.jpaw.annotations.Lazy
@@ -25,9 +29,6 @@ import de.jpaw.dp.Singleton
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicInteger
-import com.arvatosystems.t9t.base.event.EventData
-import com.arvatosystems.t9t.base.services.IEventHandler
-import com.arvatosystems.t9t.cfg.be.ConfigProvider
 
 // async processor without cross-server scaling. For vert.x please see AsyncProcessor which uses the event bus
 @AddLogger
@@ -75,6 +76,11 @@ class LocalAsyncProcessor implements IAsyncRequestProcessor {
     }
 
     override registerSubscriber(String eventID, IEventHandler subscriber) {
-        LOGGER.debug("subscriber (not) registered: {} for {}", subscriber.class.canonicalName, eventID)
+        registerSubscriber(eventID, T9tConstants.GLOBAL_TENANT_REF42, subscriber);
     }
+
+    override registerSubscriber(String eventID, Long tenantRef, IEventHandler subscriber) {
+        LOGGER.debug("subscriber (not) registered: {} for {} of tenant {}", subscriber.class.canonicalName, eventID, tenantRef)
+    }
+
 }

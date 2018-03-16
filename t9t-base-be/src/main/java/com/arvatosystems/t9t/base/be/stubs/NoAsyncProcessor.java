@@ -18,6 +18,7 @@ package com.arvatosystems.t9t.base.be.stubs;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.arvatosystems.t9t.base.T9tConstants;
 import com.arvatosystems.t9t.base.api.ServiceRequest;
 import com.arvatosystems.t9t.base.event.EventData;
 import com.arvatosystems.t9t.base.services.IAsyncRequestProcessor;
@@ -54,6 +55,11 @@ public class NoAsyncProcessor implements IAsyncRequestProcessor {
 
     @Override
     public void registerSubscriber(String eventID, IEventHandler subscriber) {
-        LOGGER.debug("subscriber (not) registered: {} for {}", subscriber.getClass().getCanonicalName(), eventID);
+        registerSubscriber(eventID, T9tConstants.GLOBAL_TENANT_REF42, subscriber);
+    }
+
+    @Override
+    public void registerSubscriber(String eventID, Long tenantRef, IEventHandler subscriber) {
+        LOGGER.debug("subscriber (not) registered: {} for {} of tenant {}", subscriber.getClass().getCanonicalName(), eventID, tenantRef);
     }
 }

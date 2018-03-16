@@ -60,7 +60,7 @@ public class SubscriberConfigCrudRequestHandler extends AbstractCrudSurrogateKey
                 ctx.addPostCommitHook((ctx2, rq, rs) -> {
                     IEventHandler eventHandler = Jdp.getOptional(IEventHandler.class, dto.getHandlerClassName());
                     if (eventHandler != null) {
-                        asyncProcessor.registerSubscriber(dto.getEventID(), eventHandler);
+                        asyncProcessor.registerSubscriber(dto.getEventID(), ctx.tenantRef, eventHandler);
                         EventSubscriptionCache.updateRegistration(dto.getEventID(), dto.getHandlerClassName(), ctx.tenantRef, dto.getIsActive());
                     }
                     else {

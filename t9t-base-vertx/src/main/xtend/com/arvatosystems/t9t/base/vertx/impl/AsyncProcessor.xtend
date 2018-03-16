@@ -15,6 +15,7 @@
  */
 package com.arvatosystems.t9t.base.vertx.impl
 
+import com.arvatosystems.t9t.base.T9tConstants
 import com.arvatosystems.t9t.base.api.ServiceRequest
 import com.arvatosystems.t9t.base.api.ServiceResponse
 import com.arvatosystems.t9t.base.event.EventData
@@ -25,6 +26,7 @@ import com.arvatosystems.t9t.base.services.IAsyncRequestProcessor
 import com.arvatosystems.t9t.base.services.IEventHandler
 import com.arvatosystems.t9t.base.services.impl.EventSubscriptionCache
 import com.arvatosystems.t9t.base.types.AuthenticationJwt
+import com.arvatosystems.t9t.cfg.be.ConfigProvider
 import com.arvatosystems.t9t.server.services.IUnauthenticatedServiceRequestExecutor
 import de.jpaw.annotations.AddLogger
 import de.jpaw.bonaparte.core.BonaPortable
@@ -38,16 +40,19 @@ import de.jpaw.dp.Named
 import de.jpaw.dp.Singleton
 import de.jpaw.json.JsonParser
 import de.jpaw.util.ApplicationException
+import io.vertx.core.Handler
 import io.vertx.core.Vertx
+import io.vertx.core.WorkerExecutor
 import io.vertx.core.eventbus.DeliveryOptions
 import io.vertx.core.eventbus.EventBus
+import io.vertx.core.eventbus.Message
 import io.vertx.core.json.JsonObject
+import java.util.HashMap
 import java.util.HashSet
+import java.util.Map
 import java.util.Set
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentMap
-import com.arvatosystems.t9t.cfg.be.ConfigProvider
-import io.vertx.core.WorkerExecutor
 
 @AddLogger
 @Singleton
@@ -57,7 +62,8 @@ class AsyncProcessor implements IAsyncRequestProcessor {
     private static final String EVENTBUS_BASE_42 = "event42.";
     private static EventBus bus = null;
     private static Vertx myVertx = null;
-    private static final ConcurrentMap<String, Set<IEventHandler>> SUBSCRIBERS = new ConcurrentHashMap<String, Set<IEventHandler>>();
+    private static final ConcurrentMap<Pair<String, Long>, Set<IEventHandler>> SUBSCRIBERS = new ConcurrentHashMap<Pair<String, Long>, Set<IEventHandler>>();
+    private static final ConcurrentMap<String, EventMessageHandler> REGISTERED_HANDLER = new ConcurrentHashMap
 
     private static IUnauthenticatedServiceRequestExecutor serviceRequestExecutor
     private static WorkerExecutor asyncExecutorPool = null  // possibly assigned during register()
@@ -70,23 +76,12 @@ class AsyncProcessor implements IAsyncRequestProcessor {
         return EVENTBUS_BASE_42 + eventID
     }
 
-    /** Called only if the bus has been set up before, to register a newly provided subscriber */
-    def private static void addConsumer(String eventID, IEventHandler subscriber) {
-        // get the qualifier of the subscriber
-        val qualifier = subscriber.class.getAnnotation(Named)?.value
-        val consumer = bus.consumer(eventID.toBusAddress)
-        consumer.completionHandler [
-            if (succeeded)
-                LOGGER.info(
-                    "vertx async event42 handler {} (qualifier {}) successfully registered on eventbus address {}",
-                    subscriber.class.simpleName,
-                    qualifier,
-                    eventID.toBusAddress
-                )
-            else
-                LOGGER.error("vertx async event42 handler FAILED to register on event bus at {}", eventID.toBusAddress)
-        ]
-        consumer.handler [
+    private static class EventMessageHandler implements Handler<Message<Object>> {
+
+        String eventID
+        Map<Long, String> qualifierByTenantRef = new HashMap
+
+        override handle(Message<Object> it) {
             var JsonObject msgBody
             // first make sure we have a jsonBody to work with. Otherwise any parsing or handling will likely fail
             if (body instanceof String) {
@@ -100,7 +95,11 @@ class AsyncProcessor implements IAsyncRequestProcessor {
                     var map = new JsonParser(msgBody.encode, false).parseObject
                     val BonaPortable tentativeEventData = MapParser.asBonaPortable(map, MapParser.OUTER_BONAPORTABLE_FOR_JSON)
                     if (tentativeEventData instanceof EventData) {
-                        LOGGER.debug("Event {} will now trigger a ProcessEventRequest", tentativeEventData.data.ret$PQON)
+                        val theEventId = tentativeEventData.data.ret$PQON
+                        val eventTenantRef = tentativeEventData.header.tenantRef
+                        val qualifier = getQualifierForTenant(eventTenantRef)
+
+                        LOGGER.debug("Event {} with qualifier {} for tenant {} will now trigger a ProcessEventRequest", theEventId, qualifier, eventTenantRef)
                         executeEvent(qualifier, new AuthenticationJwt(tentativeEventData.header.encodedJwt), tentativeEventData.data)
                     }
                 } else { // otherwise deal with a raw json event without PQON
@@ -108,6 +107,7 @@ class AsyncProcessor implements IAsyncRequestProcessor {
                     val header = msgBody.getJsonObject("header")
                     val tenantRef = header?.getLong("tenantRef")
                     val z = msgBody.getJsonObject("z")
+                    val qualifier = getQualifierForTenant(tenantRef)
                     if (theEventID === null || header === null || tenantRef === null) {
                         LOGGER.error("eventID or header or tenantId missing in event42 object at address {}", eventID)
                     } else if (eventID != theEventID) {
@@ -128,8 +128,52 @@ class AsyncProcessor implements IAsyncRequestProcessor {
             } else {
                 LOGGER.error("Received an async message of type {}, cannot handle!", msgBody.class.canonicalName)
             }
-        ]
+        }
 
+        private def String getQualifierForTenant(Long tenantRef) {
+            var qualifier = qualifierByTenantRef.get(tenantRef)
+
+            // If tenant ref is not the @ tenant and no qualifier is registered, fallback to @ tenants qualifier configuration
+            if (qualifier === null && tenantRef != T9tConstants.GLOBAL_TENANT_REF42) {
+                qualifier = qualifierByTenantRef.get(T9tConstants.GLOBAL_TENANT_REF42)
+                LOGGER.debug("No qualifier configured within tenant {}, fallback to qualifier {} available from @ tenant", tenantRef, qualifier)
+            }
+
+            return qualifier;
+        }
+
+    }
+
+    /** Called only if the bus has been set up before, to register a newly provided subscriber */
+    def private static void addConsumer(String eventID, Long tenantRef, IEventHandler subscriber) {
+        // get the qualifier of the subscriber
+        val qualifier = subscriber.class.getAnnotation(Named)?.value
+
+        // get handler instance
+        val handler = REGISTERED_HANDLER.computeIfAbsent(eventID.toBusAddress,
+                                                         [busAddress|
+                                                             val handler = new EventMessageHandler => [
+                                                                 it.eventID = eventID
+                                                             ]
+                                                             val consumer = bus.consumer(busAddress)
+                                                             consumer.completionHandler [
+                                                                 if (succeeded)
+                                                                     LOGGER.info("vertx async event42 handler successfully registered on eventbus address {}", busAddress)
+                                                                 else
+                                                                     LOGGER.error("vertx async event42 handler FAILED to register on event bus at {}", busAddress)
+                                                             ]
+                                                             consumer.handler(handler)
+
+                                                             return handler
+                                                         ])
+
+        // add tenant to qualifier mapping to handler for but address
+        LOGGER.info("vertx async event42 handler {} added with qualifier {} for tenant {}",
+                       subscriber.class.simpleName,
+                       qualifier,
+                       tenantRef
+                   )
+        handler.qualifierByTenantRef.put(tenantRef, qualifier)
     }
 
     def private static void executeEvent(String qualifier, AuthenticationJwt authenticationJwt, EventParameters eventParams) {
@@ -144,30 +188,36 @@ class AsyncProcessor implements IAsyncRequestProcessor {
         myVertx.runInWorkerThread(srq)
     }
 
-    /** Registers an implementation of an event handler for a given ID. */
-    override registerSubscriber(String eventID, IEventHandler subscriber) {
+    /** Register an IEventHandler as subscriber for an eventID. */
+    override registerSubscriber(String eventID, Long tenantRef, IEventHandler subscriber) {
 
-        LOGGER.debug("Registering subscriber {} for event {} ...", subscriber, eventID);
+        LOGGER.debug("Registering subscriber {} for event {} in tenant {} ...", subscriber, eventID, tenantRef);
 
         var isNewSubscriber = true
 
-        var currentEventHandler = SUBSCRIBERS.get(eventID)
+        val key = new Pair(eventID, tenantRef)
+        var currentEventHandler = SUBSCRIBERS.get(key)
 
         if (currentEventHandler === null) {
             var newSubscriberSet = new HashSet()
             newSubscriberSet.add(subscriber)
-            SUBSCRIBERS.put(eventID, newSubscriberSet)
+            SUBSCRIBERS.put(key, newSubscriberSet)
         } else if (!currentEventHandler.contains(subscriber)) {
             currentEventHandler.add(subscriber)
-            SUBSCRIBERS.put(eventID, currentEventHandler)
+            SUBSCRIBERS.put(key, currentEventHandler)
         } else {
             isNewSubscriber = false
-            LOGGER.info("Subscriber {} already registered for event {}. Skip this one.", subscriber, eventID)
+            LOGGER.info("Subscriber {} already registered for event {} in tenant {}. Skip this one.", subscriber, eventID, tenantRef)
         }
 
         if (isNewSubscriber && bus !== null) {
-            addConsumer(eventID, subscriber)
+            addConsumer(eventID, tenantRef, subscriber)
         }
+    }
+
+    /** Registers an implementation of an event handler for a given ID. */
+    override registerSubscriber(String eventID, IEventHandler subscriber) {
+        registerSubscriber(eventID, T9tConstants.GLOBAL_TENANT_REF42, subscriber)
     }
 
     def public static runInWorkerThread(Vertx vertx, ServiceRequest msgBody) {
@@ -236,7 +286,7 @@ class AsyncProcessor implements IAsyncRequestProcessor {
         // now also register any preregistered event handlers
         for (q : SUBSCRIBERS.entrySet) {
             for (IEventHandler eh : q.value) {
-                addConsumer(q.key, eh)
+                addConsumer(q.key.key, q.key.value, eh)
             }
         }
     }

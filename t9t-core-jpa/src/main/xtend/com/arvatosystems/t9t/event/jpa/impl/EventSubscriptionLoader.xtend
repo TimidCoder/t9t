@@ -55,7 +55,7 @@ class EventSubscriptionLoader implements StartupOnly {
                         if (eventHandler === null) {
                             LOGGER.error("No event handler found for qualifier {} - ignoring subscriptions", e.handlerClassName)
                         } else {
-                            asyncProcessor.registerSubscriber(e.eventID, eventHandler)
+                            asyncProcessor.registerSubscriber(e.eventID, e.tenantRef, eventHandler)
                             EventSubscriptionCache.updateRegistration(e.eventID, e.handlerClassName, e.tenantRef, e.isActive)
                         }
                     } else {
