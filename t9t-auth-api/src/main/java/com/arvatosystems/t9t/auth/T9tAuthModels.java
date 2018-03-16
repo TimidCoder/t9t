@@ -36,6 +36,8 @@ import com.arvatosystems.t9t.base.CrudViewModel;
 import com.arvatosystems.t9t.base.IViewModelContainer;
 import com.arvatosystems.t9t.base.entities.SessionTracking;
 import com.arvatosystems.t9t.base.entities.FullTrackingWithVersion;
+import com.arvatosystems.t9t.authc.api.ResetPasswordRequest;
+import de.jpaw.bonaparte.pojos.api.TrackingBase;
 
 public class T9tAuthModels implements IViewModelContainer {
     public static final CrudViewModel<TenantDTO, FullTrackingWithVersion> TENANT_VIEW_MODEL = new CrudViewModel<TenantDTO, FullTrackingWithVersion>(
@@ -83,16 +85,23 @@ public class T9tAuthModels implements IViewModelContainer {
         FullTrackingWithVersion.BClass.INSTANCE,
         TenantLogoSearchRequest.BClass.INSTANCE,
         TenantLogoCrudRequest.BClass.INSTANCE);
+    public static final CrudViewModel<ResetPasswordRequest, TrackingBase> RESET_PWD_VIEW_MODEL = new CrudViewModel<ResetPasswordRequest, TrackingBase>(
+        ResetPasswordRequest.BClass.INSTANCE,
+        null,
+        null,
+        null);
+
 
     static {
-        IViewModelContainer.CRUD_VIEW_MODEL_REGISTRY.putIfAbsent("sessions", SESSION_VIEW_MODEL);
-        IViewModelContainer.CRUD_VIEW_MODEL_REGISTRY.putIfAbsent("tenant",   TENANT_VIEW_MODEL);
-        IViewModelContainer.CRUD_VIEW_MODEL_REGISTRY.putIfAbsent("user",     USER_VIEW_MODEL);
-        IViewModelContainer.CRUD_VIEW_MODEL_REGISTRY.putIfAbsent("role",     ROLE_VIEW_MODEL);
-        IViewModelContainer.CRUD_VIEW_MODEL_REGISTRY.putIfAbsent("apikey",   APIKEY_VIEW_MODEL);
+        IViewModelContainer.CRUD_VIEW_MODEL_REGISTRY.putIfAbsent("sessions",         SESSION_VIEW_MODEL);
+        IViewModelContainer.CRUD_VIEW_MODEL_REGISTRY.putIfAbsent("tenant",           TENANT_VIEW_MODEL);
+        IViewModelContainer.CRUD_VIEW_MODEL_REGISTRY.putIfAbsent("user",             USER_VIEW_MODEL);
+        IViewModelContainer.CRUD_VIEW_MODEL_REGISTRY.putIfAbsent("role",             ROLE_VIEW_MODEL);
+        IViewModelContainer.CRUD_VIEW_MODEL_REGISTRY.putIfAbsent("apikey",           APIKEY_VIEW_MODEL);
         IViewModelContainer.CRUD_VIEW_MODEL_REGISTRY.putIfAbsent("roleToPermission", ROLE_PERMISSION_VIEW_MODEL);
         IViewModelContainer.CRUD_VIEW_MODEL_REGISTRY.putIfAbsent("userTenantRole",   USER_TENANT_ROLE_VIEW_MODEL);
         IViewModelContainer.CRUD_VIEW_MODEL_REGISTRY.putIfAbsent("authModuleCfg",    AUTH_MODULE_CFG_VIEW_MODEL);
-        IViewModelContainer.CRUD_VIEW_MODEL_REGISTRY.putIfAbsent("tenantLogo", TENANT_LOGO_VIEW_MODEL);
+        IViewModelContainer.CRUD_VIEW_MODEL_REGISTRY.putIfAbsent("tenantLogo",       TENANT_LOGO_VIEW_MODEL);
+        IViewModelContainer.CRUD_VIEW_MODEL_REGISTRY.putIfAbsent("resetPwd",         RESET_PWD_VIEW_MODEL);
     }
 }
