@@ -45,6 +45,8 @@ public class ReportParamsEntityMappers {
         entity.reportConfigRef = _er.getRef(dto.reportConfigRef, onlyActive)
         if (dto.mailingGroupRef !== null) {
             entity.mailingGroupRef = reportMailingEntityResolver.getRef(dto.mailingGroupRef, onlyActive)
+        } else {
+            entity.mailingGroupRef = null
         }
     }
     def void e2dReportParamsKey(ReportParamsEntity entity, ReportParamsKey dto) {}
