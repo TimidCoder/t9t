@@ -52,53 +52,57 @@ class BucketPersistenceAccess implements IBucketPersistenceAccess {
         try {
             val now = new Instant
             val em = emf.createEntityManager
-            em.transaction.begin
 
-            // obtain counters
-            val tenants = m.keySet.map[tenantRef].toList
-            val buckets = m.keySet.map[typeId].toList
-            val query1a = em.createQuery(
-                "SELECT bc FROM BucketCounterEntity bc WHERE bc.tenantRef IN :tenants AND bc.qualifier IN :buckets",
-                BucketCounterEntity)
-            query1a.setParameter("tenants", tenants)
-            query1a.setParameter("buckets", buckets)
-            val currentCounters = query1a.resultList
+            try {
+                em.transaction.begin
 
-            for (kv : m.entrySet) {
-                val bucketNo = getBucketNo(currentCounters, kv.key.tenantRef, kv.key.typeId)
-                // determine current bucket
-                val query = em.createQuery('''
-                    SELECT be FROM BucketEntryEntity be
-                     WHERE be.qualifier = :bucketId
-                       AND be.bucket    = :bucket
-                       AND be.ref       = :ref
-                ''', BucketEntryEntity);
-//                query.setParameter("tenantRef", kv.key.tenantRef)
-                query.setParameter("bucketId",  kv.key.typeId)
-                query.setParameter("ref",       kv.key.objectRef)
-                query.setParameter("bucket",    bucketNo)
-                val existingEntries = query.resultList
-                if (existingEntries.isEmpty) {
-                    // create a new entry
-                    val e        = new BucketEntryEntity
-                    e.tenantRef  = kv.key.tenantRef
-                    e.qualifier  = kv.key.typeId
-                    e.ref        = kv.key.objectRef
-                    e.bucket     = bucketNo
-                    e.modes      = kv.value
-                    e.CTimestamp = now
-                    e.MTimestamp = now
-                    em.persist(e)
-                } else {
-                    // use existing entry: merge data
-                    val e        = existingEntries.get(0)
-                    e.modes      = Integer.valueOf(e.modes.intValue().bitwiseOr(kv.value.intValue()))
-                    e.MTimestamp = now
+                // obtain counters
+                val tenants = m.keySet.map[tenantRef].toList
+                val buckets = m.keySet.map[typeId].toList
+                val query1a = em.createQuery(
+                    "SELECT bc FROM BucketCounterEntity bc WHERE bc.tenantRef IN :tenants AND bc.qualifier IN :buckets",
+                    BucketCounterEntity)
+                query1a.setParameter("tenants", tenants)
+                query1a.setParameter("buckets", buckets)
+                val currentCounters = query1a.resultList
+
+                for (kv : m.entrySet) {
+                    val bucketNo = getBucketNo(currentCounters, kv.key.tenantRef, kv.key.typeId)
+                    // determine current bucket
+                    val query = em.createQuery('''
+                        SELECT be FROM BucketEntryEntity be
+                         WHERE be.qualifier = :bucketId
+                           AND be.bucket    = :bucket
+                           AND be.ref       = :ref
+                    ''', BucketEntryEntity);
+    //                query.setParameter("tenantRef", kv.key.tenantRef)
+                    query.setParameter("bucketId",  kv.key.typeId)
+                    query.setParameter("ref",       kv.key.objectRef)
+                    query.setParameter("bucket",    bucketNo)
+                    val existingEntries = query.resultList
+                    if (existingEntries.isEmpty) {
+                        // create a new entry
+                        val e        = new BucketEntryEntity
+                        e.tenantRef  = kv.key.tenantRef
+                        e.qualifier  = kv.key.typeId
+                        e.ref        = kv.key.objectRef
+                        e.bucket     = bucketNo
+                        e.modes      = kv.value
+                        e.CTimestamp = now
+                        e.MTimestamp = now
+                        em.persist(e)
+                    } else {
+                        // use existing entry: merge data
+                        val e        = existingEntries.get(0)
+                        e.modes      = Integer.valueOf(e.modes.intValue().bitwiseOr(kv.value.intValue()))
+                        e.MTimestamp = now
+                    }
                 }
+                em.transaction.commit
+                em.clear
+            } finally {
+                em.close
             }
-            em.transaction.commit
-            em.clear
-
         } catch (Exception e) {
             LOGGER.error("Problem writing buckets: ", e)
             LOGGER.error("The following bucket entries have NOT been persisted: {}", ToStringHelper.toStringML(m))

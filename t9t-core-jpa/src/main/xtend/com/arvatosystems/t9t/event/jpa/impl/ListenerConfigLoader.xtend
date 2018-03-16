@@ -49,8 +49,6 @@ class ListenerConfigLoader implements StartupOnly {
             } catch (NoResultException e) {
                 LOGGER.debug("No JPA entity listener configurations found for t9t")
             }
-            cp.commit
-
         } catch (Exception e) {
             LOGGER.error("Could not load JPA entity listener configurations - {}", ExceptionUtil.causeChain(e))
         }

@@ -65,8 +65,6 @@ class EventSubscriptionLoader implements StartupOnly {
             } catch (NoResultException e) {
                 LOGGER.debug("No event subscriptions found for t9t")
             }
-            cp.commit
-
         } catch (Exception e) {
             LOGGER.error("Could not load event handler subscriptions - {}", ExceptionUtil.causeChain(e))
         }
