@@ -59,7 +59,6 @@ public class ReportMailNotifierImpl implements IReportMailNotifier {
 
     public static final String COMMA_SEPARATOR = ",";
     private final IAutonomousExecutor autonomousExecutor = Jdp.getRequired(IAutonomousExecutor.class);
-    private final RequestContext ctx = Jdp.getRequired(RequestContext.class);
     private final ICrossModuleRefResolver crossModuleRefResolver = Jdp.getRequired(ICrossModuleRefResolver.class);
     private final IExecutor executor = Jdp.getRequired(IExecutor.class);
     private final IFileUtil fileUtil = Jdp.getRequired(IFileUtil.class);
@@ -67,6 +66,8 @@ public class ReportMailNotifierImpl implements IReportMailNotifier {
 
     @Override
     public void sendEmail(ReportConfigDTO reportConfigDTO, ReportParamsDTO reportParamsDTO, String mailGroup, String docConfigId, Long sinkRef, DocumentSelector selector) {
+
+        RequestContext ctx = Jdp.getRequired(RequestContext.class);
 
         RecipientEmail recipientEmail = getEmailByUserId(mailGroup);
 
