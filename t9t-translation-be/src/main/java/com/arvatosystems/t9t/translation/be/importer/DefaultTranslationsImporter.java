@@ -92,12 +92,10 @@ public class DefaultTranslationsImporter {
                 Enumeration<URL> urls = cl.getResources(fileName);
 
                 while (urls.hasMoreElements()) {
-                    URL nextUrl = urls.nextElement();
-                    BufferedReader br = new BufferedReader(new InputStreamReader(nextUrl.openStream(), PROPERTY_FILE_CHARSET));
                     int count = 0;
-
-                    String line;
-                    if (br != null) {
+                    URL nextUrl = urls.nextElement();
+                    try (BufferedReader br = new BufferedReader(new InputStreamReader(nextUrl.openStream(), PROPERTY_FILE_CHARSET))) {
+                        String line;
                         while ((line = br.readLine()) != null) {
                             if (line.trim().isEmpty() || line.startsWith(COMMENT_SIGN)) {
                                 continue;
@@ -106,8 +104,11 @@ public class DefaultTranslationsImporter {
                             if (parseAndStoreLine(language, line, isDefaults))
                                 ++count;
                         }
+                    } catch (IOException e) {
+                        LOGGER.error("Reading property file with {} translations failed.", fileTypeName);
+                        LOGGER.error("Exception", e);
                     }
-                    LOGGER.debug("Property files with {} translations read successfully: {} translations read for language {} from {}",
+                    LOGGER.debug("Property files with {} translations read: {} translations read for language {} from {}",
                             fileTypeName, count, language, nextUrl);
                 }
             } catch (IOException e) {

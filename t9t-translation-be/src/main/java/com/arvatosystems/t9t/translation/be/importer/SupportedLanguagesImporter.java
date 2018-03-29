@@ -54,10 +54,8 @@ public class SupportedLanguagesImporter {
             Enumeration<URL> urls = cl.getResources(SUPPORTED_LANGUAGES_FILE_NAME);
 
             while (urls.hasMoreElements()) {
-                BufferedReader br = new BufferedReader(new InputStreamReader(urls.nextElement().openStream()));
-
-                String line;
-                if (br != null) {
+                try (BufferedReader br = new BufferedReader(new InputStreamReader(urls.nextElement().openStream()))) {
+                    String line;
                     while ((line = br.readLine()) != null) {
                         if (line.isEmpty() || line.startsWith(COMMENT_SIGN)) {
                             continue;
@@ -65,6 +63,8 @@ public class SupportedLanguagesImporter {
 
                         su.add(line.trim());
                     }
+                } catch (IOException e) {
+                    LOGGER.error("Reading property file with supported languages failed.", e);
                 }
             }
         } catch (IOException e) {
