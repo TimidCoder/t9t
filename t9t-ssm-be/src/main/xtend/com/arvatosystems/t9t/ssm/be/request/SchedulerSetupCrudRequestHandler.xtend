@@ -99,7 +99,7 @@ class SchedulerSetupCrudRequestHandler extends AbstractCrudSurrogateKeyBERequest
             if (dto.additionalPermissions !== null) {
                  permissions = Joiner.on(",").join(permissions, dto.additionalPermissions)
             }
-             
+
             // create an API key. Use the current user's effective permissions
             val apiKeyDTO = new ApiKeyDTO => [
                 userRef         = new UserKey(dto.userId)
