@@ -266,8 +266,9 @@ class T9tServer extends AbstractVerticle {
         LOGGER.info('''t9t vert.x single node based server starting...''')
 
         System.setProperty("org.jboss.logging.provider", "slf4j");              // configure hibernate to use slf4j
-        // System.setProperty("org.terracotta.quartz.skipUpdateCheck", "true");
-        // System.setProperty("vertx.disableFileCaching", "true");              // disable caching of resources in .vertx (for development)
+        System.setProperty("org.terracotta.quartz.skipUpdateCheck", "true");
+        System.setProperty("vertx.disableFileCaching", "true");                 // disable caching of resources in .vertx (for development)
+        System.setProperty("com.sun.xml.bind.v2.bytecode.ClassTailor.noOptimize", "true");   // prevent Illegal reflection access with Java 10 (fixed with jaxb 2.3.1)
 
         parseCommandLine(args);
 
