@@ -75,8 +75,8 @@ class AuthenticationMock implements IAuthenticate {
         name            = "John E. Smith"
         locale          = "en"
         zoneinfo        = "UTC"
-        permissionsMin  = Permissionset.of(OperationType.EXECUTE, OperationType.READ, OperationType.CREATE)
-        permissionsMax  = Permissionset.of(OperationType.EXECUTE, OperationType.READ, OperationType.CREATE, OperationType.DELETE, OperationType.UPDATE)
+        permissionsMin  = Permissionset.ofTokens(OperationType.EXECUTE, OperationType.READ, OperationType.CREATE)
+        permissionsMax  = Permissionset.ofTokens(OperationType.EXECUTE, OperationType.READ, OperationType.CREATE, OperationType.DELETE, OperationType.UPDATE)
         freeze
     ]
     private static final AtomicLong sessionCounter = new AtomicLong(77000L)

@@ -41,8 +41,8 @@ class T9tEmailSetup {
     ITestConnection dlg
 
     static final public UUID API_KEY_FORGOT_PW     = UUID.fromString("282fd9dd-233c-4ebe-8d91-727bebd839c6");
-    private final Permissionset onlyExecPermission = Permissionset.of(OperationType.EXECUTE)
-    private final Permissionset execReadPermission = Permissionset.of(OperationType.EXECUTE, OperationType.READ)
+    private final Permissionset onlyExecPermission = Permissionset.ofTokens(OperationType.EXECUTE)
+    private final Permissionset execReadPermission = Permissionset.ofTokens(OperationType.EXECUTE, OperationType.READ)
 
 
 

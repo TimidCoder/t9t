@@ -35,6 +35,7 @@ import org.junit.Before
 import org.junit.BeforeClass
 import org.junit.Test
 
+/** Note: Java 10 and Java 8 differ in day and timestamp formatting (space vs - for GB, and additional commas separating day and time for timestamp. **/
 class DateTimeFormatterTest {
 
     def void print(String language, String country) {
@@ -139,7 +140,7 @@ class DateTimeFormatterTest {
         val expected = '''
             Tagesdatum: 15.08.2016,
             Uhrzeit:    17:26:58,
-            Datum+Zeit: 15.08.2016 19:26:58
+            Datum+Zeit: 15.08.2016, 19:26:58
             Tagesdatum: 15.08.2016,
             Uhrzeit:    17:26:58,
             Jahr:       2016,
@@ -159,7 +160,7 @@ class DateTimeFormatterTest {
         val expected = '''
             Tagesdatum: 15.08.2016,
             Uhrzeit:    17:26:58,
-            Datum+Zeit: 15.08.2016 17:26:58
+            Datum+Zeit: 15.08.2016, 17:26:58
             Tagesdatum: 15.08.2016,
             Uhrzeit:    17:26:58,
             Jahr:       2016,
@@ -177,10 +178,10 @@ class DateTimeFormatterTest {
             currencyCode = "GBP"
         ], null, data, null)
         val expected = '''
-            Day:        15-Aug-2016,
+            Day:        15 Aug 2016,
             Time:       17:26:58,
-            Timestamp:  15-Aug-2016 17:26:58
-            Day:        15-Aug-2016,
+            Timestamp:  15 Aug 2016, 17:26:58
+            Day:        15 Aug 2016,
             Time:       17:26:58,
             Custom:     2016,
             DoW, month: Monday August,
@@ -199,7 +200,7 @@ class DateTimeFormatterTest {
         val expected = '''
             Day:        Aug 15, 2016,
             Time:       5:26:58 PM,
-            Timestamp:  Aug 15, 2016 5:26:58 PM
+            Timestamp:  Aug 15, 2016, 5:26:58 PM
             Day:        Aug 15, 2016,
             Time:       5:26:58 PM,
             Custom:     2016,

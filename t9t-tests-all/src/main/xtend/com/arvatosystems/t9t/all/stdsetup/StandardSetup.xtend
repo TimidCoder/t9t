@@ -65,8 +65,8 @@ class StandardSetup {
             isActive                = true
             emailAddress            = "aro_3rdLevel@Bertelsmann.de"  // unused
             permissions             = new PermissionsDTO => [
-                minPermissions      = Permissionset.of(OperationType.EXECUTE)
-                maxPermissions      = Permissionset.of(OperationType.EXECUTE)
+                minPermissions      = Permissionset.ofTokens(OperationType.EXECUTE)
+                maxPermissions      = Permissionset.ofTokens(OperationType.EXECUTE)
                 logLevel            = UserLogLevelType.REQUESTS
                 logLevelErrors      = UserLogLevelType.REQUESTS
             ]
@@ -78,8 +78,8 @@ class StandardSetup {
             isActive                = true
             userRef                 = new UserKey(USER_ID)
             permissions             = new PermissionsDTO => [
-                minPermissions      = Permissionset.of(OperationType.EXECUTE)
-                maxPermissions      = Permissionset.of(OperationType.EXECUTE)
+                minPermissions      = Permissionset.ofTokens(OperationType.EXECUTE)
+                maxPermissions      = Permissionset.ofTokens(OperationType.EXECUTE)
                 logLevel            = UserLogLevelType.REQUESTS
                 logLevelErrors      = UserLogLevelType.REQUESTS
                 resourceIsWildcard  = true
@@ -98,7 +98,7 @@ class StandardSetup {
             isActive                = application.isActive
             emailAddress            = "aro_3rdLevel@Bertelsmann.de"  // unused
             permissions             = new PermissionsDTO => [
-                minPermissions      = Permissionset.of(OperationType.EXECUTE)
+                minPermissions      = Permissionset.ofTokens(OperationType.EXECUTE)
                 maxPermissions      = SetupUserTenantRole.ALL_PERMISSIONS
                 logLevel            = UserLogLevelType.REQUESTS
                 logLevelErrors      = UserLogLevelType.REQUESTS
@@ -111,7 +111,7 @@ class StandardSetup {
             isActive                = true
             userRef                 = new UserKey(application.applicationId)
             permissions             = new PermissionsDTO => [
-                minPermissions      = Permissionset.of(OperationType.EXECUTE)
+                minPermissions      = Permissionset.ofTokens(OperationType.EXECUTE)
                 maxPermissions      = SetupUserTenantRole.ALL_PERMISSIONS
                 logLevel            = UserLogLevelType.REQUESTS
                 logLevelErrors      = UserLogLevelType.REQUESTS

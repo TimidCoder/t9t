@@ -46,5 +46,11 @@
             <groupId>com.arvato-systems.t9t</groupId>
             <artifactId>t9t-jdp</artifactId>
         </dependency>
+
+        <!-- required for Java 9 and later -->
+        <dependency>
+            <groupId>javax.activation</groupId>
+            <artifactId>javax.activation-api</artifactId>
+        </dependency>
     </dependencies>
 </project>
