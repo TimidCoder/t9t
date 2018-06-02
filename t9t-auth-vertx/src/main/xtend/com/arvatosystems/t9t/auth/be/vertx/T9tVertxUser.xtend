@@ -49,7 +49,7 @@ public class T9tVertxUser implements User {
         return principal;
     }
 
-    override isAuthorised(String authority, Handler<AsyncResult<Boolean>> resultHandler) {
+    override isAuthorized(String authority, Handler<AsyncResult<Boolean>> resultHandler) {
         throw new UnsupportedOperationException("TODO: auto-generated method stub")
     }
 
