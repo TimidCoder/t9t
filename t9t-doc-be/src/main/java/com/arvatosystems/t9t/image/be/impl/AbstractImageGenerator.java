@@ -22,6 +22,9 @@ import java.io.ByteArrayOutputStream;
 
 import javax.imageio.ImageIO;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.arvatosystems.t9t.barcode.api.FlipMode;
 import com.arvatosystems.t9t.doc.services.IImageGenerator;
 import com.arvatosystems.t9t.doc.services.valueclass.ImageParameter;
@@ -32,6 +35,8 @@ import de.jpaw.bonaparte.pojos.api.media.MediaData;
 import de.jpaw.util.ByteArray;
 
 public abstract class AbstractImageGenerator implements IImageGenerator {
+    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractImageGenerator.class);
+
     static {
         System.setProperty("java.awt.headless", "true");
     }
@@ -68,6 +73,7 @@ public abstract class AbstractImageGenerator implements IImageGenerator {
         MediaData m = new MediaData();
         m.setMediaType(MediaTypes.MEDIA_XTYPE_PNG);
         m.setRawData(ByteArray.fromByteArrayOutputStream(baos));
+        LOGGER.debug("Generated barcode image has {} bytes in PNG format for dimensions {} x {}", m.getRawData().length(), width, height);
         return m;
     }
 
