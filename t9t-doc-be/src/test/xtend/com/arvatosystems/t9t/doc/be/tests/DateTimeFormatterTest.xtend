@@ -38,6 +38,9 @@ import org.junit.Test
 /** Note: Java 10 and Java 8 differ in day and timestamp formatting (space vs - for GB, and additional commas separating day and time for timestamp. **/
 class DateTimeFormatterTest {
 
+    static char hy = ' '  		  // hyphen or space to separate date fields in GB ('-' for 1.8, space for 9 and 10
+    static String comma = ",";    // separates time and date (empty for 1.8, comma for 9 and 10)
+
     def void print(String language, String country) {
         println('''Date / time format for «language», «country»''')
         val now = new LocalDateTime()
@@ -112,14 +115,22 @@ class DateTimeFormatterTest {
     }
 
     @BeforeClass
-    def public static void setup() {
+    def static void setup() {
         Jdp.reset
         Jdp.bindInstanceTo(new MockedDocModuleCfgDtoResolver, IDocModuleCfgDtoResolver)
         Jdp.bindInstanceTo(new MockedPersistenceAccess, IDocPersistenceAccess)
+
+        // set Java 8 / later differences
+        val version = System.getProperty("java.version")
+        println('''Java version is «version»''')
+        if (version.startsWith("1.8")) {
+            comma = ""
+            hy = "-"
+        }
     }
 
     @Before
-    def public void clearCache() {
+    def void clearCache() {
         // because we feed different data into the formatter with the same key, the cache must be invalidated before every test
         DocFormatter.clearCache
     }
@@ -131,7 +142,7 @@ class DateTimeFormatterTest {
     }
 
     @Test
-    def public void testDateTimeDocFormatterDE() {
+    def void testDateTimeDocFormatterDE() {
         val actual = new DocFormatter().formatDocument(136138L, TemplateType.DOCUMENT_ID, 'testId', new DocumentSelector => [
             languageCode = "de"
             countryCode  = "DE"
@@ -140,7 +151,7 @@ class DateTimeFormatterTest {
         val expected = '''
             Tagesdatum: 15.08.2016,
             Uhrzeit:    17:26:58,
-            Datum+Zeit: 15.08.2016, 19:26:58
+            Datum+Zeit: 15.08.2016«comma» 19:26:58
             Tagesdatum: 15.08.2016,
             Uhrzeit:    17:26:58,
             Jahr:       2016,
@@ -151,7 +162,7 @@ class DateTimeFormatterTest {
     }
 
     @Test
-    def public void testDateTimeDocFormatterUTC() {
+    def void testDateTimeDocFormatterUTC() {
         val actual = new DocFormatter().formatDocument(136138L, TemplateType.DOCUMENT_ID, 'testId', new DocumentSelector => [
             languageCode = "de"
             countryCode  = "DE"
@@ -160,7 +171,7 @@ class DateTimeFormatterTest {
         val expected = '''
             Tagesdatum: 15.08.2016,
             Uhrzeit:    17:26:58,
-            Datum+Zeit: 15.08.2016, 17:26:58
+            Datum+Zeit: 15.08.2016«comma» 17:26:58
             Tagesdatum: 15.08.2016,
             Uhrzeit:    17:26:58,
             Jahr:       2016,
@@ -171,17 +182,17 @@ class DateTimeFormatterTest {
     }
 
     @Test
-    def public void testDateTimeDocFormatterGB() {
+    def void testDateTimeDocFormatterGB() {
         val actual = new DocFormatter().formatDocument(136138L, TemplateType.DOCUMENT_ID, 'testId', new DocumentSelector => [
             languageCode = "en"
             countryCode  = "GB"
             currencyCode = "GBP"
         ], null, data, null)
         val expected = '''
-            Day:        15 Aug 2016,
+            Day:        15«hy»Aug«hy»2016,
             Time:       17:26:58,
-            Timestamp:  15 Aug 2016, 17:26:58
-            Day:        15 Aug 2016,
+            Timestamp:  15«hy»Aug«hy»2016«comma» 17:26:58
+            Day:        15«hy»Aug«hy»2016,
             Time:       17:26:58,
             Custom:     2016,
             DoW, month: Monday August,
@@ -191,7 +202,7 @@ class DateTimeFormatterTest {
     }
 
     @Test
-    def public void testDateTimeDocFormatterUS() {
+    def void testDateTimeDocFormatterUS() {
         val actual = new DocFormatter().formatDocument(136138L, TemplateType.DOCUMENT_ID, 'testId', new DocumentSelector => [
             languageCode = "en"
             countryCode  = "US"
@@ -200,7 +211,7 @@ class DateTimeFormatterTest {
         val expected = '''
             Day:        Aug 15, 2016,
             Time:       5:26:58 PM,
-            Timestamp:  Aug 15, 2016, 5:26:58 PM
+            Timestamp:  Aug 15, 2016«comma» 5:26:58 PM
             Day:        Aug 15, 2016,
             Time:       5:26:58 PM,
             Custom:     2016,
