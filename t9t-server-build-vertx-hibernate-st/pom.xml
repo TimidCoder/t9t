@@ -37,12 +37,16 @@
             <groupId>com.arvato-systems.t9t</groupId>
             <artifactId>t9t-base-jpa-st</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.arvato-systems.t9t</groupId>
+            <artifactId>t9t-orm-hibernate-jpa</artifactId>
+        </dependency>
     </dependencies>
 
     <build>
         <resources>
             <resource>
-                <directory>src/main/resources</directory>       <!-- for logback.xml -->
+                <directory>src/main/resources</directory>       <!-- for logback.xml and persistence.xml -->
                 <filtering>false</filtering>
             </resource>
         </resources>

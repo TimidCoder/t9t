@@ -40,7 +40,7 @@ class AuthorizationMock implements IAuthorize {
     override getAllPermissions(JwtInfo jwtInfo, PermissionType permissionType) {
         LOGGER.debug("Full permission list requested for user {}, tenant {}, type {}", jwtInfo.userId, jwtInfo.tenantId, permissionType);
         if (permissionType == PermissionType.BACKEND)
-            return #[ new PermissionEntry("B.testRequest", Permissionset.of(OperationType.EXECUTE))]
+            return #[ new PermissionEntry("B.testRequest", Permissionset.ofTokens(OperationType.EXECUTE))]
         else
             return #[]
     }

@@ -49,7 +49,7 @@ class PermissionsTest {
             return new PermissionsDTO => [
                 logLevel            = UserLogLevelType.REQUESTS
                 logLevelErrors      = UserLogLevelType.REQUESTS
-                minPermissions      = Permissionset.of(OperationType.LOOKUP)
+                minPermissions      = Permissionset.ofTokens(OperationType.LOOKUP)
                 maxPermissions      = ALL_PERMISSIONS
                 resourceIsWildcard  = Boolean.TRUE
                 resourceRestriction = "B.,"
@@ -66,7 +66,7 @@ class PermissionsTest {
         val rtp = new RoleToPermissionDTO => [
             roleRef          = new RoleKey("testPerm")
             permissionId     = myPermissionId
-            permissionSet    = Permissionset.of(OperationType.CONTEXT)
+            permissionSet    = Permissionset.ofTokens(OperationType.CONTEXT)
             validate
         ]
         dlg.okIO(new RoleToPermissionCrudRequest => [
@@ -80,20 +80,20 @@ class PermissionsTest {
         val result = dlg.typeIO(new QueryPermissionsRequest(PermissionType.FRONTEND), QueryPermissionsResponse)
         println('''Result is «ToStringHelper.toStringML(result)»''')
         Assert.assertEquals(result.permissions.size, 1)
-        Assert.assertEquals(new PermissionEntry(myPermissionId, Permissionset.of(OperationType.CONTEXT, OperationType.LOOKUP)), result.permissions.get(0))
+        Assert.assertEquals(new PermissionEntry(myPermissionId, Permissionset.ofTokens(OperationType.CONTEXT, OperationType.LOOKUP)), result.permissions.get(0))
     }
 
     @Test
     def public void QuerySinglePermissionTest() {
         val result = dlg.typeIO(new QuerySinglePermissionRequest(PermissionType.FRONTEND, "testperm-id.x"), QuerySinglePermissionResponse)
         println('''Result is «ToStringHelper.toStringML(result)»''')
-        Assert.assertEquals(Permissionset.of(OperationType.CONTEXT, OperationType.LOOKUP), result.permissions)
+        Assert.assertEquals(Permissionset.ofTokens(OperationType.CONTEXT, OperationType.LOOKUP), result.permissions)
     }
 
     @Test
     def public void QueryAnotherSinglePermissionTest() {
         val result = dlg.typeIO(new QuerySinglePermissionRequest(PermissionType.FRONTEND, "no-perm"), QuerySinglePermissionResponse)
         println('''Result is «ToStringHelper.toStringML(result)»''')
-        Assert.assertEquals(Permissionset.of(), result.permissions)
+        Assert.assertEquals(Permissionset.ofTokens(), result.permissions)
     }
 }
