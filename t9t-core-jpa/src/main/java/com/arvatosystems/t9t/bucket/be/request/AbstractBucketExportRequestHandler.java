@@ -159,7 +159,7 @@ public abstract class AbstractBucketExportRequestHandler<T extends AbstractBucke
             int chunks = (refsToExport.size() + (chunkSize - 1)) / chunkSize;
 
             for (int chunk = 0; chunk < chunks; ++chunk) {
-                ctx.statusText = "Exporting chunk " + chunk + " of " + chunks + " for bucket " + qualifier;
+                ctx.statusText = "Exporting chunk " + (chunk + 1) + " of " + chunks + " for bucket " + qualifier;
                 int endIndex = chunk < chunks - 1 ? (chunk + 1) * chunkSize : refsToExport.size();
                 List<Long> subListToProcess = refsToExport.subList(chunk * chunkSize, endIndex);  // a list of min 1 and max CHUNK_SIZE entries
                 LOGGER.debug("Processing chunk of {} entries", subListToProcess.size());

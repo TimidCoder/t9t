@@ -17,22 +17,28 @@ package com.arvatosystems.t9t.out.be.impl
 
 import com.arvatosystems.t9t.base.FieldMappers
 import com.arvatosystems.t9t.base.T9tException
+import com.arvatosystems.t9t.base.output.ExportStatusEnum
 import com.arvatosystems.t9t.base.output.OutputSessionParameters
 import com.arvatosystems.t9t.base.services.IExecutor
 import com.arvatosystems.t9t.base.services.IOutputSession
 import com.arvatosystems.t9t.base.services.RequestContext
+import com.arvatosystems.t9t.io.CamelExecutionScheduleType
 import com.arvatosystems.t9t.io.CommunicationTargetChannelType
 import com.arvatosystems.t9t.io.DataSinkDTO
 import com.arvatosystems.t9t.io.DataSinkRef
 import com.arvatosystems.t9t.io.OutboundMessageDTO
 import com.arvatosystems.t9t.io.SinkDTO
 import com.arvatosystems.t9t.io.T9tIOException
+import com.arvatosystems.t9t.io.request.CheckSinkFilenameUsedRequest
+import com.arvatosystems.t9t.io.request.CheckSinkFilenameUsedResponse
+import com.arvatosystems.t9t.io.request.ProcessCamelRouteRequest
 import com.arvatosystems.t9t.out.be.ICommunicationFormatGenerator
 import com.arvatosystems.t9t.out.be.IPreOutputDataTransformer
 import com.arvatosystems.t9t.out.be.impl.formatgenerator.FormatGeneratorDumb
 import com.arvatosystems.t9t.out.be.impl.output.FoldableParams
 import com.arvatosystems.t9t.out.be.impl.output.PatternExpansionUtil
 import com.arvatosystems.t9t.out.be.impl.output.SpecificTranslationProvider
+import com.arvatosystems.t9t.out.services.IAsyncTransmitter
 import com.arvatosystems.t9t.out.services.IOutPersistenceAccess
 import com.arvatosystems.t9t.out.services.IOutputResource
 import com.arvatosystems.t9t.translation.services.ITranslationProvider
@@ -52,18 +58,14 @@ import java.io.OutputStream
 import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
 import java.util.List
-import com.arvatosystems.t9t.io.CamelExecutionScheduleType
-import com.arvatosystems.t9t.base.output.ExportStatusEnum
-import com.arvatosystems.t9t.io.request.ProcessCamelRouteRequest
-import com.arvatosystems.t9t.io.request.CheckSinkFilenameUsedRequest
-import com.arvatosystems.t9t.io.request.CheckSinkFilenameUsedResponse
 
 @AddLogger
 @Dependent
 class OutputSession implements IOutputSession {
-    @Inject protected RequestContext ctx
+    @Inject protected RequestContext        ctx
     @Inject protected IOutPersistenceAccess dpl
-    @Inject protected IExecutor messaging
+    @Inject protected IExecutor             messaging
+    @Inject protected IAsyncTransmitter     asyncTransmitter
 
     protected enum State {
         OPENED, CLOSED, LAZY
@@ -286,6 +288,9 @@ class OutputSession implements IOutputSession {
                 // persist the data in the DB interface table
                 if (Boolean.TRUE == sinkCfg.logMessages)
                     writeOutboundMessage(recordRef, r);
+                // store as async message
+                if (sinkCfg.copyToAsyncChannel !== null)
+                    asyncTransmitter.transmitMessage(sinkCfg.copyToAsyncChannel, r, recordRef, "SINK", sinkCfg.dataSinkId)
                 // and write it to file
                 dataGenerator.generateData(sourceRecordCounter, mappedRecordCounter, recRef, r)
             }
@@ -295,7 +300,7 @@ class OutputSession implements IOutputSession {
     /**
      * {@inheritDoc}
      */
-    override public void store(Long recordRef, BonaPortable record) {
+    override void store(Long recordRef, BonaPortable record) {
         // see if LAZY
         if (currentState == State.LAZY)
             openStream();
@@ -314,14 +319,14 @@ class OutputSession implements IOutputSession {
     /**
      * {@inheritDoc}
      */
-    override public void store(BonaPortable record) {
+    override void store(BonaPortable record) {
         store(null, record);
     }
 
     /**
      * {@inheritDoc}
      */
-    override public void close() throws Exception {
+    override void close() throws Exception {
         thisSink.camelTransferStatus = ExportStatusEnum.RESPONSE_OK  // means DONE
 
         // if LAZY open, skip actual opening, then also closing is not required
@@ -369,7 +374,7 @@ class OutputSession implements IOutputSession {
     }
 
 
-    override public OutputStream getOutputStream() {
+    override OutputStream getOutputStream() {
         // see if LAZY
         if (currentState == State.LAZY)
             openStream();
@@ -378,7 +383,7 @@ class OutputSession implements IOutputSession {
         return outputResource.getOutputStream();
     }
 
-    override public MediaXType getCommunicationFormatType() {
+    override MediaXType getCommunicationFormatType() {
         return usedFormat.mediaType;
     }
 

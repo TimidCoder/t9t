@@ -38,11 +38,19 @@ package (com.arvatosystems) t9t.base.search {
         EQUALITY="=", UPPER_BOUND="U", LOWER_BOUND="L", WILDCARD="*", TENANT_SELECTION="T"
     }
 
+    enum SearchFilterMatchTypeEnum {
+        EXACT,
+        START,
+        SUBSTRING
+    }
+
     enum SearchFilterTypeEnum {
         BOTH,
         SOLR_ONLY,
         DB_ONLY
     }
+
+    enumset SearchFilterTypes is SearchFilterTypeEnum;
 
     /** Response which is returned by export jobs or report runs.
      * It transmits the key to the created file (or other export event).

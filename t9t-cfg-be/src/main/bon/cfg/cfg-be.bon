@@ -47,6 +47,7 @@ package (com.arvatosystems) t9t.cfg.be XML PROPERTY {
         optional (AWSConfiguration...)              awsConfiguration;
         optional (UplinkConfiguration...)           uplinkConfiguration;
         optional (SearchConfiguration...)           searchConfiguration;
+        optional (AsyncTransmitterConfiguration...) asyncMsgConfiguration;
         required Ascii(16) List<>                   mocks;                  // entries for mocked SMTP, defacto etc.
         optional Boolean                            runInCluster;           // if true, activates sending of cache invalidation events via vert.x event bus
         optional Boolean                            disableScheduler;       // cluster server - if set, do not run jobs here
@@ -125,5 +126,16 @@ package (com.arvatosystems) t9t.cfg.be XML PROPERTY {
     class SearchConfiguration {
         required namedQualifier                     strategy;               // select the implementation (SOLR, Elastic etc...)
         required Unicode(255)                       defaultUrl;             // default URL, for example of a SOLR server. Providers can override by DB
+    }
+
+    class AsyncTransmitterConfiguration {
+        required namedQualifier                     strategy;               // select the implementation. Currently only "LTQ" is available
+        required int                                maxMessageAtStartup;    // how many persisted messages to load initially at max [100]
+        required int                                timeoutIdleGreen;       // sleep time in ms when queue is empty and last request was green [500 ms]
+        required int                                timeoutIdleRed;         // sleep time in ms after an error [5000 ms]
+        required int                                timeoutShutdown;        // sleep time in ms while waiting for graceful shutdown [1000 ms]
+        required int                                timeoutExternal;        // max allowable duration of an external request [1000 ms]
+        required int                                waitAfterExtError;      // sleep time in ms after an initial remote problem [10000 ms]
+        required int                                waitAfterDbErrors;      // sleep time in ms after a database error [60000 ms]
     }
 }

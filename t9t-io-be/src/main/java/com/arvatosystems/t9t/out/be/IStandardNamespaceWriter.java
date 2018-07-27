@@ -15,9 +15,12 @@
  */
 package com.arvatosystems.t9t.out.be;
 
+import javax.xml.bind.JAXBContext;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 
 public interface IStandardNamespaceWriter {
     void writeApplicationNamespaces(XMLStreamWriter writer) throws XMLStreamException;
+    String getStandardJAXBPath();               // retrieves the default external API XML path
+    JAXBContext getStandardJAXBContext();       // retrieves a cached JAXB context for the standard path (cached because construction is expensive)
 }

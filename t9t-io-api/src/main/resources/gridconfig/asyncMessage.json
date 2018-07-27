@@ -1,0 +1,18 @@
+{
+    "viewModel": "asyncMessage",
+    "filters": [
+        { "filterType": "W", "fieldName": "asyncChannelId" },
+        { "filterType": "E", "fieldName": "status" },
+        { "filterType": "E", "fieldName": "httpResponseCode" },
+        { "filterType": "W", "fieldName": "reference" },
+        { "filterType": "R", "fieldName": "lastAttempt" },
+        { "filterType": "R", "fieldName": "cTimestamp" },
+        { "filterType": "E", "fieldName": "refType" },
+        { "filterType": "E", "fieldName": "refIdentifier" },
+        { "filterType": "E", "fieldName": "ref" }
+    ],
+    "fields": [
+        "cTimestamp", "asyncChannelId", "status", "refType", "refIdentifier", "ref", "attempts", "lastAttempt", "latency",
+        "httpResponseCode", "returnCode", "reference"
+    ]
+}

@@ -25,7 +25,9 @@ public class T9tIOLeanGridConfig implements ILeanGridConfigContainer {
     private static String [] GRID_CONFIGS = {
         "csvConfiguration",
         "dataSinkConfig",
-        "sinkSearch"
+        "sinkSearch",
+        "asyncMessage",
+        "asyncChannelCfg"
     };
 
     @Override

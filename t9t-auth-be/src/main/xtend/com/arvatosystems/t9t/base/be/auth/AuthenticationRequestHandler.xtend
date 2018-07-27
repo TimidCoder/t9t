@@ -177,7 +177,7 @@ class AuthenticationRequestHandler extends AbstractRequestHandler<Authentication
     /** Authenticates a user via username / password. Relevant information for the JWT is taken from the UserDTO, then the TenantDTO. */
     def protected dispatch AuthenticationResponse auth(RequestContext ctx, PasswordAuthentication pw, String locale, String zoneinfo) {
         val authResult = persistenceAccess.getByUserIdAndPassword(ctx.executionStart, pw.userId, pw.password, pw.newPassword)
-        if (authResult === null || authResult.returnCode != 0) {
+        if (authResult === null || (authResult.returnCode != 0 && authResult.returnCode != T9tException.PASSWORD_EXPIRED)) {
             LOGGER.debug("Incorrect authentication for userId {}", pw.userId)
             return null
         }
@@ -200,6 +200,7 @@ class AuthenticationRequestHandler extends AbstractRequestHandler<Authentication
             resp.lastLoginMethod    = authResult.userStatus.lastLoginByPassword
             resp.numberOfIncorrentAttempts = authResult.userStatus.numberOfIncorrectAttempts
         }
+        resp.returnCode             = authResult.returnCode
         return resp
     }
 

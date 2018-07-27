@@ -137,10 +137,10 @@ package (com.arvatosystems) t9t.base.request {
     }
 
     class ProcessStatusDTO {
-        required long                               threadId;                   // thread identifier
+        required Long                               threadId;                   // thread identifier
         required long                               ageInMs;                    // age in milliseconds
         required Long                               sessionRef;                 // session reference (references additional login information)
-        required Long                               processRef;                 // age in milliseconds
+        required Long                               processRef;                 // unique request identifier
         required Instant                            processStartedAt;           // when did it start
         required tenantId                           tenantId;                   // process tenantId
         required userId                             userId;                     // process userId
@@ -148,10 +148,20 @@ package (com.arvatosystems) t9t.base.request {
         optional Long                               invokingProcessRef;         // who requested it?
         required int                                progressCounter;            // numeric progress counter, 1 per exported record for data exports, usually 1 per processed data record for batches
         optional Unicode(512)                       statusText;                 // task defined general status text
+        optional Unicode(64)                        createdByThread;            // the name of the thread which created this context (which usually also is the one executing it)
     }
 
     class ProcessStatusResponse extends ServiceResponse {
         required (ProcessStatusDTO...) required List<> processes;               // current list of processes
+    }
+
+    /** Asks a process to be terminated. For security reasons, all parameters are required and must match.
+     * The data should be obtained via a prior ProcessStatusRequest.
+     */
+    class TerminateProcessRequest extends RequestParameters {
+        required tenantId                           tenantId;                   // must pass tenantId to avoid that non global users kill processes of other tenants
+        required Long                               threadId;                   // thread identifier
+        required Long                               processRef;                 // unique request identifier
     }
 
     /**

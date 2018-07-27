@@ -23,7 +23,7 @@ import com.arvatosystems.t9t.io.request.LeanCsvConfigurationSearchRequest
 import de.jpaw.dp.Jdp
 
 class LeanCsvConfigurationSearchRequestHandler extends AbstractLeanSearchRequestHandler<LeanCsvConfigurationSearchRequest, CsvConfigurationEntity> {
-    public new() {
+    new() {
         super(Jdp.getRequired(ICsvConfigurationEntityResolver),
             [ return new Description(null, csvConfigurationId, description ?: '?', false, false) ]
         )

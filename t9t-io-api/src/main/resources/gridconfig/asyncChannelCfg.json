@@ -1,0 +1,12 @@
+{
+    "viewModel": "asyncChannelCfg",
+    "filters": [
+        { "filterType": "E", "fieldName": "tenantRef" },
+        { "filterType": "W", "fieldName": "asyncChannelId" },
+        { "filterType": "E", "fieldName": "payloadFormat" }
+    ],
+    "fields": [
+        "tenantRef","asyncChannelId", "isActive", "description", "url", "timeoutInMs", "authType", "authParam", "maxRetries", "payloadFormat", "serializerQualifier", "payloadParameters"
+    ],
+    "fieldWidths": [ 80, 120, 20, 200, 260, 120, 120, 120, 120, 120, 120, 200 ]
+}

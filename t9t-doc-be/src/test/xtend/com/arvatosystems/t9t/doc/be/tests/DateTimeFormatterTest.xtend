@@ -38,7 +38,7 @@ import org.junit.Test
 /** Note: Java 10 and Java 8 differ in day and timestamp formatting (space vs - for GB, and additional commas separating day and time for timestamp. **/
 class DateTimeFormatterTest {
 
-    static char hy = ' '  		  // hyphen or space to separate date fields in GB ('-' for 1.8, space for 9 and 10
+    static char hy = ' '          // hyphen or space to separate date fields in GB ('-' for 1.8, space for 9 and 10
     static String comma = ",";    // separates time and date (empty for 1.8, comma for 9 and 10)
 
     def void print(String language, String country) {

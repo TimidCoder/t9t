@@ -41,7 +41,7 @@ import com.arvatosystems.t9t.io.CamelExecutionScheduleType
 @Named("FILE")  // name of CommunicationTargetChannelType instance
 @Dependent
 class OutputResourceFile implements IOutputResource {
-    @Inject private IFileUtil fileUtil
+    @Inject IFileUtil fileUtil
     @Inject Provider<RequestContext> ctxProvider
 
     protected static final String GZIP_EXTENSION = ".gz";

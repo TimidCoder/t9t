@@ -22,7 +22,7 @@
     <parent>
         <groupId>com.arvato-systems.t9t</groupId>
         <artifactId>t9t-settings</artifactId>
-        <version>3.4-SNAPSHOT</version>
+        <version>3.6-SNAPSHOT</version>
         <relativePath>../t9t-settings</relativePath>
     </parent>
 
@@ -44,6 +44,11 @@
         <dependency>
             <groupId>com.arvato-systems.t9t</groupId>
             <artifactId>t9t-bpmn-jpa</artifactId>
+            <classifier>sql</classifier>
+        </dependency>
+        <dependency>
+            <groupId>com.arvato-systems.t9t</groupId>
+            <artifactId>t9t-bpmn2-camunda-be</artifactId>
             <classifier>sql</classifier>
         </dependency>
         <dependency>
@@ -93,6 +98,11 @@
         </dependency>
         <dependency>
             <groupId>com.arvato-systems.t9t</groupId>
+            <artifactId>t9t-sql-migration</artifactId>
+            <classifier>sql</classifier>
+        </dependency>
+        <dependency>
+            <groupId>com.arvato-systems.t9t</groupId>
             <artifactId>t9t-solr-jpa</artifactId>
             <classifier>sql</classifier>
         </dependency>
@@ -114,7 +124,7 @@
                         </goals>
                         <configuration>
                             <descriptorRefs>
-                                <descriptorRef>sql-multi-module-assembly</descriptorRef>
+                                <descriptorRef>sql-merged-module-assembly</descriptorRef>
                             </descriptorRefs>
                         </configuration>
                     </execution>

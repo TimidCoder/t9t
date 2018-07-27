@@ -23,7 +23,7 @@ import com.arvatosystems.t9t.io.request.LeanDataSinkSearchRequest
 import de.jpaw.dp.Jdp
 
 class LeanDataSinkSearchRequestHandler extends AbstractLeanSearchRequestHandler<LeanDataSinkSearchRequest, DataSinkEntity> {
-    public new() {
+    new() {
         super(Jdp.getRequired(IDataSinkEntityResolver),
             [ return new Description(null, dataSinkId, description ?: '?', false, false) ]
         )

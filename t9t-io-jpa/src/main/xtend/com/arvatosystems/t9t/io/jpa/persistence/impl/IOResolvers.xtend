@@ -17,16 +17,20 @@ package com.arvatosystems.t9t.io.jpa.persistence.impl
 
 import com.arvatosystems.t9t.annotations.jpa.AllCanAccessGlobalTenant
 import com.arvatosystems.t9t.annotations.jpa.AutoResolver42
+import com.arvatosystems.t9t.annotations.jpa.GlobalTenantCanAccessAll
+import com.arvatosystems.t9t.io.AsyncChannelRef
+import com.arvatosystems.t9t.io.AsyncMessageRef
 import com.arvatosystems.t9t.io.CsvConfigurationRef
 import com.arvatosystems.t9t.io.DataSinkRef
 import com.arvatosystems.t9t.io.OutboundMessageRef
 import com.arvatosystems.t9t.io.SinkRef
+import com.arvatosystems.t9t.io.jpa.entities.AsyncChannelEntity
+import com.arvatosystems.t9t.io.jpa.entities.AsyncMessageEntity
 import com.arvatosystems.t9t.io.jpa.entities.CsvConfigurationEntity
 import com.arvatosystems.t9t.io.jpa.entities.DataSinkEntity
 import com.arvatosystems.t9t.io.jpa.entities.OutboundMessageEntity
 import com.arvatosystems.t9t.io.jpa.entities.SinkEntity
 import java.util.List
-import com.arvatosystems.t9t.annotations.jpa.GlobalTenantCanAccessAll
 
 @AutoResolver42
 class IOResolvers {
@@ -43,4 +47,8 @@ class IOResolvers {
     def SinkEntity              getSinkEntity               (SinkRef      entityRef, boolean onlyActive) { return null; }
 
     def OutboundMessageEntity   getOutboundMessageEntity    (OutboundMessageRef entityRef, boolean onlyActive) { return null; }
+    def AsyncMessageEntity      getAsyncMessageEntity       (AsyncMessageRef entityRef, boolean onlyActive) { return null; }
+    @GlobalTenantCanAccessAll   // required for Camel startup
+    @AllCanAccessGlobalTenant   // for DataSinkEntity, everyone can see the global tenant's defaults
+    def AsyncChannelEntity      getAsyncChannelEntity       (AsyncChannelRef entityRef, boolean onlyActive) { return null; }
 }

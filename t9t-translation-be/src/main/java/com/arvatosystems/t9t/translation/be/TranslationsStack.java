@@ -117,7 +117,7 @@ public class TranslationsStack {
     public static void dump(String key) {
         Map<String, String> tx = translations.get(key);
         LOGGER.info("{} translations for key {}", tx == null ? 0 : tx.size(), key);
-        if (tx != null) {
+        if (LOGGER.isDebugEnabled() && tx != null) {
             for (Map.Entry<String, String> e: tx.entrySet()) {
                 LOGGER.debug("Translation for {} is {}", e.getKey(), e.getValue());
             }

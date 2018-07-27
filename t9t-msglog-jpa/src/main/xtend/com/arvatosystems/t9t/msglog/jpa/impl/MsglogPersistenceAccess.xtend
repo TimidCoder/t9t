@@ -24,6 +24,11 @@ import javax.persistence.EntityManagerFactory
 import com.arvatosystems.t9t.msglog.jpa.entities.MessageEntity
 import de.jpaw.annotations.AddLogger
 
+/**
+ * Class which writes message log entities.
+ * This is a special implementation because no request context is available.
+ * It is comparable to AsyncMessageUpdater in t9t-io-jpa.
+*/
 @Singleton
 @AddLogger
 class MsglogPersistenceAccess implements IMsglogPersistenceAccess {
@@ -49,5 +54,6 @@ class MsglogPersistenceAccess implements IMsglogPersistenceAccess {
         }
         em.transaction.commit
         em.clear
+        em.close
     }
 }

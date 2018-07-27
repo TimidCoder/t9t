@@ -19,6 +19,10 @@ import com.arvatosystems.t9t.base.CrudViewModel;
 import com.arvatosystems.t9t.base.IViewModelContainer;
 import com.arvatosystems.t9t.base.entities.FullTracking;
 import com.arvatosystems.t9t.base.entities.FullTrackingWithVersion;
+import com.arvatosystems.t9t.base.entities.WriteTracking;
+import com.arvatosystems.t9t.io.request.AsyncChannelCrudRequest;
+import com.arvatosystems.t9t.io.request.AsyncChannelSearchRequest;
+import com.arvatosystems.t9t.io.request.AsyncMessageSearchRequest;
 import com.arvatosystems.t9t.io.request.CsvConfigurationCrudRequest;
 import com.arvatosystems.t9t.io.request.CsvConfigurationSearchRequest;
 import com.arvatosystems.t9t.io.request.DataSinkCrudRequest;
@@ -42,10 +46,22 @@ public class T9tIOModels implements IViewModelContainer {
         FullTracking.BClass.INSTANCE,
         SinkSearchRequest.BClass.INSTANCE,
         SinkCrudRequest.BClass.INSTANCE);
+    public static final CrudViewModel<AsyncChannelDTO, FullTrackingWithVersion> ASYNC_CHANNEL_VIEW_MODEL = new CrudViewModel<AsyncChannelDTO, FullTrackingWithVersion>(
+        AsyncChannelDTO.BClass.INSTANCE,
+        FullTrackingWithVersion.BClass.INSTANCE,
+        AsyncChannelSearchRequest.BClass.INSTANCE,
+        AsyncChannelCrudRequest.BClass.INSTANCE);
+    public static final CrudViewModel<AsyncMessageDTO, WriteTracking> ASYNC_MESSAGE_VIEW_MODEL = new CrudViewModel<AsyncMessageDTO, WriteTracking>(
+        AsyncMessageDTO.BClass.INSTANCE,
+        WriteTracking.BClass.INSTANCE,
+        AsyncMessageSearchRequest.BClass.INSTANCE,
+        null);
 
     static {
         IViewModelContainer.CRUD_VIEW_MODEL_REGISTRY.putIfAbsent("sinkSearch",        SINK_VIEW_MODEL);
         IViewModelContainer.CRUD_VIEW_MODEL_REGISTRY.putIfAbsent("dataSinkConfig",    DATA_SINK_VIEW_MODEL);
         IViewModelContainer.CRUD_VIEW_MODEL_REGISTRY.putIfAbsent("csvConfiguration",  CSV_CONFIGURATION_VIEW_MODEL);
+        IViewModelContainer.CRUD_VIEW_MODEL_REGISTRY.putIfAbsent("asyncChannelCfg",   ASYNC_CHANNEL_VIEW_MODEL);
+        IViewModelContainer.CRUD_VIEW_MODEL_REGISTRY.putIfAbsent("asyncMessage",      ASYNC_MESSAGE_VIEW_MODEL);
     }
 }

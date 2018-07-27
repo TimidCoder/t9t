@@ -27,6 +27,7 @@ import com.arvatosystems.t9t.base.auth.AuthenticationResponse;
 import com.arvatosystems.t9t.client.init.AbstractConfigurationProvider;
 
 import de.jpaw.bonaparte.core.BonaPortable;
+import de.jpaw.bonaparte.core.HttpPostResponseObject;
 import de.jpaw.bonaparte.sock.HttpPostClient;
 import de.jpaw.bonaparte.util.IMarshaller;
 import de.jpaw.bonaparte.util.impl.RecordMarshallerCompactBonaparteIdentity;
@@ -68,7 +69,21 @@ public class RemoteConnection extends AbstractRemoteConnection {
     protected ServiceResponse execSub(HttpPostClient dlg, RequestParameters rp) {
         try {
             LOGGER.info("Sending request of type {}", rp.ret$PQON());
-            BonaPortable response = dlg.doIO(rp);
+            final HttpPostResponseObject resp = dlg.doIO2(rp);
+            if (resp.getHttpReturnCode() / 100 != 2) {
+                return MessagingUtil.createServiceResponse(
+                        99000 + resp.getHttpReturnCode(),
+                        resp.getHttpStatusMessage(),
+                        null, null);
+            }
+            final BonaPortable response = resp.getResponseObject();
+            if (response == null) {
+                LOGGER.info("Response object is null for http code {}, status {}", resp.getHttpReturnCode(), resp.getHttpStatusMessage());
+                return MessagingUtil.createServiceResponse(
+                        T9tException.BAD_REMOTE_RESPONSE,
+                        Integer.toString(resp.getHttpReturnCode()),
+                        null, null);
+            }
             if (response instanceof ServiceResponse) {
                 ServiceResponse r = (ServiceResponse)response;
                 LOGGER.info("Received response type {} with return code {}", r.ret$PQON(), r.getReturnCode());

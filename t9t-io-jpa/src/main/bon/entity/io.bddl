@@ -24,17 +24,19 @@ package (com.arvatosystems) t9t.io.jpa.entities owner fortytwo prefix p28 {
     fields private;
 
     entity CsvConfigurationEntity category cfg is CsvConfigurationDTO {
+        cacheable
         tenantClass InternalTenantRef42
         pk (objectRef)
-
         index unique (tenantRef, csvConfigurationId)
     }
 
     entity DataSinkEntity category cfg is DataSinkDTO tablename p42_cfg_data_sinks historytablename p42_his_data_sinks {
+        cacheable
         tenantClass InternalTenantRef42
         pk (objectRef)
         index unique (tenantRef, dataSinkId)
-        @ManyToOne CsvConfigurationEntity csvConfiguration EAGER for (csvConfigurationRef)
+        @ManyToOne CsvConfigurationEntity csvConfiguration LAZY for (csvConfigurationRef)
+        //@ManyToOne AsyncChannelEntity     asyncChannel     LAZY for (csvConfigurationRef)
     }
 
     entity SinkEntity category datrw is SinkDTO tablename p42_dat_sinks {
@@ -51,5 +53,20 @@ package (com.arvatosystems) t9t.io.jpa.entities owner fortytwo prefix p28 {
         pk (objectRef)
         index unique (sinkRef, mappedRecordNo)
 //        @ManyToOne SinkEntity sink LAZY for (sinkRef)
+    }
+
+    @Generator(doMapper)
+    entity AsyncChannelEntity category cfg is AsyncChannelDTO {
+        cacheable
+        tenantClass InternalTenantRef42
+        pk (objectRef)
+        index unique (tenantRef, asyncChannelId)
+    }
+
+    @Generator(doMapper)
+    entity AsyncMessageEntity category ^int is AsyncMessageDTO tablename p42_int_async_messages {
+        tenantClass InternalTenantRef42
+        pk (objectRef)
+        index (status)
     }
 }

@@ -54,7 +54,8 @@ public class RequestContext extends AbstractRequestContext {
     private static final Logger LOGGER = LoggerFactory.getLogger(RequestContext.class);
     static private final Cache<Long, Semaphore> GLOBAL_JVM_LOCKS = CacheBuilder.newBuilder().expireAfterAccess(1, TimeUnit.MINUTES).initialCapacity(1000).build();
 
-    public final InternalHeaderParameters       internalHeaderParameters;
+    public final InternalHeaderParameters internalHeaderParameters;
+    public final Thread createdByThread = Thread.currentThread();
 
     public final ITenantCustomization customization;    // stored here for convenience
     public final ITenantMapping tenantMapping;          // stored here for convenience

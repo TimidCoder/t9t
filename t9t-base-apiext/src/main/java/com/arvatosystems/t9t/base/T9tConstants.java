@@ -125,6 +125,11 @@ public interface T9tConstants {
     public static final String MDC_REQUEST_PQON = "requestPqon";
     public static final String MDC_USER_ID = "userId";
     public static final String MDC_TENANT_ID = "tenantId";
+
     public static final String MDC_SSM_JOB_ID = "ssmJobId";
     public static final String MDC_IO_DATA_SINK_ID = "ioDataSinkId";
+
+    public static final String MDC_BPMN_PROCESS = "bpmnProcess";
+    public static final String MDC_BPMN_PROCESS_INSTANCE = "bpmnProcessInstance";
+    public static final String MDC_BPMN_STEP = "bpmnStep";
 }

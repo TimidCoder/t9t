@@ -23,7 +23,7 @@ import t9t.uiprefsv3.*
 
 package (com.arvatosystems) t9t.uiprefsv3.request {
     default private unsigned trim noControlChars;
-    properties inherited, compact, active, ^json,
+    properties inherited, active, ^json,
         tenantCategory is com.arvatosystems.t9t.annotations.TenantCategory(),
         searchprefix is com.arvatosystems.t9t.annotations.SearchPrefix(),
         serialized is com.arvatosystems.t9t.annotations.StoreSerialized,

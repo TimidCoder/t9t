@@ -104,7 +104,7 @@ public class T9tIOException extends T9tException {
         codeToDescription.put(OUTPUT_COMM_CHANNEL_NOT_FILE, "Requested a download for a sink which does not correspond to a file");
         codeToDescription.put(OUTPUT_COMM_CHANNEL_IO_ERROR, "I/O error during file read");
         codeToDescription.put(OUTPUT_COMM_CHANNEL_REQUIRED, "explicit communication format channel required for uploads");
-        codeToDescription.put(FORBIDDEN_FILE_PATH_ELEMENTS, "Vorbidden file path element.");
+        codeToDescription.put(FORBIDDEN_FILE_PATH_ELEMENTS, "Forbidden file path element.");
         codeToDescription.put(FAILED_TO_BUILD_ABSOLUTE_PATH, "An error occurred on building absolute path.");
         codeToDescription.put(FAILED_TO_PREPARE_OUTPUT_LOCATION, "Failed to prepare output file location.");
         codeToDescription.put(TOO_MANY_COLUMNS_FOR_EXCEL_EXPORT, "Can't export report to excel (xls) because of too many columns (> 255).");

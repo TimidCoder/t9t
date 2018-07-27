@@ -20,7 +20,6 @@ import javax.persistence.EntityManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.orm.jpa.JpaTransactionManager;
-import org.springframework.orm.jpa.SharedEntityManagerCreator;
 import org.springframework.transaction.TransactionStatus;
 
 import de.jpaw.bonaparte.jpa.refs.PersistenceProviderJPA;
@@ -33,23 +32,17 @@ public class PersistenceProviderJPASTImpl implements PersistenceProviderJPA {
     private final JpaTransactionManager jpaTransactionManager;
 
     private TransactionStatus transaction;
+    private EntityManager sharedEntityManager;
 
-    public PersistenceProviderJPASTImpl(JpaTransactionManager jpaTransactionManager) {
+    public PersistenceProviderJPASTImpl(JpaTransactionManager jpaTransactionManager, EntityManager sharedEntityManager) {
         this.jpaTransactionManager = jpaTransactionManager;
-
+        this.sharedEntityManager = sharedEntityManager;
     }
 
     @Override
     public EntityManager getEntityManager() {
-        // Create shared EntityManager (but thread local instance!)
-        final EntityManager em = SharedEntityManagerCreator.createSharedEntityManager(jpaTransactionManager.getEntityManagerFactory());
-
-        if (transaction == null) {
-            LOGGER.trace("getEntityManager(): lazy starting transaction");
-            transaction = jpaTransactionManager.getTransaction(null);
-        }
-
-        return em;
+        LOGGER.trace("getEntityManager()");
+        return sharedEntityManager;
     }
 
     @Override
@@ -64,9 +57,10 @@ public class PersistenceProviderJPASTImpl implements PersistenceProviderJPA {
 
     @Override
     public void open() {
-        LOGGER.trace("open(): starting transaction");
-
-        transaction = jpaTransactionManager.getTransaction(null);
+        if (transaction == null) {
+            LOGGER.trace("open(): starting transaction");
+            transaction = jpaTransactionManager.getTransaction(null);
+        }
     }
 
     @Override
@@ -95,14 +89,13 @@ public class PersistenceProviderJPASTImpl implements PersistenceProviderJPA {
 
     @Override
     public void close() {
+        LOGGER.trace("close(): close persistence provider");
 
         if (transaction != null) {
             LOGGER.warn("attempt to close an open transaction, performing an implicit rollback");
             jpaTransactionManager.rollback(transaction);
             transaction = null;
         }
-
-        // Close EntityManager?
     }
 
 }

@@ -19,7 +19,7 @@ import t9t.base.entities.*
 
 package (com.arvatosystems) t9t.genconf {
     default private unsigned trim noControlChars;
-    properties inherited, compact,
+    properties inherited,
         tenantCategory is com.arvatosystems.t9t.annotations.TenantCategory(),
         searchprefix is com.arvatosystems.t9t.annotations.SearchPrefix(),
         serialized is com.arvatosystems.t9t.annotations.StoreSerialized,

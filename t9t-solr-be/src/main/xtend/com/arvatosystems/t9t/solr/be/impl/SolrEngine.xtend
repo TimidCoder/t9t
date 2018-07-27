@@ -79,7 +79,6 @@ class SolrEngine implements ITextSearch {
             rows  = if (sc.limit > 0) sc.limit else Integer.MAX_VALUE
             query = sc.expression ?: filterToSolrConverter.toSolrCondition(sc.searchFilter) ?: "*"
         ]
-        LOGGER.debug("SOLR expression is {}", solrQuery.query)
 
         if (sc.sortColumns !== null) {
             for (sortOrder : sc.sortColumns) {
@@ -91,6 +90,8 @@ class SolrEngine implements ITextSearch {
 
         // always add a filter on the requesters tenant_ref
         solrQuery.filterQueries = T9tConstants.TENANT_REF_FIELD_NAME + ":" + ctx.tenantRef
+
+        LOGGER.debug("SOLR expression is {}", solrQuery.toString)
 
         val solrResponse = solrServer.query(solrQuery)
         LOGGER.debug("SOLR query took {} ms overall, pure query time {} ms, and returned {} results",

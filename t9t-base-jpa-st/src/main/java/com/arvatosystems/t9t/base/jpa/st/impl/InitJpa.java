@@ -15,6 +15,7 @@
  */
 package com.arvatosystems.t9t.base.jpa.st.impl;
 
+import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.sql.DataSource;
 
@@ -23,11 +24,13 @@ import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.datasource.TransactionAwareDataSourceProxy;
 import org.springframework.orm.jpa.JpaTransactionManager;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
+import org.springframework.orm.jpa.SharedEntityManagerCreator;
 import org.springframework.transaction.PlatformTransactionManager;
 
 import com.arvatosystems.t9t.base.jpa.ormspecific.IJpaJdbcConnectionProvider;
 import com.arvatosystems.t9t.base.jpa.st.IDataSourceFactory;
 import com.arvatosystems.t9t.base.jpa.st.IEMFBeanCustomizer;
+import com.arvatosystems.t9t.base.jpa.st.util.DiagnoseDataSourceProxy;
 import com.arvatosystems.t9t.base.services.IJdbcConnectionProvider;
 import com.arvatosystems.t9t.cfg.be.RelationalDatabaseConfiguration;
 import com.arvatosystems.t9t.cfg.be.T9tServerConfiguration;
@@ -48,8 +51,8 @@ public class InitJpa {
         final RelationalDatabaseConfiguration dbCfg = cfg.getDatabaseConfiguration();
 
         // Create initial DataSource (or get from pooling like c3p0 or commons-pool)
-        final DataSource dataSource = Jdp.getRequired(IDataSourceFactory.class)
-                                         .createDataSource();
+        final DataSource dataSource = DiagnoseDataSourceProxy.createProxy(Jdp.getRequired(IDataSourceFactory.class)
+                                                                             .createDataSource());
 
         // Wrap as transaction aware to be included in global transaction management
         // (This is the data source to be normally used!)
@@ -72,7 +75,9 @@ public class InitJpa {
         jpaTransactionManager.afterPropertiesSet();
         Jdp.bindInstanceTo(jpaTransactionManager, PlatformTransactionManager.class);
 
-        Jdp.registerWithCustomProvider(PersistenceProviderJPA.class, new PersistenceProviderJPASTProvider(jpaTransactionManager));
+        final EntityManager sharedEntityManager = SharedEntityManagerCreator.createSharedEntityManager(jpaTransactionManager.getEntityManagerFactory());
+
+        Jdp.registerWithCustomProvider(PersistenceProviderJPA.class, new PersistenceProviderJPASTProvider(jpaTransactionManager, sharedEntityManager));
 
         // Add JDBC provider with tx managment
         Jdp.bindInstanceTo(new JDBCConnectionProvider(transactionAwareDataSource), IJdbcConnectionProvider.class);
@@ -80,7 +85,8 @@ public class InitJpa {
 
         // Add JDBC provider for independend connections
         // This is just using the raw data source without tx management
-        // NOTE: There seems to be a bug in JDP, which will just kick the binding blow if done before the unnamed binding of the same type above.
+        // NOTE: There seems to be a bug in JDP, which will just kick the binding blow if done before the unnamed
+        // binding of the same type above.
         Jdp.bindInstanceTo(new JDBCConnectionProvider(dataSource), IJdbcConnectionProvider.class, "independent");
     }
 

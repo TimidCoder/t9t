@@ -301,6 +301,10 @@ class RequestProcessor implements IRequestProcessor {
                 ctx.applyPostFailureActions(rq, resp)
                 return resp
             } finally {
+                if (Thread.interrupted()) {
+                    // clears the interrupted flag!
+                    LOGGER.warn("Thread has been interrupted for process ref {}", ctx.requestRef)
+                }
                 ctx.releaseAllLocks
                 ctxScope.close
                 ctx.close

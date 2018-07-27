@@ -23,7 +23,7 @@ import t9t.base.output.*
 
 package (com.arvatosystems) t9t.uiprefsv3 {
     default private unsigned trim noControlChars;
-    properties inherited, compact, active,
+    properties inherited, active,
         tenantCategory is com.arvatosystems.t9t.annotations.TenantCategory(),
         dropdown is com.arvatosystems.t9t.annotations.UseDropDownInUI(),
         searchprefix is com.arvatosystems.t9t.annotations.SearchPrefix(),

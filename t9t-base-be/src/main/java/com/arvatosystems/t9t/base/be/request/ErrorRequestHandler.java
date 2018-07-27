@@ -20,7 +20,7 @@ import com.arvatosystems.t9t.base.request.ErrorRequest;
 import com.arvatosystems.t9t.base.services.AbstractReadOnlyRequestHandler;
 
 /**
- * A technical Request handler which is used to pass exceptions thrown in outer transport layers through appropriate database logging and response message
+ * A technical request handler which is used to pass exceptions thrown in outer transport layers through appropriate database logging and response message
  * translation.
  */
 public class ErrorRequestHandler extends AbstractReadOnlyRequestHandler<ErrorRequest> {

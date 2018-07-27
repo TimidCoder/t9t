@@ -113,10 +113,7 @@ public class AbstractFormatGeneratorXml extends AbstractFormatGenerator {
         xmlRootElementName  = sinkCfg.getXmlRootElementName();          // simple name of xml root element class
         writeTenantId       = sinkCfg.getWriteTenantId();               // write the tenantId field?
 
-        if (path == null) {
-            throw new T9tIOException(T9tIOException.NO_JAXB_CONTEXT_PATH, sinkCfg.getDataSinkId());
-        }
-        context = jaxbContexts.get(path);
+        context = path == null ? namespaceWriter.getStandardJAXBContext() : jaxbContexts.get(path);
         try {
             if (context == null) {
                 context = JAXBContext.newInstance(path);

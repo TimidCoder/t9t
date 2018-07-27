@@ -131,9 +131,6 @@ If some kind of such behavior is needed, the result needs to be provided to a va
 
 In case of the return value `ERROR`, a BPM error with error code `workflowStepError` is created, which can be handled using an error boundary event.
 
-In case the `mayRun` or `execute` method of the workflow step throws an `ApplicationException`, the return value is provided as `ERROR`.
-Furthermore, a BPM error with the exceptions error code and error message is created, which can be handled using an error boundary event.
-
 
 === Execute Requests
 Besides execution of regular T9T workflow step implementations, execution of arbitrary requests is possible by using the 
@@ -153,9 +150,6 @@ Configuration is possible using following variables (which might be provided usi
 It will be unmarshalled using Bonaparte and thus need to follow the Bonaparte rules for JSON. Furthermore, it must be a subclass of
 `com.arvatosystems.t9t.base.api.RequestParameters`.
 |===
-
-The return code of the execution is checked and in case of an error code, an BPM error is throws with the return code and return message, which can be handled using
-a boundary error event.
 
 Following local variables are available for mapping:
 
@@ -184,6 +178,14 @@ Configuration is possible using following variables (which might be provided usi
 | JSON of request to be executed. It will be unmarshalled using Bonaparte and thus need to follow the Bonaparte rules for JSON.
 Furthermore, is must be a subclass of `com.arvatosystems.t9t.base.event.EventParameters`.
 |===
+
+
+== Process End Events
+All end events can also execute a regular workflow step. The step name to use is defined using an extension `camunda:properties` with the name `WorkflowStepName` attached to the triggered end event in process definition.
+  
+NOTE: No listener need to be added to the process definition to trigger these callbacks. An appropriate listener will added added by T9T during BPM parse.
+
+Execution is done as for regular workflow steps as java delegates, except that the workflow step has to provide the result `DONE`.
 
 
 == Background Job Execution

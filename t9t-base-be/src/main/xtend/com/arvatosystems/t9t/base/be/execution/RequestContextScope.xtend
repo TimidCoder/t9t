@@ -24,6 +24,8 @@ import de.jpaw.dp.Singleton
 import java.util.ArrayList
 import java.util.List
 import org.joda.time.Instant
+import com.arvatosystems.t9t.base.request.TerminateProcessRequest
+import com.arvatosystems.t9t.base.T9tException
 
 /**
  * An extension of the ThreadLocal scope
@@ -65,9 +67,22 @@ class RequestContextScope extends JdpThreadLocalStrict<RequestContext> {
                 if (statusText !== null) {
                     dto.statusText      = if (statusText.length <= 512) statusText else statusText.substring(0, 512)
                 }
+                val threadName = createdByThread.name
+                if (threadName !== null) {
+                    dto.createdByThread = if (threadName.length <= 64) threadName else threadName.substring(0, 64)
+                }
                 result.add(dto)
             }
         ]
         return result
+    }
+
+    def int terminateRequest(TerminateProcessRequest rq) {
+        val processToTerminate = instances.get(rq.threadId)
+        if (processToTerminate === null || processToTerminate.tenantId != rq.tenantId || processToTerminate.requestRef != rq.processRef) {
+            return T9tException.RECORD_DOES_NOT_EXIST
+        }
+        processToTerminate.createdByThread.interrupt();
+        return 0;
     }
 }

@@ -134,6 +134,7 @@ public class T9tException extends ApplicationException {
     public static final int NOT_AN_XENUMSET             = OFFSET_LOGIC_ERROR + 135;
     public static final int MALFORMATTED_FIELDNAME      = OFFSET_LOGIC_ERROR + 136;
     public static final int NOT_ENUM_INSTANCE           = OFFSET_LOGIC_ERROR + 137;
+    public static final int TOO_HIGH_RESULT_SIZE_FOR_SORTING = OFFSET_LOGIC_ERROR + 138;
 
     // Codes specific to getting sequence numbers (artificial keys for JPA)
     public static final int JDBC_BAD_TYPE_RETURNED      = OFFSET_DB_ERROR + 150;
@@ -169,6 +170,7 @@ public class T9tException extends ApplicationException {
 
     // IO errors
     public static final int FILE_NOT_FOUND_FOR_DOWNLOAD = OFFSET + 300;
+    public static final int BAD_REMOTE_RESPONSE         = OFFSET_TIMEOUT + 304;
 
     public static final int UPSTREAM_NULL_RESPONSE      = OFFSET_TIMEOUT + 310;
     public static final int UPSTREAM_BAD_RESPONSE       = OFFSET_TIMEOUT + 311;
@@ -192,6 +194,9 @@ public class T9tException extends ApplicationException {
     public static final int SOLR_EXCEPTION              = OFFSET + 703;
     public static final int NO_CORE_DEFINITION_FOUND    = OFFSET + 704;
     public static final int NO_DOCUMENT_NAME_DEFINED    = OFFSET + 705;
+    public static final int ILLEGAL_SOLR_DB_COMBINED_FILTER_EXPRESSION = OFFSET + 710;
+    public static final int ILE_SOLR_DB_COMBINED_FILTERS = OFFSET_LOGIC_ERROR + 711;
+    public static final int ILE_SOLR_DB_SORT = OFFSET + 712;
 
     // internal logic errors
     public static final int ILE_REQUIRED_PARAMETER_IS_NULL = OFFSET_LOGIC_ERROR + 800;
@@ -339,6 +344,8 @@ public class T9tException extends ApplicationException {
             codeToDescription.put(NOT_AN_XENUMSET,              "Not an xenumset");
             codeToDescription.put(MALFORMATTED_FIELDNAME,       "Badly formatted field name: array index not of form [ (digits) ]");
             codeToDescription.put(NOT_ENUM_INSTANCE,            "enum(set) does not have requested instance name");
+            codeToDescription.put(TOO_HIGH_RESULT_SIZE_FOR_SORTING,  "Too high result size for sorting");
+
 
             // Codes specific to getting sequence numbers (artificial keys for JPA)
             codeToDescription.put(JDBC_BAD_TYPE_RETURNED,       "Sequence query returned a type which cannot be processed (yet)");
@@ -404,6 +411,7 @@ public class T9tException extends ApplicationException {
 
             // IO errors
             codeToDescription.put(FILE_NOT_FOUND_FOR_DOWNLOAD, "File was not found.");
+            codeToDescription.put(BAD_REMOTE_RESPONSE, "received HTTP OK return code, but empty remote response");
 
             // IO errors
             codeToDescription.put(REF_RESOLVER_WRONG_RESPONSE_TYPE, "Unexpected service response type.");
@@ -421,6 +429,9 @@ public class T9tException extends ApplicationException {
             codeToDescription.put(SOLR_EXCEPTION, "Solr based search currently unavailable, exception caught.");
             codeToDescription.put(NO_CORE_DEFINITION_FOUND, "No Solr core (URL) was found on the database.");
             codeToDescription.put(NO_DOCUMENT_NAME_DEFINED, "No documentName defined as property on SOLR search request class");
+            codeToDescription.put(ILLEGAL_SOLR_DB_COMBINED_FILTER_EXPRESSION, "Combined search only allows FieldFilters and AND conditions");
+            codeToDescription.put(ILE_SOLR_DB_COMBINED_FILTERS, "Logic error: missing search filter, which should be there");
+            codeToDescription.put(ILE_SOLR_DB_SORT, "Combined SOLR and DB search only allows a single sort column");
 
             codeToDescription.put(IMPORT_NO_VALID_CLASS_IN_IMPORT_ROUTE, "No valid class name in the configuration of a camel route");
             codeToDescription.put(IMPORT_NO_IMPORT_TYPE_CLASS, "No class for input type in camel route header");

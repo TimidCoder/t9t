@@ -69,6 +69,16 @@ class ConfigProvider {
             strategy                = "SOLR"
             defaultUrl              = "http://localhost:8880/solr6"
         ]
+        asyncMsgConfiguration       = new AsyncTransmitterConfiguration => [
+            strategy                = "LTQ"
+            maxMessageAtStartup     =   100
+            timeoutIdleGreen        =   500
+            timeoutIdleRed          =  5000
+            timeoutShutdown         =  1000
+            timeoutExternal         =  1000
+            waitAfterExtError       = 10000
+            waitAfterDbErrors       = 60000
+        ]
     ]
 
     static private T9tServerConfiguration myConfiguration = postgresConfig
@@ -121,6 +131,7 @@ class ConfigProvider {
             awsConfiguration        = a.awsConfiguration        ?: b.awsConfiguration
             uplinkConfiguration     = a.uplinkConfiguration     ?: b.uplinkConfiguration
             searchConfiguration     = a.searchConfiguration     ?: b.searchConfiguration
+            asyncMsgConfiguration   = a.asyncMsgConfiguration   ?: b.asyncMsgConfiguration
             mocks                   = a.mocks                   ?: b.mocks
             runInCluster            = a.runInCluster            ?: b.runInCluster
             disableScheduler        = a.disableScheduler        ?: b.disableScheduler

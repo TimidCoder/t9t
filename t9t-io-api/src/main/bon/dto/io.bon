@@ -33,7 +33,7 @@ import t9t.base.output.*
  */
 package (com.arvatosystems) t9t.io {
     default private unsigned trim noControlChars;
-    properties inherited, nullWhenZero,
+    properties inherited, nullWhenZero, compact2, noJava, noDDL,
         tenantCategory is com.arvatosystems.t9t.annotations.TenantCategory(),
         searchprefix is com.arvatosystems.t9t.annotations.SearchPrefix(),
         serialized is com.arvatosystems.t9t.annotations.StoreSerialized,
@@ -52,7 +52,7 @@ package (com.arvatosystems) t9t.io {
 
     enum CamelExecutionScheduleType {
         IN_TRANSACTION            = "I",  // immediate transfer in transaction
-        ASYNCHRONOUSLY             = "A",  // immediately afterwards, using an async post commit action
+        ASYNCHRONOUSLY            = "A",  // immediately afterwards, using an async post commit action
         SCHEDULED                 = "S"   // not triggered by the export, run via separate scheduler or external trigger
     }
 
@@ -216,6 +216,8 @@ package (com.arvatosystems) t9t.io {
         optional Enum CamelExecutionScheduleType        camelExecution;             // defines when a camel route should be triggered
         optional Boolean                                checkDuplicateFilename;     // reject sending/receiving duplicate filenames on tenant level
         optional Unicode(255)                           xmlNamespaceMappings;       // xml name space mappings: <namespace-prefix>=<namespace-url> {(; NEWLINE) [namespace-prefix]=[namespace-url]}
+        //optional (AsyncChannelRef..., AsyncChannelDTO)  copyToAsyncChannel properties ref, dropdown="asyncChannelId";        // may reference some async channel to mirror requests to
+        optional t9tShortId                             copyToAsyncChannel;         // may reference some async channel to mirror requests to
     }
 
     /** Records all asynchronous outgoing communication. For every file created, there is one entry of this type.
@@ -281,5 +283,53 @@ package (com.arvatosystems) t9t.io {
         required Unicode(255)                           fileOrQueueName;    // file name (including optional date/time pattern) or queue name
         required xenum MediaXType                       commFormatType;     // filled from configuration lookup
         required Binary(11500000)                       data;               // must be less than maxMessage size in length, when base64 encoded,
+    }
+
+    // Configuration for asynchronous messages
+    class AsyncChannelRef RTTI 16 extends Ref {}
+
+    final class AsyncChannelKey extends AsyncChannelRef {
+        required t9tShortId                             asyncChannelId;
+    }
+
+    /** Configuration for asynchronous messages. */
+    class AsyncChannelDTO extends AsyncChannelRef {
+        properties tenantCategory="E";    // E required, not just D, because Camel startup accesses all other tenants from @ tenant
+        required t9tShortId                             asyncChannelId properties notupdatable;  // the ID of the channel
+        required boolean                                isActive       properties active;        // messages sent to inactive channels will be discarded (not generate an error!)
+        required shortText                              description;                             // some descriptive text
+        required Unicode(255)                           url;                                     // remote URL
+        optional t9tShortId                             authType;                                // basic, apikey etc...
+        optional Unicode(255)                           authParam;                               // userID / password or API-Key (if not required (unlikely), put in "N/A")
+        optional Integer                                maxRetries;                              // if defined, a message should be discarded after this number of attempts! (0 = after initial)
+        required XEnum MediaXType                       payloadFormat;                           // XML, JSON etc.
+        optional Json                                   payloadParameters;                       // XML namespaces etc.
+        optional t9tShortId                             serializerQualifier;                     // specific serialization code (for dependency injection)
+        optional Integer                                timeoutInMs;                             // if not null, overrides the default timeout sprecified in the XML
+    }
+
+    class AsyncMessageRef RTTI 101 extends Ref {}
+    /** Asynchronous messages. Columns objectRef, cTimestamp and mTimestamp are actively used to track message persisting time and success time. */
+    class AsyncMessageDTO extends AsyncMessageRef {
+        required t9tShortId                             asyncChannelId;                          // used to retrieve the URL and authentication parameters
+        optional Enum ExportStatusEnum                  status;                                  // specifies if the message must still be sent or has been sent
+        optional Instant                                lastAttempt;                             // null if no initial send attempt done, date of transmission or last attempt otherwise
+        required integer                                attempts;                                // number of send attempts so far (initially 0)
+        required Object                                 payload properties serialized, compact2; // the serialized message
+        optional Ascii(4)                               refType;                                 // for debugging / maintenance: the type of reference
+        optional defaultExternalId                      refIdentifier;                           // for debugging / maintenance: order ID, customer ID etc.
+        optional f42Ref                                 ref;                                     // for debugging / maintenance: related objectRef
+        optional Integer                                httpResponseCode;                        // if the remote returned some http response code
+        optional Integer                                returnCode;                              // last return code returned by receiver (in payload)
+        optional Unicode(80)                            reference;                               // a reference to the client object, or text response or additional error code
+        optional Long                                   latency properties noJava, noDDL, noAutoMap;  // the time from creation until recent delivery attempt
+    }
+
+    /** Structure to be used for internal message propagation. */
+    final class InMemoryMessage {
+        required Long                                   tenantRef;                               // the tenant of the message
+        required t9tShortId                             asyncChannelId;                          // used to retrieve the URL and authentication parameters
+        optional Long                                   objectRef;                               // refers to a DB entry (to reset the status after a successful send)
+        required Object                                 payload;                                 // the message to be sent
     }
 }

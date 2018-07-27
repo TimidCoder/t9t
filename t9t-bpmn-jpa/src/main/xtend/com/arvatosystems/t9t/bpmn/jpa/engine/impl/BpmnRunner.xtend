@@ -42,6 +42,8 @@ import de.jpaw.dp.Singleton
 import java.util.HashMap
 import java.util.Map
 import org.joda.time.Instant
+import org.slf4j.MDC
+import java.util.Objects
 
 @Singleton
 @AddLogger
@@ -84,81 +86,95 @@ class BpmnRunner implements IBpmnRunner {
     }
 
     def protected boolean run(RequestContext ctx, ProcessExecStatusEntity statusEntity, ProcessDefinitionDTO pd, IBPMObjectFactory<?> factory, Long lockObjectRef, boolean jvmLockAcquired) {
-        val workflowObject = factory.read(statusEntity.targetObjectRef, lockObjectRef, jvmLockAcquired)
-        // only now the lock has been obtained
-        statusResolver.entityManager.refresh(statusEntity)  // inside the lock, read again before we make any changes
-        val parameters = statusEntity.currentParameters ?: new HashMap<String, Object>()  // do not work with the entity data, every getter / setter will convert!
-        statusEntity.yieldUntil = ctx.executionStart;  // default entry for next execution
+        MDC.put(T9tConstants.MDC_BPMN_PROCESS, pd.name?:Objects.toString(pd.objectRef));
+        MDC.put(T9tConstants.MDC_BPMN_PROCESS_INSTANCE, Objects.toString(statusEntity.objectRef));
 
-        //////////////////////////////////////////////////
-        // find where to (re)start...
-        //////////////////////////////////////////////////
-        var int nextStepToExecute = pd.findStep(statusEntity.nextStep)
-        LOGGER.debug("(Re)starting workflow {}: {} for ref {} at step {} ({})",
-            ctx.tenantId, pd.processDefinitionId, statusEntity.targetObjectRef,
-            nextStepToExecute, statusEntity.nextStep ?: ""
-        )
+        try {
+            val workflowObject = factory.read(statusEntity.targetObjectRef, lockObjectRef, jvmLockAcquired)
+            // only now the lock has been obtained
+            statusResolver.entityManager.refresh(statusEntity)  // inside the lock, read again before we make any changes
+            val parameters = statusEntity.currentParameters ?: new HashMap<String, Object>()  // do not work with the entity data, every getter / setter will convert!
+            statusEntity.yieldUntil = ctx.executionStart;  // default entry for next execution
 
-        var boolean running       = true
-        statusEntity.returnCode   = null    // reset issue marker
-        statusEntity.errorDetails = null
-
-        while (running) {
-            // execute a step (or skip it)
-            val nextStep = pd.workflow.steps.get(nextStepToExecute)
-            LOGGER.debug("Starting workflow step {}: {} for ref {} at step {} ({})",
+            //////////////////////////////////////////////////
+            // find where to (re)start...
+            //////////////////////////////////////////////////
+            var int nextStepToExecute = pd.findStep(statusEntity.nextStep)
+            LOGGER.debug("(Re)starting workflow {}: {} for ref {} at step {} ({})",
                 ctx.tenantId, pd.processDefinitionId, statusEntity.targetObjectRef,
                 nextStepToExecute, statusEntity.nextStep ?: ""
             )
-            val WorkflowReturnCode wfReturnCode = nextStep.execute(ctx, pd, statusEntity, workflowObject, parameters)
-            LOGGER.debug("{}.{} ({}) returned {} on object {}", //, parameters are {}",
-                pd.processDefinitionId, nextStep.label, nextStep.ret$PQON, wfReturnCode, statusEntity.targetObjectRef
-            )
 
-            // evaluate workflow return code
-            if (wfReturnCode === WorkflowReturnCode.COMMIT_RESTART || wfReturnCode === WorkflowReturnCode.PROCEED_NEXT || wfReturnCode === WorkflowReturnCode.YIELD_NEXT) {
-                nextStepToExecute += 1
-                if (nextStepToExecute >= pd.workflow.steps.size) {
-                    // implicit end
-                    // remove the status entity
-                    LOGGER.info("Workflow {} COMPLETED by running past end for ref {} (original return code was {})", pd.processDefinitionId, statusEntity.targetObjectRef, wfReturnCode)
-                    statusResolver.entityManager.remove(statusEntity)
-                    return false
+            var boolean running       = true
+            statusEntity.returnCode   = null    // reset issue marker
+            statusEntity.errorDetails = null
+
+            while (running) {
+                // execute a step (or skip it)
+                val nextStep = pd.workflow.steps.get(nextStepToExecute)
+                MDC.put(T9tConstants.MDC_BPMN_STEP, nextStep.label);
+
+                try {
+                    LOGGER.debug("Starting workflow step {}: {} for ref {} at step {} ({})",
+                        ctx.tenantId, pd.processDefinitionId, statusEntity.targetObjectRef,
+                        nextStepToExecute, statusEntity.nextStep ?: ""
+                    )
+                    val WorkflowReturnCode wfReturnCode = nextStep.execute(ctx, pd, statusEntity, workflowObject, parameters)
+                    LOGGER.debug("{}.{} ({}) returned {} on object {}", //, parameters are {}",
+                        pd.processDefinitionId, nextStep.label, nextStep.ret$PQON, wfReturnCode, statusEntity.targetObjectRef
+                    )
+
+                    // evaluate workflow return code
+                    if (wfReturnCode === WorkflowReturnCode.COMMIT_RESTART || wfReturnCode === WorkflowReturnCode.PROCEED_NEXT || wfReturnCode === WorkflowReturnCode.YIELD_NEXT) {
+                        nextStepToExecute += 1
+                        if (nextStepToExecute >= pd.workflow.steps.size) {
+                            // implicit end
+                            // remove the status entity
+                            LOGGER.info("Workflow {} COMPLETED by running past end for ref {} (original return code was {})", pd.processDefinitionId, statusEntity.targetObjectRef, wfReturnCode)
+                            statusResolver.entityManager.remove(statusEntity)
+                            return false
+                        }
+                        statusEntity.nextStep = pd.workflow.steps.get(nextStepToExecute).label
+                    }
+                    switch (wfReturnCode) {
+                        case DONE: {
+                            // remove the status entity
+                            LOGGER.info("Workflow {} COMPLETED with DONE for ref {}", pd.processDefinitionId, statusEntity.targetObjectRef)
+                            statusResolver.entityManager.remove(statusEntity)
+                            return false
+                        }
+                        case YIELD: {
+                            // write back parameters and return, next time we restart the same step!
+                            statusEntity.currentParameters = if (parameters.empty) null else parameters
+                            return false
+                        }
+                        case COMMIT_RESTART: {
+                            // common code executed before...
+                            return true
+                        }
+                        case PROCEED_NEXT: {
+                            // common code executed before...
+                            // fall through (keep running)
+                        }
+                        case YIELD_NEXT: {
+                            // common code executed before...
+                            // write back parameters and return, next time we restart the next step!
+                            statusEntity.currentParameters = if (parameters.empty) null else parameters
+                            return false
+                        }
+                        case ERROR: {
+                            // nothing to do?
+                        }
+                    }
+                } finally {
+                    MDC.remove(T9tConstants.MDC_BPMN_STEP);
                 }
-                statusEntity.nextStep = pd.workflow.steps.get(nextStepToExecute).label
             }
-            switch (wfReturnCode) {
-                case DONE: {
-                    // remove the status entity
-                    LOGGER.info("Workflow {} COMPLETED with DONE for ref {}", pd.processDefinitionId, statusEntity.targetObjectRef)
-                    statusResolver.entityManager.remove(statusEntity)
-                    return false
-                }
-                case YIELD: {
-                    // write back parameters and return, next time we restart the same step!
-                    statusEntity.currentParameters = if (parameters.empty) null else parameters
-                    return false
-                }
-                case COMMIT_RESTART: {
-                    // common code executed before...
-                    return true
-                }
-                case PROCEED_NEXT: {
-                    // common code executed before...
-                    // fall through (keep running)
-                }
-                case YIELD_NEXT: {
-                    // common code executed before...
-                    // write back parameters and return, next time we restart the next step!
-                    statusEntity.currentParameters = if (parameters.empty) null else parameters
-                    return false
-                }
-                case ERROR: {
-                    // nothing to do?
-                }
-            }
+            return false
+        } finally {
+            MDC.remove(T9tConstants.MDC_BPMN_PROCESS);
+            MDC.remove(T9tConstants.MDC_BPMN_PROCESS_INSTANCE);
         }
-        return false
     }
 
     def int findStep(ProcessDefinitionDTO pd, String label) {

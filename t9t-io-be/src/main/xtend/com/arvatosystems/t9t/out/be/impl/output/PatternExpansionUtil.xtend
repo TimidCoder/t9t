@@ -24,11 +24,11 @@ import java.util.Map
 import org.joda.time.LocalDateTime
 
 class PatternExpansionUtil {
-    private static final String CLEAR_DATE_PATTERN = "\\w";
-    private static final String YEAR_PATTERN = "yyyy";
-    private static final String MONTH_PATTERN = "MM";
-    private static final String DAY_PATTERN = "dd";
-    private static final String DATE_PATTERN = "yyyy-MM-dd";
+    static final String CLEAR_DATE_PATTERN = "\\w";
+    static final String YEAR_PATTERN = "yyyy";
+    static final String MONTH_PATTERN = "MM";
+    static final String DAY_PATTERN = "dd";
+    static final String DATE_PATTERN = "yyyy-MM-dd";
 
     def private static String formatDate(LocalDateTime dt, String datePattern) {
         return if (dt === null) datePattern.replaceAll(CLEAR_DATE_PATTERN, "0") else dt.toString(datePattern);
@@ -76,7 +76,7 @@ class PatternExpansionUtil {
         return patternReplacements;
     }
 
-    def public static String expandFileOrQueueName(RequestContext ctx, String pattern, OutputSessionParameters params,
+    def static String expandFileOrQueueName(RequestContext ctx, String pattern, OutputSessionParameters params,
             MediaTypeDescriptor communicationFormatType, Map<String, String> additionalParams) {
         val patternReplacements = buildOutputPatternReplacementsFromParameters(ctx, params, communicationFormatType, additionalParams);
         return SimplePatternEvaluator.evaluate(pattern, patternReplacements);

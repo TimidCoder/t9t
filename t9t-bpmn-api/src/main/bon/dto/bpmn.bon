@@ -22,7 +22,7 @@ import t9t.base.crud.*
 import t9t.base.search.*
 
 /** BPM API module.
- * RTTI values in range 600-699
+ * RTTI values in range 600-650
  *
  * Assigned values are:
  * 601 - ProcessDefinition

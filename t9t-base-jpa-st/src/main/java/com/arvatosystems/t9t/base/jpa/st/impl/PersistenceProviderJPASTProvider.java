@@ -15,6 +15,8 @@
  */
 package com.arvatosystems.t9t.base.jpa.st.impl;
 
+import javax.persistence.EntityManager;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.orm.jpa.JpaTransactionManager;
@@ -37,9 +39,11 @@ public class PersistenceProviderJPASTProvider implements CustomScope<Persistence
 
     private final Provider<RequestContext> ctxProvider = Jdp.getProvider(RequestContext.class);
     private final JpaTransactionManager txMgr;
+    private final EntityManager sharedEntityManager;
 
-    public PersistenceProviderJPASTProvider(JpaTransactionManager txMgr) {
+    public PersistenceProviderJPASTProvider(JpaTransactionManager txMgr, EntityManager sharedEntityManager) {
         this.txMgr = txMgr;
+        this.sharedEntityManager = sharedEntityManager;
     }
 
     @Override
@@ -49,7 +53,7 @@ public class PersistenceProviderJPASTProvider implements CustomScope<Persistence
         if (jpaContext == null) {
             // does not exist, create a new one!
             LOGGER.trace("Adding JPA to request context");
-            jpaContext = new PersistenceProviderJPASTImpl(txMgr);
+            jpaContext = new PersistenceProviderJPASTImpl(txMgr, sharedEntityManager);
             ctx.addPersistenceContext(jpaContext);
         }
 

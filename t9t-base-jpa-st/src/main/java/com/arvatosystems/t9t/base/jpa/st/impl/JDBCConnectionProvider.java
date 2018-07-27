@@ -23,10 +23,15 @@ import java.util.List;
 import javax.persistence.EntityManager;
 import javax.sql.DataSource;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.arvatosystems.t9t.base.jpa.ormspecific.IJpaJdbcConnectionProvider;
 import com.arvatosystems.t9t.base.services.IJdbcConnectionProvider;
 
 public class JDBCConnectionProvider implements IJpaJdbcConnectionProvider, IJdbcConnectionProvider {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(JDBCConnectionProvider.class);
 
     private final DataSource dataSource;
 
@@ -36,6 +41,7 @@ public class JDBCConnectionProvider implements IJpaJdbcConnectionProvider, IJdbc
 
     @Override
     public Connection get(EntityManager em) {
+        LOGGER.trace("get(EntityManager): get jdbc connection based on entity manager {}", em);
         try {
             return dataSource.getConnection();
         } catch (SQLException e) {
@@ -45,6 +51,7 @@ public class JDBCConnectionProvider implements IJpaJdbcConnectionProvider, IJdbc
 
     @Override
     public Connection getJDBCConnection() {
+        LOGGER.trace("getJDBCConnection(): get jdbc connection");
         try {
             return dataSource.getConnection();
         } catch (SQLException e) {

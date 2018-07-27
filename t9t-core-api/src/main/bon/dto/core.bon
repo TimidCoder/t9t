@@ -21,7 +21,7 @@ import t9t.base.api.*
 
 package (com.arvatosystems) t9t.core {
     default private unsigned trim noControlChars;
-    properties noJava, simpleref, compact,
+    properties noJava, simpleref, compact2,
         tenantCategory is com.arvatosystems.t9t.annotations.TenantCategory(),
         searchprefix is com.arvatosystems.t9t.annotations.SearchPrefix(),
         serialized is com.arvatosystems.t9t.annotations.StoreSerialized,
@@ -57,6 +57,6 @@ package (com.arvatosystems) t9t.core {
         required Unicode(80)                        name;                                       // explanation / purpose in primary language
         optional Unicode(255)                       jobRequestObjectName;                       // the PQON of the object extending RequestParameters (if null, then request itself must be populated)
         optional Json                               jobParameters;                              // readable JSOn format of the parameters
-        optional (RequestParameters...)             request             properties serialized, compact;  // filled by backend (for CRUD C and U operations), the canned request including parameters
+        optional (RequestParameters...)             request             properties serialized, compact2;  // filled by backend (for CRUD C and U operations), the canned request including parameters
     }
 }

@@ -18,9 +18,11 @@ package com.arvatosystems.t9t.in.be.impl
 import com.arvatosystems.t9t.in.services.IInputSession
 import com.arvatosystems.t9t.io.DataSinkDTO
 import com.arvatosystems.t9t.io.T9tIOException
+import com.arvatosystems.t9t.out.be.IStandardNamespaceWriter
 import com.arvatosystems.t9t.server.services.IStatefulServiceSession
 import de.jpaw.annotations.AddLogger
 import de.jpaw.bonaparte.core.BonaPortableClass
+import de.jpaw.dp.Inject
 import de.jpaw.util.ExceptionUtil
 import java.util.Map
 import java.util.concurrent.ConcurrentHashMap
@@ -33,8 +35,9 @@ import javax.xml.stream.XMLStreamReader
 abstract class AbstractXmlFormatConverter extends AbstractInputFormatConverter {
 
     // cache for the contexts, to avoid iterative creation of them
+    @Inject
+    protected IStandardNamespaceWriter namespaceWriter
     protected static ConcurrentHashMap<String, JAXBContext> jaxbContexts = new ConcurrentHashMap<String, JAXBContext>(16);
-
     protected JAXBContext context = null;
     protected Unmarshaller m = null;
     protected XMLStreamReader writer = null;
@@ -48,10 +51,12 @@ abstract class AbstractXmlFormatConverter extends AbstractInputFormatConverter {
         val path             = sinkCfg.jaxbContextPath
         defaultNamespace     = sinkCfg.xmlDefaultNamespace
 
-        if (path === null) {
-            throw new T9tIOException(T9tIOException.NO_JAXB_CONTEXT_PATH, sinkCfg.getDataSinkId());
+        context = if (path === null) {
+            // use the default path
+            namespaceWriter.standardJAXBContext
+        } else {
+            jaxbContexts.get(path);
         }
-        context = jaxbContexts.get(path);
         try {
             if (context === null) {
                 context = JAXBContext.newInstance(path);
