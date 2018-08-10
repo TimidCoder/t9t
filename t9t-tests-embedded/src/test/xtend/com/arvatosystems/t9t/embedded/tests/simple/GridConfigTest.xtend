@@ -29,16 +29,16 @@ import org.junit.Test
 import org.junit.Assert
 
 class GridConfigTest {
-    static private ITestConnection dlg
+    static ITestConnection dlg
 
     @BeforeClass
-    def public static void createConnection() {
+    def static void createConnection() {
         // use a single connection for all tests (faster)
         dlg = new InMemoryConnection
     }
 
     @Test
-    def public void readEmailModuleConfigWithLimitTest() {
+    def void readEmailModuleConfigWithLimitTest() {
         val rq = new EmailModuleCfgSearchRequest => [ limit = 26 ]
         val resp = dlg.typeIO(rq, ReadAllResponse)
         println('''EmailCfg result is «ToStringHelper.toStringML(resp.dataList)»''')
@@ -46,7 +46,7 @@ class GridConfigTest {
 
     // email module config search request
     @Test
-    def public void readEmailModuleConfigTest() {
+    def void readEmailModuleConfigTest() {
         val rq = new EmailModuleCfgSearchRequest
         val resp = dlg.typeIO(rq, ReadAllResponse)
         Assert.assertEquals(0, resp.dataList.size)
@@ -54,7 +54,7 @@ class GridConfigTest {
 
     // doc module config search request
     @Test
-    def public void readDocModuleConfigTest() {
+    def void readDocModuleConfigTest() {
         val rq = new DocModuleCfgSearchRequest
         val resp = dlg.typeIO(rq, ReadAllResponse)
         Assert.assertEquals(0, resp.dataList.size)
@@ -62,7 +62,7 @@ class GridConfigTest {
 
     // auth module config search request
     @Test
-    def public void readAuthModuleConfigTest() {
+    def void readAuthModuleConfigTest() {
         val rq = new AuthModuleCfgSearchRequest
         val resp = dlg.typeIO(rq, ReadAllResponse)
         Assert.assertEquals(0, resp.dataList.size)
@@ -70,14 +70,14 @@ class GridConfigTest {
 
     // SOLR module config search request
     @Test
-    def public void readSolrModuleConfigTest() {
+    def void readSolrModuleConfigTest() {
         val rq = new SolrModuleCfgSearchRequest
         val resp = dlg.typeIO(rq, ReadAllResponse)
         Assert.assertEquals(0, resp.dataList.size)
     }
 
     @Test
-    def public void configEnTest() {
+    def void configEnTest() {
         val rq = new GridConfigRequest => [
             gridId                    = "docComponent"
             translateInvisibleHeaders = true
@@ -88,7 +88,7 @@ class GridConfigTest {
     }
 
     @Test
-    def public void configDeTest() {
+    def void configDeTest() {
         val rq = new GridConfigRequest => [
             gridId                    = "docConfig"
             translateInvisibleHeaders = true
