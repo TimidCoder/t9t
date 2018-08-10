@@ -16,14 +16,15 @@
 package com.arvatosystems.t9t.out.jpa.impl;
 
 import java.util.List;
-import java.util.concurrent.Callable;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.concurrent.LinkedTransferQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
@@ -40,8 +41,9 @@ import com.arvatosystems.t9t.base.services.RequestContext;
 import com.arvatosystems.t9t.cfg.be.AsyncTransmitterConfiguration;
 import com.arvatosystems.t9t.cfg.be.ConfigProvider;
 import com.arvatosystems.t9t.io.AsyncChannelDTO;
+import com.arvatosystems.t9t.io.AsyncHttpResponse;
+import com.arvatosystems.t9t.io.AsyncQueueDTO;
 import com.arvatosystems.t9t.io.InMemoryMessage;
-import com.arvatosystems.t9t.io.jpa.entities.AsyncChannelEntity;
 import com.arvatosystems.t9t.io.jpa.entities.AsyncMessageEntity;
 import com.arvatosystems.t9t.out.services.IAsyncMessageUpdater;
 import com.arvatosystems.t9t.out.services.IAsyncQueue;
@@ -50,7 +52,7 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 
 import de.jpaw.bonaparte.core.BonaPortable;
-import de.jpaw.bonaparte.core.HttpPostResponseObject;
+import de.jpaw.bonaparte.util.ToStringHelper;
 import de.jpaw.dp.Jdp;
 import de.jpaw.dp.Named;
 import de.jpaw.dp.Provider;
@@ -63,38 +65,88 @@ public class AsyncQueueLTQ<R extends BonaPortable> implements IAsyncQueue {
     private static final Logger LOGGER = LoggerFactory.getLogger(AsyncQueueLTQ.class);
     private final Provider<RequestContext> ctxProvider = Jdp.getProvider(RequestContext.class);
     private final IAsyncMessageUpdater messageUpdater = Jdp.getRequired(IAsyncMessageUpdater.class);
-    private final IAsyncSender<R> messageSender = Jdp.getRequired(IAsyncSender.class);
-    private final LinkedTransferQueue<InMemoryMessage> queue = new LinkedTransferQueue<>();
-    private final AsyncTransmitterConfiguration serverConfig = ConfigProvider.getConfiguration().getAsyncMsgConfiguration();
-    private final Boolean lock = new Boolean(true);  // separate object used as semaphore
-    private final AtomicBoolean gate = new AtomicBoolean();  // true is GREEN, false is RED
+    private final AsyncTransmitterConfiguration globalServerConfig = ConfigProvider.getConfiguration().getAsyncMsgConfiguration();
     private final AtomicBoolean shutdownInProgress = new AtomicBoolean();
     private final EntityManagerFactory emf = Jdp.getRequired(EntityManagerFactory.class);
     private final Cache<String, AsyncChannelDTO> channelCache = CacheBuilder.newBuilder().expireAfterWrite(30, TimeUnit.SECONDS).build();
-    private ExecutorService executor;
-    private Future<Boolean> writerResult;
+    private final Map<Long, AsyncQueueDTO> queueConfigs;
+    private final Map<Long, WriterThread> writerThreads;
+    private final AtomicInteger threadCounter = new AtomicInteger();
 
-    public AsyncQueueLTQ() {
-        LOGGER.warn("Async queue by LinkedTransferQueue loaded");
-        // get any pending data from DB, fill queue up to a certain limit. If less than MAX_IN_QUEUE records are found, set the gate to GREEN
-        // update: this is done by the regular refill job within the transmitter thread, no need to code it again here
-        // launch a separate thread which continuously drains the transfer queue
-        executor = Executors.newSingleThreadExecutor(call -> new Thread(call, "t9t-AsyncTx"));
-        writerResult = executor.submit(new WriterThread());
+    private ExecutorService executor = null;
+
+    private final String defaultThreadName(Runnable r) {
+        return r instanceof AsyncQueueLTQ.WriterThread ? ((WriterThread)r).threadName : "t9t-AsyncTx-" + threadCounter.incrementAndGet();
     }
 
-    private class WriterThread implements Callable<Boolean> {
+    public AsyncQueueLTQ() {
+        LOGGER.info("Async queue by LinkedTransferQueue loaded");
+
+        // read the configured queues and launch a thread for each of them...
+        final List<AsyncQueueDTO> queueDTOs = messageUpdater.getActiveQueues();
+        queueConfigs = new ConcurrentHashMap<>(2 * queueDTOs.size());
+        writerThreads = new ConcurrentHashMap<>(2 * queueDTOs.size());
+        if (queueDTOs.size() > 0) {
+            // do not use fixed size pool, because it will create an initial thread before the writers are submitted,
+            // which means we do not yet have access to their name.
+            executor = Executors.newCachedThreadPool(r -> new Thread(r, defaultThreadName(r)));
+            for (AsyncQueueDTO q: queueDTOs) {
+                q.freeze();
+                queueConfigs.put(q.getObjectRef(), q);
+                try {
+                    WriterThread thread = new WriterThread(q);
+                    executor.submit(thread);
+                    writerThreads.put(q.getObjectRef(), thread);
+                } catch (Exception e) {
+                    LOGGER.error("Cannot launch async writer thread due to {}", ExceptionUtil.causeChain(e));
+                }
+            }
+        }
+    }
+
+    private class WriterThread implements Runnable {
+        private final LinkedTransferQueue<InMemoryMessage> queue = new LinkedTransferQueue<>();
+        private final String threadName;
+        private final Boolean lock = new Boolean(true);  // separate object used as semaphore
+        private final AtomicBoolean gate = new AtomicBoolean();  // true is GREEN, false is RED
+        private final AsyncTransmitterConfiguration serverConfig;
+        private final AsyncQueueDTO myQueueCfg;
+        private final IAsyncSender sender;
+
+        private WriterThread(AsyncQueueDTO myCfg) {
+            myQueueCfg = myCfg;
+            myQueueCfg.freeze();
+            threadName = "t9t-AsyncTx-" + myCfg.getAsyncQueueId();
+            serverConfig = globalServerConfig.ret$MutableClone(true, false);
+            // merge queue config into global config
+            if (myCfg.getMaxMessageAtStartup() != null)
+                serverConfig.setMaxMessageAtStartup(myCfg.getMaxMessageAtStartup());
+            if (myCfg.getTimeoutIdleGreen() != null)
+                serverConfig.setTimeoutIdleGreen(myCfg.getTimeoutIdleGreen());
+            if (myCfg.getTimeoutIdleRed() != null)
+                serverConfig.setTimeoutIdleRed(myCfg.getTimeoutIdleRed());
+            if (myCfg.getTimeoutExternal() != null)
+                serverConfig.setTimeoutExternal(myCfg.getTimeoutExternal());
+            if (myCfg.getWaitAfterExtError() != null)
+                serverConfig.setWaitAfterExtError(myCfg.getWaitAfterExtError());
+            if (myCfg.getWaitAfterDbErrors() != null)
+                serverConfig.setWaitAfterDbErrors(myCfg.getWaitAfterDbErrors());
+
+            sender = Jdp.getRequired(IAsyncSender.class, myCfg.getSenderQualifier() == null ? "POST" : myCfg.getSenderQualifier());
+            sender.init(myCfg);
+        }
 
         @Override
-        public Boolean call() throws Exception {
+        public void run() {
+            LOGGER.info("Starting async thread {} for queue {}", threadName, myQueueCfg.getAsyncQueueId());
             while (!shutdownInProgress.get()) {
                 try {
                     final InMemoryMessage nextMsg = queue.peek();
                     if (nextMsg != null) {
                         if (!tryToSend(nextMsg)) {
                             // switch to RED and wait
-                            LOGGER.debug("Flipping gate to RED (transmission error)");
-                            gate.set(false);
+                            if (gate.getAndSet(false))
+                                LOGGER.debug("Flipping gate to RED (transmission error)");
                             Thread.sleep(serverConfig.waitAfterExtError);
                         } else {
                             // eat message, it was sent successfully
@@ -115,160 +167,187 @@ public class AsyncQueueLTQ<R extends BonaPortable> implements IAsyncQueue {
                     }
                 } catch (Exception e) {
                     LOGGER.error("Exception in Async transmitter thread: {}", ExceptionUtil.causeChain(e));
+                    LOGGER.error("Trace is", e);
+                    try {
+                        Thread.sleep(serverConfig.waitAfterExtError);
+                    } catch (InterruptedException e1) {
+                        LOGGER.error("Sleep disturbed, terminating!");
+                        break;  // terminate thread!
+                    }
                 }
             }
-            return Boolean.TRUE;
+            LOGGER.info("Stopping async thread {} for queue {} due to system shutdown", threadName, myQueueCfg.getAsyncQueueId());
         }
-    }
 
-    // fills the queue from the DB. Returns true if there was at least one element (or an exception has occurred), else false.
-    // the gate is "RED" if we enter here. Synchronization is needed if we want to flip to "GREEN", in order to avoid race conditions
-    protected boolean refillQueue() {
-        final EntityManager em = emf.createEntityManager();
-        List<AsyncMessageEntity> results = null;
+        // fills the queue from the DB. Returns true if there was at least one element (or an exception has occurred), else false.
+        // the gate is "RED" if we enter here. Synchronization is needed if we want to flip to "GREEN", in order to avoid race conditions
+        protected boolean refillQueue() {
+            final EntityManager em = emf.createEntityManager();
+            List<AsyncMessageEntity> results = null;
 
-        synchronized(lock) {
-            try {
-                em.getTransaction().begin();
-                TypedQuery<AsyncMessageEntity> query = em.createQuery("SELECT m FROM AsyncMessageEntity m WHERE m.status != null ORDER BY m.objectRef", AsyncMessageEntity.class);
-                query.setMaxResults(serverConfig.maxMessageAtStartup);
-                results = query.getResultList();
-                em.getTransaction().commit();
-                em.clear();
-            } catch (Exception e) {
-                LOGGER.error("Database query exception: {}", ExceptionUtil.causeChain(e));
+            synchronized(lock) {
                 try {
-                    Thread.sleep(serverConfig.waitAfterDbErrors);
-                } catch (InterruptedException e1) {
-                    // continue with aborted sleep
-                    return true;
+                    em.getTransaction().begin();
+                    TypedQuery<AsyncMessageEntity> query = em.createQuery(
+                            "SELECT m FROM AsyncMessageEntity m WHERE m.status != null AND m.asyncQueueRef = :queueRef ORDER BY m.objectRef",
+                            AsyncMessageEntity.class);
+                    query.setParameter("queueRef", myQueueCfg.getObjectRef());
+                    query.setMaxResults(serverConfig.maxMessageAtStartup);
+                    results = query.getResultList();
+                    em.getTransaction().commit();
+                    em.clear();
+                } catch (Exception e) {
+                    LOGGER.error("Database query exception: {}", ExceptionUtil.causeChain(e));
+                    try {
+                        Thread.sleep(serverConfig.waitAfterDbErrors);
+                    } catch (InterruptedException e1) {
+                        // continue with aborted sleep
+                        return true;
+                    }
+                } finally {
+                    em.close();
                 }
-            } finally {
-                em.close();
+                if (results == null) {
+                    // error: do nothing
+                    return false;
+                } else if (results.size() == 0) {
+                    // switch to green, no data pending
+                    LOGGER.debug("Flipping gate to GREEN (queue empty)");
+                    gate.set(true);
+                    return false;
+                }
+                // add them to the queue
+                for (AsyncMessageEntity m : results) {
+                    queue.put(new InMemoryMessage(m.getTenantRef(), m.getAsyncChannelId(), m.getObjectRef(), m.getPayload()));
+                }
+                if (results.size() < serverConfig.maxMessageAtStartup) {
+                    LOGGER.debug("Flipping gate to GREEN (low watermark)");
+                    gate.set(true);
+                }
             }
-            if (results == null) {
-                // error: do nothing
-                return false;
-            } else if (results.size() == 0) {
-                // switch to green, no data pending
-                LOGGER.debug("Flipping gate to GREEN (queue empty)");
-                gate.set(true);
-                return false;
-            }
-            // add them to the queue
-            for (AsyncMessageEntity m : results) {
-                queue.put(new InMemoryMessage(m.getTenantRef(), m.getAsyncChannelId(), m.getObjectRef(), m.getPayload()));
-            }
-            if (results.size() < serverConfig.maxMessageAtStartup) {
-                LOGGER.debug("Flipping gate to GREEN (low watermark)");
-                gate.set(true);
+            return true;
+        }
+
+        private void send(RequestContext ctx, InMemoryMessage m) {
+            synchronized(lock) {
+                if (gate.get()) {
+                    // we are in "GREEN" status
+                    ctx.addPostCommitHook((RequestContext oldCtx, RequestParameters rq, ServiceResponse rs) -> {
+                        queue.put(m);
+                    });
+                }
             }
         }
-        return true;
+
+        private void clearQueue() {
+            // drain the queue! This is done after artificially removing entries from the queue
+            queue.clear();
+            gate.set(true);  // gate must be true now, because we otherwise will never poll again
+        }
+
+        private void close() {
+            LOGGER.info("Shutting down async transmitter {} (in current state {})", threadName, gate.get());
+            gate.set(false);
+        }
+
+        // sends a message. In case of error, the gate is flipped to "RED" and a long timeout is done, in order to ensure we do not burn CPU
+        // in high frequency retry cycles.
+        // Returns true is the message was sent successfully, else false
+        protected boolean tryToSend(final InMemoryMessage nextMsg) {
+            ExportStatusEnum newStatus = ExportStatusEnum.RESPONSE_ERROR;  // OK when sent
+            final String channelId = nextMsg.getAsyncChannelId();
+            final Long tenantRef = nextMsg.getTenantRef();
+            try {
+                LOGGER.info("Sending message to channel {} of type {}", nextMsg.getAsyncChannelId(), nextMsg.getPayload().ret$PQON());
+                // obtain (cached) channel config
+                final AsyncChannelDTO channelDto = getCachedChannelConfig(channelId, tenantRef);
+                if (!channelDto.getIsActive()) {
+                    LOGGER.debug("Discarding async message to inactive channel {}", channelId);
+                    newStatus = ExportStatusEnum.RESPONSE_OK;
+                } else {
+
+                    // log message if desired (expensive!)
+                    if (LOGGER.isTraceEnabled()) {
+                        LOGGER.trace("Sending payload {}, objectRef {}", ToStringHelper.toStringML(nextMsg.getPayload()), nextMsg.getObjectRef());
+                    }
+
+                    Integer newHttpCode = null;
+                    Integer newClientReturnCode = null;
+                    String newClientReference = null;
+                    try {
+                        int timeout = channelDto.getTimeoutInMs() == null ? serverConfig.getTimeoutExternal() : channelDto.getTimeoutInMs().intValue();
+                        AsyncHttpResponse resp =  sender.send(channelDto, nextMsg.getPayload(), timeout, nextMsg.getObjectRef());
+                        newHttpCode = resp.getHttpReturnCode();
+                        newStatus = (newHttpCode / 100) == 2 ? ExportStatusEnum.RESPONSE_OK : ExportStatusEnum.RESPONSE_ERROR;
+                        newClientReturnCode = resp.getClientReturnCode();
+                        newClientReference = resp.getClientReference();
+                    } catch (Exception e) {
+                        LOGGER.error("Exception in external http: {}", ExceptionUtil.causeChain(e));
+                        newHttpCode = 999;
+                    }
+                    messageUpdater.updateMessage(nextMsg.getObjectRef(), newStatus, newHttpCode, newClientReturnCode, newClientReference);
+                    return newStatus == ExportStatusEnum.RESPONSE_OK;
+                }
+            } catch (ExecutionException e) {
+                LOGGER.error("Cannot get cache configuration for channelId {}: {}", channelId, ExceptionUtil.causeChain(e));
+                newStatus = ExportStatusEnum.PROCESSING_ERROR;
+            }
+
+            messageUpdater.updateMessage(nextMsg.getObjectRef(), newStatus, null, null, null);
+            return newStatus == ExportStatusEnum.RESPONSE_OK;
+        }
     }
 
-    // sends a message. In case of error, the gate is flipped to "RED" and a long timeout is done, in order to ensure we do not burn CPU
-    // in high frequency retry cycles.
-    // Returns true is the message was sent successfully, else false
-    protected boolean tryToSend(final InMemoryMessage nextMsg) {
-        ExportStatusEnum newStatus = ExportStatusEnum.RESPONSE_ERROR;  // OK when sent
-        final String channelId = nextMsg.getAsyncChannelId();
-        final Long tenantRef = nextMsg.getTenantRef();
-        try {
-            LOGGER.info("Sending message to channel {} of type {}", nextMsg.getAsyncChannelId(), nextMsg.getPayload().ret$PQON());
-            // obtain (cached) channel config
-            final AsyncChannelDTO channelDto = channelCache.get(channelId, () -> readChannelConfig(channelId, tenantRef));
-            if (!channelDto.getIsActive()) {
-                LOGGER.debug("Discarding async message to inactive channel {}", channelId);
-                newStatus = ExportStatusEnum.RESPONSE_OK;
-            } else {
-                // do external I/O
-                Integer newHttpCode = null;
-                Integer newClientReturnCode = null;
-                String newClientReference = null;
-                HttpPostResponseObject resp = messageSender.fireMessage(channelDto, serverConfig.timeoutExternal, nextMsg.getPayload());
-                newHttpCode = resp.getHttpReturnCode();
-                newStatus = (newHttpCode / 100) == 2 ? ExportStatusEnum.RESPONSE_OK : ExportStatusEnum.RESPONSE_ERROR;
-                if (resp.getResponseObject() != null) {
-                    R r = (R)resp.getResponseObject();
-                    newClientReturnCode = messageSender.getClientReturnCode(r);
-                    newClientReference = messageSender.getClientReference(r);
-                }
-                messageUpdater.updateMessage(nextMsg.getObjectRef(), newStatus, newHttpCode, newClientReturnCode, newClientReference);
-                return newStatus == ExportStatusEnum.RESPONSE_OK;
-            }
-        } catch (ExecutionException e) {
-            LOGGER.error("Cannot get cache configuration for channelId {}: {}", channelId, ExceptionUtil.causeChain(e));
-            newStatus = ExportStatusEnum.PROCESSING_ERROR;
-        }
-
-        messageUpdater.updateMessage(nextMsg.getObjectRef(), newStatus, null, null, null);
-        return newStatus == ExportStatusEnum.RESPONSE_OK;
-    }
-
-    // read a channel configuration from the database
-    protected AsyncChannelDTO readChannelConfig(String channelId, Long tenantRef) {
-        LOGGER.debug("Reading async channel configuration for channelId {}, tenantRef {}", channelId, tenantRef);
-        final EntityManager em = emf.createEntityManager();
-        List<AsyncChannelEntity> results = null;
-        try {
-            em.getTransaction().begin();
-            TypedQuery<AsyncChannelEntity> query = em.createQuery("SELECT cfg FROM AsyncChannelEntity cfg WHERE cfg.asyncChannelId = :channelId and cfg.tenantRef = :tenantRef", AsyncChannelEntity.class);
-            query.setParameter("tenantRef", tenantRef);
-            query.setParameter("channelId", channelId);
-            results = query.getResultList();
-            em.getTransaction().commit();
-            em.clear();
-        } finally {
-            em.close();
-        }
-        if (results.size() != 1)
-            throw new T9tException(T9tException.RECORD_DOES_NOT_EXIST, "ChannelId " + channelId + " for tenant " + tenantRef);
-        AsyncChannelDTO dto = results.get(0).ret$Data();
-        dto.freeze();  // ensure it stays immutable in cache
-        return dto;
+    private AsyncChannelDTO getCachedChannelConfig(String asyncChannelId, Long tenantRef) throws ExecutionException {
+        return channelCache.get(asyncChannelId, () -> messageUpdater.readChannelConfig(asyncChannelId, tenantRef));
     }
 
     @Override
-    public void sendAsync(final String asyncChannelId, BonaPortable payload, Long objectRef) {
+    public Long sendAsync(final String asyncChannelId, BonaPortable payload, Long objectRef) {
         final RequestContext ctx = ctxProvider.get();
         // redundant check to see if the channel exists (to get exception in sync thread already). Should not cost too much time due to caching
         try {
-            final AsyncChannelDTO cfg = channelCache.get(asyncChannelId, () -> readChannelConfig(asyncChannelId, ctx.tenantRef));
-            if (!cfg.getIsActive()) {
-                LOGGER.debug("Discarding async message to inactive channel {}", asyncChannelId);
-                return;
+            final AsyncChannelDTO cfg = getCachedChannelConfig(asyncChannelId, ctx.tenantRef);
+            if (!cfg.getIsActive() || cfg.getAsyncQueueRef() == null) {
+                LOGGER.debug("Discarding async message to inactive or unassociated channel {}", asyncChannelId);
+                return null;
             }
+            final Long asyncQueueRef = cfg.getAsyncQueueRef().getObjectRef();
+            LOGGER.debug("checking queueRef {}", asyncQueueRef);
+            final AsyncQueueDTO queue = queueConfigs.get(asyncQueueRef);
+            if (queue == null) {
+                LOGGER.debug("Discarding async message to channel {}: Not associated with an active queue!", asyncChannelId);
+                return null;
+            }
+
+            // build the in-memory message
+            final InMemoryMessage m = new InMemoryMessage();
+            m.setTenantRef(ctx.tenantRef);       // obtain the tenantRef and store it
+            m.setAsyncChannelId(asyncChannelId);
+            m.setObjectRef(objectRef);
+            m.setPayload(payload);
+
+            WriterThread w = writerThreads.get(queue.getObjectRef());
+            if (w == null) {
+                LOGGER.error("Cannot find cached writer thread for channel {}, cannot send now!", asyncChannelId);
+            } else {
+                w.send(ctx, m);
+            }
+            return queue.getObjectRef();
         } catch (ExecutionException e) {
             LOGGER.error("Cannot get cache configuration for channelId {}: {}", asyncChannelId, ExceptionUtil.causeChain(e));
             throw new T9tException(T9tException.RECORD_DOES_NOT_EXIST, "ChannelId " + asyncChannelId);
-        }
-
-        // build the in-memory message
-        final InMemoryMessage m = new InMemoryMessage();
-        m.setTenantRef(ctx.tenantRef);       // obtain the tenantRef and store it
-        m.setAsyncChannelId(asyncChannelId);
-        m.setObjectRef(objectRef);
-        m.setPayload(payload);
-
-        synchronized(lock) {
-            if (gate.get()) {
-                // we are in "GREEN" status
-                ctx.addPostCommitHook((RequestContext oldCtx, RequestParameters rq, ServiceResponse rs) -> {
-                    queue.put(m);
-                });
-            }
         }
     }
 
     @Override
     public void close() {
-        LOGGER.info("Shutting down async transmitter (in current state {})", gate.get());
-        gate.set(false);
+        for (WriterThread w: writerThreads.values())
+            w.close();
         shutdownInProgress.set(true);
         executor.shutdown();
         try {
-            if (executor.awaitTermination(serverConfig.timeoutShutdown, TimeUnit.MILLISECONDS)) {
+            if (executor.awaitTermination(globalServerConfig.timeoutShutdown, TimeUnit.MILLISECONDS)) {
                 LOGGER.info("Normal completion of shutting down async transmitter");
             } else {
                 LOGGER.warn("Timeout during shutdown of async transmitter");
@@ -279,9 +358,18 @@ public class AsyncQueueLTQ<R extends BonaPortable> implements IAsyncQueue {
     }
 
     @Override
-    public void clearQueue() {
-        // drain the queue! This is done after artificially removing entries from the queue
-        queue.clear();
-        gate.set(true);  // gate must be true now, because we otherwise will never poll again
+    public void clearQueue(Long queueRef) {
+        if (queueRef == null) {
+            for (WriterThread w: writerThreads.values()) {
+                w.clearQueue();
+            }
+        } else {
+            WriterThread w = writerThreads.get(queueRef);
+            if (w != null) {
+                w.clearQueue();
+            } else {
+                LOGGER.error("Cannot find writer thread for {}", queueRef);
+            }
+        }
     }
 }

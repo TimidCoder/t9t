@@ -19,13 +19,21 @@ import com.arvatosystems.t9t.annotations.jpa.AutoHandler
 import com.arvatosystems.t9t.annotations.jpa.AutoMap42
 import com.arvatosystems.t9t.io.AsyncChannelDTO
 import com.arvatosystems.t9t.io.jpa.entities.AsyncChannelEntity
+import com.arvatosystems.t9t.io.jpa.mapping.IAsyncQueueDTOMapper
 import com.arvatosystems.t9t.io.jpa.persistence.IAsyncChannelEntityResolver
+import com.arvatosystems.t9t.io.jpa.persistence.IAsyncQueueEntityResolver
 
 @AutoMap42
-public class AsyncChannelMappers {
+class AsyncChannelMappers {
     IAsyncChannelEntityResolver resolver
+    IAsyncQueueEntityResolver queueResolver
+    IAsyncQueueDTOMapper queueMapper
 
     @AutoHandler("SC42")
-    def void e2dAsyncChannelDTO(AsyncChannelEntity entity, AsyncChannelDTO dto) {}
-    def void d2eAsyncChannelDTO(AsyncChannelEntity entity, AsyncChannelDTO dto, boolean onlyActive) {}
+    def void e2dAsyncChannelDTO(AsyncChannelEntity entity, AsyncChannelDTO dto) {
+        dto.asyncQueueRef = queueMapper.mapToDto(entity.asyncQueue)
+    }
+    def void d2eAsyncChannelDTO(AsyncChannelEntity entity, AsyncChannelDTO dto, boolean onlyActive) {
+        entity.asyncQueueRef = queueResolver.getRef(dto.asyncQueueRef, onlyActive)
+    }
 }

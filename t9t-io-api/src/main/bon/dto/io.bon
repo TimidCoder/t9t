@@ -33,7 +33,7 @@ import t9t.base.output.*
  */
 package (com.arvatosystems) t9t.io {
     default private unsigned trim noControlChars;
-    properties inherited, nullWhenZero, compact2, noJava, noDDL,
+    properties inherited, nullWhenZero, compact2, noJava, noDDL, simpleref, qualifierFor,
         tenantCategory is com.arvatosystems.t9t.annotations.TenantCategory(),
         searchprefix is com.arvatosystems.t9t.annotations.SearchPrefix(),
         serialized is com.arvatosystems.t9t.annotations.StoreSerialized,
@@ -174,8 +174,8 @@ package (com.arvatosystems) t9t.io {
         required Unicode(255)                           fileOrQueueNamePattern;     // substitutions: DAY/TIME, TENANT,
         required boolean                                compressed;                 // if true and the output type is a file, then it should be compressed (gzipped) on the fly
         optional Ascii(8)                               originatorModule;           // REP, COMM, AROMA etc...
-        optional customizationQualifier                 preTransformerName;         // custom pre-transform to transform output data before storing it
-        optional customizationQualifier                 commFormatName;             // custom communication format name (done through DI lookup)
+        optional customizationQualifier                 preTransformerName properties qualifierFor="out.be.IPreOutputDataTransformer";     // custom pre-transform to transform output data before storing it
+        optional customizationQualifier                 commFormatName     properties qualifierFor="out.be.ICommunicationFormatGenerator"; // custom communication format name (done through DI lookup)
         required xenum DataSinkCategoryXType            category;                   // the type of data sink
         // 42: this is a ref there. in 28, it cannot be, because callbacks are defined in a different module
         optional f42Ref                                 callbackRef     properties dropdown="cannedRequestId";                // link to CannedRequestRef   ...  the request handler to call for operation results (when an entry is finished or aborted with an error)
@@ -286,34 +286,78 @@ package (com.arvatosystems) t9t.io {
     }
 
     // Configuration for asynchronous messages
+
+    class AsyncQueueRef RTTI 17 extends Ref {}
+
+    final class AsyncQueueKey extends AsyncQueueRef {
+        required t9tShortId                             asyncQueueId;
+    }
+
+    /**
+     * Configuration for asynchronous queues. A queue represents one or more channels. All messages within a queue must be delivered in order.
+     * A queue is represented by a separate thread of name t9t-AsyncTx-(asyncQueueId) at runtime.
+     * The queue allows to override the timeout and throttling configuration of the XMl config.
+     * Changes in queue configuration and channel to queue assignment currently require a restart.
+     *
+     * The active flag of a queue determines if there are delivery attempts. If a queue is set to inactive, messages will be stored
+     * and delivered after the queue has been reactivated. This could cause some monitoring software to raise alerts if maxAgeInSeconds
+     * has been configured.
+     */
+    class AsyncQueueDTO extends AsyncQueueRef {
+        properties tenantCategory="E";    // E required, not just D, because Camel startup accesses all other tenants from @ tenant
+        required t9tShortId                             asyncQueueId   properties notupdatable;  // the ID of the queue
+        required boolean                                isActive       properties active;        // messages sent to inactive channels will be discarded (not generate an error!)
+        required shortText                              description;                             // some descriptive text
+        optional customizationQualifier                 defaultSerializerQualifier properties qualifierFor="out.services.IMarshallerExt"; // specific serialization code (for dependency injection)
+        optional customizationQualifier                 senderQualifier            properties qualifierFor="out.services.IAsyncSender";   // specific serialization code (for dependency injection)
+        optional Integer                                maxMessageAtStartup;    // how many persisted messages to load initially at max [100]
+        optional Integer                                timeoutIdleGreen;       // sleep time in ms when queue is empty and last request was green [500 ms]
+        optional Integer                                timeoutIdleRed;         // sleep time in ms after an error [5000 ms]
+        optional Integer                                timeoutExternal;        // max allowable duration of an external request [1000 ms]
+        optional Integer                                waitAfterExtError;      // sleep time in ms after an initial remote problem [10000 ms]
+        optional Integer                                waitAfterDbErrors;      // sleep time in ms after a database error [60000 ms]
+        optional Integer                                maxAgeInSeconds;        // can be used by monitoring to raise an alert if the queue's pending messages are stalled for this amount of time
+        optional Integer                                purgeAfterSeconds;      // a which age to delete sent messages
+        optional Json                                   z;                      // additional custom attributes
+    }
+
+    // Configuration for asynchronous messages
     class AsyncChannelRef RTTI 16 extends Ref {}
 
     final class AsyncChannelKey extends AsyncChannelRef {
         required t9tShortId                             asyncChannelId;
     }
 
-    /** Configuration for asynchronous messages. */
+    /**
+     * Configuration of channels for asynchronous messages.
+     * A channel describes the message format and is associated with a logical structure.
+     * Multiple channels are grouped together in a queue, the queue determines the order of delivery.
+     * The active flag of the channel controls if a message will be processed or discarded.
+     */
     class AsyncChannelDTO extends AsyncChannelRef {
         properties tenantCategory="E";    // E required, not just D, because Camel startup accesses all other tenants from @ tenant
         required t9tShortId                             asyncChannelId properties notupdatable;  // the ID of the channel
         required boolean                                isActive       properties active;        // messages sent to inactive channels will be discarded (not generate an error!)
         required shortText                              description;                             // some descriptive text
+        optional (AsyncQueueRef..., AsyncQueueDTO)      asyncQueueRef  properties ref, searchprefix="asyncQueue", simpleref="getObjectRef()", dropdown="asyncQueueId";
         required Unicode(255)                           url;                                     // remote URL
-        optional t9tShortId                             authType;                                // basic, apikey etc...
-        optional Unicode(255)                           authParam;                               // userID / password or API-Key (if not required (unlikely), put in "N/A")
-        optional Integer                                maxRetries;                              // if defined, a message should be discarded after this number of attempts! (0 = after initial)
-        required XEnum MediaXType                       payloadFormat;                           // XML, JSON etc.
-        optional Json                                   payloadParameters;                       // XML namespaces etc.
-        optional t9tShortId                             serializerQualifier;                     // specific serialization code (for dependency injection)
+        optional t9tShortId                             authType;                                // basic, apikey etc... (for information / documentation in core, can be used by customizations)
+        optional Unicode(255)                           authParam;                               // userID / password or API-Key
+        optional Integer                                maxRetries;                              // can be used by monitoring to raise an alert after this number of attempts
+        required XEnum MediaXType                       payloadFormat;                           // XML, JSON etc. (for information / documentation in core, can be used by customizations supporting multiple formats)
+        optional customizationQualifier                 serializerQualifier properties qualifierFor="out.services.IMarshallerExt";  // specific serialization code (for dependency injection)
         optional Integer                                timeoutInMs;                             // if not null, overrides the default timeout sprecified in the XML
+        optional Json                                   z;                      // additional custom attributes
     }
 
     class AsyncMessageRef RTTI 101 extends Ref {}
     /** Asynchronous messages. Columns objectRef, cTimestamp and mTimestamp are actively used to track message persisting time and success time. */
     class AsyncMessageDTO extends AsyncMessageRef {
-        required t9tShortId                             asyncChannelId;                          // used to retrieve the URL and authentication parameters
+        required t9tShortId                             asyncChannelId properties dropdown="asyncChannelId";  // used to retrieve the URL and authentication parameters
+        optional (AsyncQueueRef..., AsyncQueueDTO)      asyncQueueRef  properties ref, searchprefix="asyncQueue", simpleref="getObjectRef()", dropdown="asyncQueueId";
         optional Enum ExportStatusEnum                  status;                                  // specifies if the message must still be sent or has been sent
-        optional Instant                                lastAttempt;                             // null if no initial send attempt done, date of transmission or last attempt otherwise
+        optional Instant(3)                             whenSent;                                // defines when the message was initiated (which is before the commit of the sending transaction is done, and before the EventBus transmission)
+        optional Instant(3)                             lastAttempt;                             // null if no initial send attempt done, date of transmission or last attempt otherwise
         required integer                                attempts;                                // number of send attempts so far (initially 0)
         required Object                                 payload properties serialized, compact2; // the serialized message
         optional Ascii(4)                               refType;                                 // for debugging / maintenance: the type of reference
@@ -331,5 +375,13 @@ package (com.arvatosystems) t9t.io {
         required t9tShortId                             asyncChannelId;                          // used to retrieve the URL and authentication parameters
         optional Long                                   objectRef;                               // refers to a DB entry (to reset the status after a successful send)
         required Object                                 payload;                                 // the message to be sent
+    }
+
+    final class AsyncHttpResponse {
+        required int                                    httpReturnCode;
+        optional shortText                              httpStatusMessage;
+        optional Element                                responseObject;                         // full response as received by web service
+        optional Integer                                clientReturnCode;                       // parsed business return code from the above (or null)
+        optional shortText                              clientReference;                        // parsed business reference / invocation reference
     }
 }

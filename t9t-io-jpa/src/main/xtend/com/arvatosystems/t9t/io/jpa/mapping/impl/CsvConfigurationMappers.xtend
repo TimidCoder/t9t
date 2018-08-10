@@ -22,7 +22,7 @@ import com.arvatosystems.t9t.io.jpa.entities.CsvConfigurationEntity
 import com.arvatosystems.t9t.io.jpa.persistence.ICsvConfigurationEntityResolver
 
 @AutoMap42
-public class CsvConfigurationMappers {
+class CsvConfigurationMappers {
     ICsvConfigurationEntityResolver entityResolver
 
     @AutoHandler("S42")

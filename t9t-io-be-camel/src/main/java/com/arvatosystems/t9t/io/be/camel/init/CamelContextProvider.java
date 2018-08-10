@@ -36,6 +36,7 @@ import de.jpaw.dp.Provider;
 import de.jpaw.dp.Singleton;
 import de.jpaw.dp.Startup;
 import de.jpaw.dp.StartupShutdown;
+import de.jpaw.util.ExceptionUtil;
 
 /**
  *
@@ -67,7 +68,8 @@ public class CamelContextProvider implements StartupShutdown, Provider<CamelCont
                     LOGGER.info("Adding route: {}", clazz.getClass());
                     camelContext.addRoutes(clazz);
                 } catch (Exception e) {
-                    LOGGER.debug("There was a problem initializing route: {} with the following exception ", clazz.getClass(), e);
+                    // in case of problems rather skip a single route instead of not initializing the context at all!
+                    LOGGER.debug("There was a problem initializing route: {} due to ", clazz.getClass(), e);
                 }
             }
         } else {
@@ -82,7 +84,11 @@ public class CamelContextProvider implements StartupShutdown, Provider<CamelCont
             List<DataSinkDTO> dataSinkDTOList = iOutPersistenceAccess.getDataSinkDTOsForEnvironment(environment);
             LOGGER.info("Looking for Camel import routes for environment {}: {} routes found", environment, dataSinkDTOList.size());
             for (DataSinkDTO dataSinkDTO : dataSinkDTOList) {
-                camelService.addRoutes(dataSinkDTO);
+                try {
+                    camelService.addRoutes(dataSinkDTO);
+                } catch (Exception e) {
+                    LOGGER.error("Could not add Camel route for {} due to {}", dataSinkDTO.getDataSinkId(), ExceptionUtil.causeChain(e));
+                }
             }
             camelContext.start();
 

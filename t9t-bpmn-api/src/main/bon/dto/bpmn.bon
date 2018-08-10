@@ -30,7 +30,7 @@ import t9t.base.search.*
  */
 package (com.arvatosystems) t9t.bpmn {
     default private unsigned trim noControlChars;
-    properties inherited, active, length,
+    properties inherited, active, length, qualifierFor,
         tenantCategory is com.arvatosystems.t9t.annotations.TenantCategory(),
         searchprefix is com.arvatosystems.t9t.annotations.SearchPrefix(),
         serialized is com.arvatosystems.t9t.annotations.StoreSerialized,
@@ -69,11 +69,11 @@ package (com.arvatosystems) t9t.bpmn {
     }
 
     final class T9tWorkflowStepJavaTask extends T9tAbstractWorkflowStep {
-        required defaultExternalId                      stepName;     // Jdp qualifier of the workflow step
+        required defaultExternalId                      stepName properties qualifierFor="bpmn.IWorkflowStep";     // Jdp qualifier of the workflow step
     }
 
     final class T9tWorkflowStepAddParameters extends T9tAbstractWorkflowStep {
-        required Json                                   parameters;   // Jdp qualifier of the workflow step
+        required Json                                   parameters;   // map of key / value pairs
     }
 
     final class T9tWorkflowStepGoto extends T9tAbstractWorkflowStep {

@@ -27,7 +27,7 @@ import java.util.UUID
 @AddLogger
 @Singleton
 @Named("NULL")
-class CommonsEmailService implements IEmailSender {
+class NoopEmailService implements IEmailSender {
 
     override sendEmail(Long messageRef, UUID messageId, EmailMessage msg, EmailModuleCfgDTO configuration) {
         LOGGER.info("Not sending email ref {}, ID {} to {} (stub NULL configured)", messageRef, messageId, msg.recipient.to.get(0))

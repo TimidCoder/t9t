@@ -28,7 +28,7 @@ import t9t.doc.api.*
  */
 package (com.arvatosystems) t9t.email {
     default private unsigned trim noControlChars;
-    properties inherited,
+    properties inherited, qualifierFor,
         tenantCategory is com.arvatosystems.t9t.annotations.TenantCategory(),
         searchprefix is com.arvatosystems.t9t.annotations.SearchPrefix(),
         serialized is com.arvatosystems.t9t.annotations.StoreSerialized,
@@ -42,7 +42,7 @@ package (com.arvatosystems) t9t.email {
      */
     class EmailModuleCfgDTO RTTI 2001 extends ModuleConfigDTO {
         properties                                  tenantCategory="D";                                 // if entry missing, get the global one
-        optional Ascii(8)                           implementation         default "SMTP";              // currently supported: SMTP, SES, VERTX
+        optional Ascii(8)                           implementation         default "SMTP" properties qualifierFor="email.services.IEmailSender"; // currently supported: SMTP, SES, VERTX
         optional Ascii(8)                           smtpServerTransport    default "smtp";              // default to "smtp"
         optional Unicode(100)                       smtpServerAddress;
         optional Integer                            smtpServerPort;

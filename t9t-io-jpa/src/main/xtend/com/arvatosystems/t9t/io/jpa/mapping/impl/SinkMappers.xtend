@@ -24,7 +24,7 @@ import com.arvatosystems.t9t.io.jpa.persistence.IDataSinkEntityResolver
 import com.arvatosystems.t9t.io.jpa.persistence.ISinkEntityResolver
 
 @AutoMap42
-public class SinkMappers {
+class SinkMappers {
     ISinkEntityResolver entityResolver
     IDataSinkEntityResolver sinkResolver
     IDataSinkFilterPropsMapper sinkMapper

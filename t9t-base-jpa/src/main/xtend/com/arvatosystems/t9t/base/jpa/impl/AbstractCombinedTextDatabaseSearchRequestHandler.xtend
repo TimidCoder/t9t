@@ -46,6 +46,7 @@ import java.util.Map
 import org.eclipse.xtend.lib.annotations.Data
 import java.util.HashSet
 import com.arvatosystems.t9t.base.search.SearchFilterMatchTypeEnum
+import de.jpaw.bonaparte.pojos.api.NotFilter
 
 /**
  * The combined search evaluates if we have filter and/or sort criteria for DB and SOLR,
@@ -367,6 +368,8 @@ class AbstractCombinedTextDatabaseSearchRequestHandler<REF extends Ref, DTO exte
     def protected void decideFilterAssociation(SearchFilter originalFilter, SearchFilterTypes result) {
         if (originalFilter instanceof FieldFilter) {
             result.add(filterTypeForField(originalFilter.fieldName))
+        } else if (originalFilter instanceof NotFilter) {
+            decideFilterAssociation(originalFilter.filter, result)
         } else if (originalFilter instanceof AndFilter) {
             decideFilterAssociation(originalFilter.filter1, result)
             decideFilterAssociation(originalFilter.filter2, result)

@@ -49,6 +49,9 @@ package (com.arvatosystems) t9t.io.request {
     class AsyncChannelSearchRequest             extends SearchRequest               <AsyncChannelDTO, FullTrackingWithVersion> {}
     class AsyncChannelCrudRequest               extends CrudSurrogateKeyRequest     <AsyncChannelRef, AsyncChannelDTO, FullTrackingWithVersion> {}
     class LeanAsyncChannelSearchRequest         extends LeanSearchRequest {}
+    class AsyncQueueSearchRequest               extends SearchRequest               <AsyncQueueDTO, FullTrackingWithVersion> {}
+    class AsyncQueueCrudRequest                 extends CrudSurrogateKeyRequest     <AsyncQueueRef, AsyncQueueDTO, FullTrackingWithVersion> {}
+    class LeanAsyncQueueSearchRequest           extends LeanSearchRequest {}
 
     /** Stores a pre-filled sinkDTO. Technical support method, only required because input data processing is done from outside request scope. */
     class StoreSinkRequest                      extends RequestParameters return SinkCreatedResponse {
@@ -170,13 +173,22 @@ package (com.arvatosystems) t9t.io.request {
     class FlushPendingAsyncRequest extends RequestParameters return FlushPendingAsyncResponse {
         required boolean                            markAsDone;              // if true, mark the selected records as "done"
         required boolean                            exportToFile;            // if true, output the records to a file (otherwise, count only)
+        required boolean                            returnInResponse;        // if true, output the records in the response
         optional dataSinkId                         dataSinkId;              // if null, the default data sink "asyncSink" will be used.
         optional t9tShortId                         onlyChannelId;           // if null, all requests will be written, if set, only pending requests for the given specific channel
+        optional (AsyncQueueRef...)                 onlyQueue;               // if set, request only targets messages of this queue
     }
     class FlushPendingAsyncResponse extends ServiceResponse {
         required int                                numberOfRecords;         // returns the number of records selected (and possibly written and / or updated)
         optional f42Ref                             sinkRef;                 // the sink ref created (or null, if the sink is created only if actual data was written and numberOfRecordsWritten was 0)
         optional Unicode(255)                       filename;                // provides the filename used (can be null if the sink was configured to write only when data has been generated)
+        required (InMemoryMessage) required List<>  records;                 // the payloads of the queried messages
+    }
+
+    /** Purge sent messages after a certain age has expired. Should be called by a scheduled job. */
+    class PurgeSentAsyncMessagesRequest extends RequestParameters {
+        required t9tShortId                         asyncQueueId;            // purge messages of this queue. Only the current tenant will be affected
+        optional Integer                            overrideAge;             // if set, overrides the age configured in the queue config. If neither is set, 8 days is assumed.
     }
 
     /** Generates an async message. Primarily for testing purposes.

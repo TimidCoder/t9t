@@ -25,7 +25,7 @@ import com.arvatosystems.t9t.io.jpa.persistence.IDataSinkEntityResolver
 import com.arvatosystems.t9t.io.DataSinkFilterProps
 
 @AutoMap42
-public class DataSinkMappers {
+class DataSinkMappers {
     IDataSinkEntityResolver         entityResolver
     ICsvConfigurationEntityResolver csvResolver
     ICsvConfigurationDTOMapper      csvMapper

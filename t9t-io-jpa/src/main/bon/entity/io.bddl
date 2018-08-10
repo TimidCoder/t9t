@@ -56,11 +56,20 @@ package (com.arvatosystems) t9t.io.jpa.entities owner fortytwo prefix p28 {
     }
 
     @Generator(doMapper)
+    entity AsyncQueueEntity category cfg is AsyncQueueDTO {
+        cacheable
+        tenantClass InternalTenantRef42
+        pk (objectRef)
+        index unique (tenantRef, asyncQueueId)
+    }
+
+    @Generator(doMapper)
     entity AsyncChannelEntity category cfg is AsyncChannelDTO {
         cacheable
         tenantClass InternalTenantRef42
         pk (objectRef)
         index unique (tenantRef, asyncChannelId)
+        @ManyToOne AsyncQueueEntity asyncQueue LAZY for (asyncQueueRef)
     }
 
     @Generator(doMapper)
@@ -68,5 +77,6 @@ package (com.arvatosystems) t9t.io.jpa.entities owner fortytwo prefix p28 {
         tenantClass InternalTenantRef42
         pk (objectRef)
         index (status)
+        @ManyToOne AsyncQueueEntity asyncQueue LAZY for (asyncQueueRef)
     }
 }

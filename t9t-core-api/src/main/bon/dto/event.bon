@@ -20,7 +20,7 @@ import t9t.base.api.*
 
 package (com.arvatosystems) t9t.event {
     default private unsigned trim noControlChars;
-    properties inherited, serialized, ref, active,
+    properties inherited, serialized, ref, active, qualifierFor,
         notupdatable is com.arvatosystems.t9t.annotations.NotUpdatable,
         tenantCategory is com.arvatosystems.t9t.annotations.TenantCategory();
 
@@ -43,7 +43,7 @@ package (com.arvatosystems) t9t.event {
         properties tenantCategory="I";
         required boolean            isActive            properties active;
         required eventId            eventID             properties notupdatable;       // Identifier of the event type this subscription is intended for
-        required identifier         handlerClassName    properties notupdatable;       // Jdp qualifier (t9t) or fully qualified class name (fortytwo) of the handler that is subscribed
+        required identifier         handlerClassName    properties notupdatable, qualifierFor="base.services.IEventHandler"; // Jdp qualifier of the handler that is subscribed
         optional shortText          remark;                                            // Additional remark
         optional Ascii(8)           environment;                                       // Server or server group on which this is relevant - all if null
     }

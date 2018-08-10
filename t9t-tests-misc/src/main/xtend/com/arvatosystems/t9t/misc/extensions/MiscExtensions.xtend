@@ -41,11 +41,14 @@ import com.arvatosystems.t9t.genconf.ConfigKey
 import com.arvatosystems.t9t.genconf.request.ConfigCrudRequest
 import com.arvatosystems.t9t.io.AsyncChannelDTO
 import com.arvatosystems.t9t.io.AsyncChannelKey
+import com.arvatosystems.t9t.io.AsyncQueueDTO
+import com.arvatosystems.t9t.io.AsyncQueueKey
 import com.arvatosystems.t9t.io.CsvConfigurationDTO
 import com.arvatosystems.t9t.io.CsvConfigurationKey
 import com.arvatosystems.t9t.io.DataSinkDTO
 import com.arvatosystems.t9t.io.DataSinkKey
 import com.arvatosystems.t9t.io.request.AsyncChannelCrudRequest
+import com.arvatosystems.t9t.io.request.AsyncQueueCrudRequest
 import com.arvatosystems.t9t.io.request.CsvConfigurationCrudRequest
 import com.arvatosystems.t9t.io.request.DataSinkCrudRequest
 import com.arvatosystems.t9t.rep.ReportConfigDTO
@@ -79,6 +82,14 @@ class MiscExtensions {
             crud            = OperationType.MERGE
             data            = dto
             naturalKey      = new CsvConfigurationKey(dto.csvConfigurationId)
+        ], CrudSurrogateKeyResponse)
+    }
+    def static CrudSurrogateKeyResponse<AsyncQueueDTO, FullTrackingWithVersion> merge(AsyncQueueDTO dto, ITestConnection dlg) {
+        dto.validate
+        return dlg.typeIO(new AsyncQueueCrudRequest => [
+            crud            = OperationType.MERGE
+            data            = dto
+            naturalKey      = new AsyncQueueKey(dto.asyncQueueId)
         ], CrudSurrogateKeyResponse)
     }
     def static CrudSurrogateKeyResponse<AsyncChannelDTO, FullTrackingWithVersion> merge(AsyncChannelDTO dto, ITestConnection dlg) {

@@ -30,7 +30,8 @@ class PerformAsyncRequestHandler extends AbstractRequestHandler<PerformAsyncRequ
     @Inject IAsyncTransmitter asyncTransmitter
 
     override execute(RequestContext ctx, PerformAsyncRequest rq) {
-        channelResolver.getEntityData(new AsyncChannelKey(rq.asyncChannelId), true)  // just a check to see if the channel has been configured
+        val channel = channelResolver.getEntityData(new AsyncChannelKey(rq.asyncChannelId), true)  // just a check to see if the channel has been configured
+        LOGGER.debug("channel {} is associated with queue {}", channel.asyncChannelId, channel.asyncQueue?.asyncQueueId ?: "NULL")
         asyncTransmitter.transmitMessage(rq.asyncChannelId, rq.payload,
             rq.ref ?: ctx.getRequestRef, rq.refType ?: "REQ", rq.refIdentifier ?: ctx.userId
         )

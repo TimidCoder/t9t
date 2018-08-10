@@ -15,16 +15,17 @@
  */
 package com.arvatosystems.t9t.io.jpa.mapping.impl
 
-
+import com.arvatosystems.t9t.annotations.jpa.AutoHandler
 import com.arvatosystems.t9t.annotations.jpa.AutoMap42
-import com.arvatosystems.t9t.io.OutboundMessageDTO
-import com.arvatosystems.t9t.io.jpa.entities.OutboundMessageEntity
-import com.arvatosystems.t9t.io.jpa.persistence.IOutboundMessageEntityResolver
+import com.arvatosystems.t9t.io.AsyncQueueDTO
+import com.arvatosystems.t9t.io.jpa.entities.AsyncQueueEntity
+import com.arvatosystems.t9t.io.jpa.persistence.IAsyncQueueEntityResolver
 
 @AutoMap42
-class OutboundMessageMappers {
-    IOutboundMessageEntityResolver resolver
+class AsyncQueueMappers {
+    IAsyncQueueEntityResolver resolver
 
-    def void d2eOutboundMessageDTO(OutboundMessageEntity entity, OutboundMessageDTO dto, boolean onlyActive) {}
-    def void e2dOutboundMessageDTO(OutboundMessageEntity entity, OutboundMessageDTO dto) {}
+    @AutoHandler("SC42")
+    def void e2dAsyncQueueDTO(AsyncQueueEntity entity, AsyncQueueDTO dto) {}
+    def void d2eAsyncQueueDTO(AsyncQueueEntity entity, AsyncQueueDTO dto, boolean onlyActive) {}
 }

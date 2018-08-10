@@ -19,16 +19,23 @@ import com.arvatosystems.t9t.annotations.jpa.AutoHandler
 import com.arvatosystems.t9t.annotations.jpa.AutoMap42
 import com.arvatosystems.t9t.io.AsyncMessageDTO
 import com.arvatosystems.t9t.io.jpa.entities.AsyncMessageEntity
+import com.arvatosystems.t9t.io.jpa.mapping.IAsyncQueueDTOMapper
 import com.arvatosystems.t9t.io.jpa.persistence.IAsyncMessageEntityResolver
+import com.arvatosystems.t9t.io.jpa.persistence.IAsyncQueueEntityResolver
 
 @AutoMap42
-public class AsyncMessageMappers {
+class AsyncMessageMappers {
     IAsyncMessageEntityResolver resolver
+    IAsyncQueueEntityResolver queueResolver
+    IAsyncQueueDTOMapper queueMapper
 
     @AutoHandler("S42")
     def void e2dAsyncMessageDTO(AsyncMessageEntity entity, AsyncMessageDTO dto) {
-        if (entity.lastAttempt !== null)
-            dto.latency = entity.lastAttempt.millis - entity.CTimestamp.millis
+        if (entity.lastAttempt !== null && entity.whenSent !== null)
+            dto.latency = entity.lastAttempt.millis - entity.whenSent.millis
+        dto.asyncQueueRef = queueMapper.mapToDto(entity.asyncQueue)
     }
-    def void d2eAsyncMessageDTO(AsyncMessageEntity entity, AsyncMessageDTO dto, boolean onlyActive) {}
+    def void d2eAsyncMessageDTO(AsyncMessageEntity entity, AsyncMessageDTO dto, boolean onlyActive) {
+        entity.asyncQueueRef = queueResolver.getRef(dto.asyncQueueRef, onlyActive)
+    }
 }

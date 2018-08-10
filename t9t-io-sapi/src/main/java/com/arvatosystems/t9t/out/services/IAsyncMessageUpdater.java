@@ -15,10 +15,21 @@
  */
 package com.arvatosystems.t9t.out.services;
 
+import java.util.List;
+
 import com.arvatosystems.t9t.base.output.ExportStatusEnum;
+import com.arvatosystems.t9t.io.AsyncChannelDTO;
+import com.arvatosystems.t9t.io.AsyncQueueDTO;
 
 /** Interface to JPA layer which updates the async message.
  * This is a technical helper method. */
 public interface IAsyncMessageUpdater {
+    /** Updates a message entry to its latest status. */
     void updateMessage(Long objectRef, ExportStatusEnum newStatus, Integer httpCode, Integer clientCode, String clientReference);
+
+    /** Reads all active queues (all tenants) from the database. */
+    List<AsyncQueueDTO> getActiveQueues();
+
+    /** Reads a channel configuration from the database. Throws an exception if the specified channel does not exist. */
+    AsyncChannelDTO readChannelConfig(String channelId, Long tenantRef);
 }

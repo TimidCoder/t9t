@@ -31,6 +31,8 @@ import com.arvatosystems.t9t.io.jpa.entities.DataSinkEntity
 import com.arvatosystems.t9t.io.jpa.entities.OutboundMessageEntity
 import com.arvatosystems.t9t.io.jpa.entities.SinkEntity
 import java.util.List
+import com.arvatosystems.t9t.io.jpa.entities.AsyncQueueEntity
+import com.arvatosystems.t9t.io.AsyncQueueRef
 
 @AutoResolver42
 class IOResolvers {
@@ -51,4 +53,7 @@ class IOResolvers {
     @GlobalTenantCanAccessAll   // required for Camel startup
     @AllCanAccessGlobalTenant   // for DataSinkEntity, everyone can see the global tenant's defaults
     def AsyncChannelEntity      getAsyncChannelEntity       (AsyncChannelRef entityRef, boolean onlyActive) { return null; }
+    @GlobalTenantCanAccessAll   // required for Camel startup
+    @AllCanAccessGlobalTenant   // for DataSinkEntity, everyone can see the global tenant's defaults
+    def AsyncQueueEntity        getAsyncQueueEntity         (AsyncQueueRef entityRef, boolean onlyActive) { return null; }
 }

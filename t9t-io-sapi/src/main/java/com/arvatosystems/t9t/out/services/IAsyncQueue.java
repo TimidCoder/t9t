@@ -24,8 +24,9 @@ import de.jpaw.bonaparte.core.BonaPortable;
  * Business logic usually does not see this interface.
  *  */
 public interface IAsyncQueue {
-    void sendAsync(String asyncChannelId, BonaPortable payload, Long objectRef);
+    /** Queues a messages. Returns null, or a QueueRef. */
+    Long sendAsync(String asyncChannelId, BonaPortable payload, Long objectRef);
     default void open() {};
     default void close() {};
-    default void clearQueue() {};  // removes any items from the queue, required after removing dead items
+    default void clearQueue(Long queueRef) {};  // removes any items from the queue, required after removing dead items
 }
