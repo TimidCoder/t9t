@@ -23,7 +23,7 @@ import org.junit.Test
 
 class ITDownload {
     @Test
-    def public void downloadTest() {
+    def void downloadTest() {
         val dlg = new Connection(true, ConnectionTypes.JSON)
 
         dlg.typeIO(new FileDownloadRequest => [

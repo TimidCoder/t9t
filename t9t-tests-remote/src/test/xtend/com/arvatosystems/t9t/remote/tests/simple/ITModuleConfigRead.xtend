@@ -27,24 +27,24 @@ import org.junit.BeforeClass
 import org.junit.Test
 
 class ITModuleConfigRead {
-    static private ITestConnection dlg
+    static ITestConnection dlg
 
     @BeforeClass
-    def public static void createConnection() {
+    def static void createConnection() {
         // use a single connection for all tests (faster)
         dlg = new Connection
     }
 
     // email module config search request
     @Test
-    def public void readEmailModuleConfigTest() {
+    def void readEmailModuleConfigTest() {
         val rq = new EmailModuleCfgSearchRequest
         val resp = dlg.typeIO(rq, ReadAllResponse)
         println('''EmailCfg result is «ToStringHelper.toStringML(resp.dataList)»''')
     }
 
     @Test
-    def public void readEmailModuleConfigWithLimitTest() {
+    def void readEmailModuleConfigWithLimitTest() {
         val rq = new EmailModuleCfgSearchRequest => [ limit = 26 ]
         val resp = dlg.typeIO(rq, ReadAllResponse)
         println('''EmailCfg result is «ToStringHelper.toStringML(resp.dataList)»''')
@@ -52,7 +52,7 @@ class ITModuleConfigRead {
 
     // doc module config search request
     @Test
-    def public void readDocModuleConfigTest() {
+    def void readDocModuleConfigTest() {
         val rq = new DocModuleCfgSearchRequest
         val resp = dlg.typeIO(rq, ReadAllResponse)
         println('''DocModule result is «ToStringHelper.toStringML(resp.dataList)»''')
@@ -60,7 +60,7 @@ class ITModuleConfigRead {
 
     // auth module config search request
     @Test
-    def public void readAuthModuleConfigTest() {
+    def void readAuthModuleConfigTest() {
         val rq = new AuthModuleCfgSearchRequest
         val resp = dlg.typeIO(rq, ReadAllResponse)
         println('''Auth Module Cfg result is «ToStringHelper.toStringML(resp.dataList)»''')
@@ -68,7 +68,7 @@ class ITModuleConfigRead {
 
     // SOLR module config search request
     @Test
-    def public void readSolrModuleConfigTest() {
+    def void readSolrModuleConfigTest() {
         val rq = new SolrModuleCfgSearchRequest
         val resp = dlg.typeIO(rq, ReadAllResponse)
         println('''SOLR module config result is «ToStringHelper.toStringML(resp.dataList)»''')

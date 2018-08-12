@@ -53,9 +53,9 @@ import org.joda.time.Instant
 @AddLogger
 @Singleton
 class AuthPersistenceAccess implements IAuthPersistenceAccess, T9tConstants {
-    private static final List<PermissionEntry> EMPTY_PERMISSION_LIST = ImmutableList.of();
+    static final List<PermissionEntry> EMPTY_PERMISSION_LIST = ImmutableList.of();
 
-    @Inject private Provider<PersistenceProviderJPA> jpaContextProvider
+    @Inject Provider<PersistenceProviderJPA> jpaContextProvider
 
     @Inject IUserEntityResolver userEntityResolver
 
@@ -149,8 +149,7 @@ class AuthPersistenceAccess implements IAuthPersistenceAccess, T9tConstants {
     override getByApiKey(Instant now, UUID key) {
         val em = jpaContextProvider.get.entityManager
 
-        var TypedQuery<ApiKeyEntity> query = em.createQuery(
-        "SELECT e FROM ApiKeyEntity e WHERE e.apiKey = :apiKey", ApiKeyEntity);
+        var TypedQuery<ApiKeyEntity> query = em.createQuery("SELECT e FROM ApiKeyEntity e WHERE e.apiKey = :apiKey", ApiKeyEntity);
         query.setParameter("apiKey", key);
 
         var ApiKeyEntity a
@@ -164,21 +163,42 @@ class AuthPersistenceAccess implements IAuthPersistenceAccess, T9tConstants {
             LOGGER.info("Authentication request by API Key denied, key {}... is set to inactive", key.toString.substring(0, 18))
             return null;
         }
+
+        val userStatus = updateUserStatusEntityForApiKeyLogin(em, a, now)
         val dto = a.ret$Data
         dto.userRef = a.user.ret$Data
         if (a.roleRef !== null)
             dto.roleRef = new RoleRef(a.roleRef)
 
         val resp = new AuthIntermediateResult
+        resp.authExpires   = a.permissions?.validTo
         resp.apiKey        = dto
         resp.user          = a.user.ret$Data
         resp.tenantRef     = a.tenantRef
+        resp.userStatus    = userStatus.ret$Data
         return resp
     }
 
+    /** Update the timestamp in the user status with the current login data. */
+    def protected updateUserStatusEntityForApiKeyLogin(EntityManager em, ApiKeyEntity a, Instant now) {
+        var UserStatusEntity userStatus = em.find(UserStatusEntity, a.userRef)
+        if (userStatus === null) {
+            // create a new one
+            userStatus = new UserStatusEntity
+            userStatus.currentPasswordSerialNumber = 0
+            userStatus.numberOfIncorrectAttempts   = 0
+            userStatus.objectRef = a.userRef
+            em.persist(userStatus)
+        }
+        userStatus.prevLogin                 = userStatus.lastLogin
+        userStatus.prevLoginByApiKey         = userStatus.lastLoginByApiKey
+        userStatus.lastLogin                 = now
+        userStatus.prevLoginByApiKey         = now
+        return userStatus
+    }
+
     def protected UserEntity getUserIgnoringTenant(String userId) {
-        val query = userEntityResolver.getEntityManager().createQuery(
-            "SELECT e FROM UserEntity e WHERE e.userId = :userId", UserEntity);
+        val query = userEntityResolver.getEntityManager().createQuery("SELECT e FROM UserEntity e WHERE e.userId = :userId", UserEntity);
         query.setParameter("userId", userId);
         try {
             return query.getSingleResult();
@@ -197,8 +217,8 @@ class AuthPersistenceAccess implements IAuthPersistenceAccess, T9tConstants {
 
         // are UserTenantRoles even necessary in a jwt token context?
 
-        var TypedQuery<UserStatusEntity> userStatusQuery = em.createQuery("SELECT u FROM UserStatusEntity u WHERE u.objectRef = ?1",UserStatusEntity)
-        userStatusQuery.setParameter(1,userEntity.objectRef)
+        var TypedQuery<UserStatusEntity> userStatusQuery = em.createQuery("SELECT u FROM UserStatusEntity u WHERE u.objectRef = ?1", UserStatusEntity)
+        userStatusQuery.setParameter(1, userEntity.objectRef)
         var UserStatusEntity userStatus
         try {
             userStatus = userStatusQuery.singleResult // then check the user status if the user is frozen
@@ -211,9 +231,9 @@ class AuthPersistenceAccess implements IAuthPersistenceAccess, T9tConstants {
 
         var PasswordEntity passwordEntity
         // now check password validity
-        var TypedQuery<PasswordEntity> passwordQuery = em.createQuery("SELECT p FROM PasswordEntity p WHERE p.objectRef = ?1 AND p.passwordSerialNumber = ?2",PasswordEntity)
-        passwordQuery.setParameter(1,userEntity.objectRef)
-        passwordQuery.setParameter(2,userStatus.currentPasswordSerialNumber)
+        var TypedQuery<PasswordEntity> passwordQuery = em.createQuery("SELECT p FROM PasswordEntity p WHERE p.objectRef = ?1 AND p.passwordSerialNumber = ?2", PasswordEntity)
+        passwordQuery.setParameter(1, userEntity.objectRef)
+        passwordQuery.setParameter(2, userStatus.currentPasswordSerialNumber)
         try {
             passwordEntity = passwordQuery.singleResult  // first retrieve password
         } catch (NoResultException e) {
@@ -238,22 +258,18 @@ class AuthPersistenceAccess implements IAuthPersistenceAccess, T9tConstants {
                     passwordChangeService.changePassword(newPassword, userEntity, userStatus)
                 }
                 // login success
-                userStatus.numberOfIncorrectAttempts   = 0;  // reset attempt counter
-                userStatus.lastLogin           = now
-                userStatus.lastLoginByPassword = now
-                resp.authExpires               = passwordEntity.passwordExpiry
-                resp.userStatus                = userStatus.ret$Data
-                return resp
             } else {
                 // password has expired and no new one was supplied
-                userStatus.numberOfIncorrectAttempts   = 0;  // reset attempt counter
-                userStatus.lastLogin           = now
-                userStatus.lastLoginByPassword = now
-                resp.authExpires               = passwordEntity.passwordExpiry
-                resp.userStatus                = userStatus.ret$Data
-                resp.returnCode                = T9tException.PASSWORD_EXPIRED;  // must change password
-                return resp
+                resp.returnCode                  = T9tException.PASSWORD_EXPIRED;  // must change password
             }
+            userStatus.numberOfIncorrectAttempts = 0;  // reset attempt counter
+            userStatus.prevLogin                 = userStatus.lastLogin
+            userStatus.prevLoginByPassword       = userStatus.lastLoginByPassword
+            userStatus.lastLogin                 = now
+            userStatus.lastLoginByPassword       = now
+            resp.userStatus                      = userStatus.ret$Data
+            resp.authExpires                     = passwordEntity.passwordExpiry
+            return resp
         } else {
             // incorrect auth: increment attemptCounter
             userStatus.numberOfIncorrectAttempts = userStatus.numberOfIncorrectAttempts + 1
@@ -287,7 +303,7 @@ class AuthPersistenceAccess implements IAuthPersistenceAccess, T9tConstants {
         return query.resultList.map[mapToTenantDescription(it)].toList
     }
 
-    private static final List<TenantDescription> NO_TENANTS = ImmutableList.of()
+    static final List<TenantDescription> NO_TENANTS = ImmutableList.of()
 
     // select all tenants for which the user has a role assigned to, either directly or UserTenantRole
     override getAllTenantsForUser(RequestContext ctx, Long userRef) {

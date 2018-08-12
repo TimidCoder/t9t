@@ -64,6 +64,7 @@ class BpmnRunner implements IBpmnRunner {
         }
         // 2.) get process configuration
         val pd = pdCache.getCachedProcessDefinitionDTO(ctx.tenantId, statusEntity.processDefinitionId)
+        ctx.statusText = ctx.tenantId + ":" + pd.processDefinitionId + "(" + statusRef.toString + ")"
 
         // 3.) obtain a factory to initialize the object (or use a dummy)
         val factory = if (pd.factoryName === null)

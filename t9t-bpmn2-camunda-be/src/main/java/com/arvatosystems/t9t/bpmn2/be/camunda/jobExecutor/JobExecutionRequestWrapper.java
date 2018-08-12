@@ -174,7 +174,7 @@ public class JobExecutionRequestWrapper {
     private ServiceResponse performJobExecutorRequest(List<String> jobIds, Authentication authentication) {
         final JobExecutorWorkerRequest request = new JobExecutorWorkerRequest();
         request.setJobIds(jobIds);
-        return requestProcessor.execute(request, authentication.jwtInfo, authentication.encodedJwt, false);
+        return requestProcessor.execute(null, request, authentication.jwtInfo, authentication.encodedJwt, false);
     }
 
     /**

@@ -27,18 +27,19 @@ import java.util.concurrent.atomic.AtomicInteger
 import com.arvatosystems.t9t.base.services.RequestContext
 import com.arvatosystems.t9t.base.api.RequestParameters
 import org.slf4j.MDC
+import com.arvatosystems.t9t.base.api.ServiceRequestHeader
 
 @AddLogger
 @Singleton
 class AutonomousExecutor implements IAutonomousExecutor {
-    private static final int MAX_AUTONOMOUS_TRANSACTIONS = 4 // should this be configurable or dynamic? Or share the pool with the Async processor?
+    static final int DEFAULT_MAX_AUTONOMOUS_TRANSACTIONS = 4
 
     protected final ExecutorService executorService
     @Inject IRequestProcessor requestProcessor
 
     new() {
         val autoPoolSizeByCfg = ConfigProvider.configuration.applicationConfiguration?.autonomousPoolSize
-        val autoPoolSize = autoPoolSizeByCfg ?: MAX_AUTONOMOUS_TRANSACTIONS
+        val autoPoolSize = autoPoolSizeByCfg ?: DEFAULT_MAX_AUTONOMOUS_TRANSACTIONS
         LOGGER.info("Creating a new thread pool for autonomous transactions of size {}", autoPoolSize);
 
         val counter = new AtomicInteger()
@@ -50,10 +51,12 @@ class AutonomousExecutor implements IAutonomousExecutor {
     }
 
     override execute(RequestContext ctx, RequestParameters rp) {
+        val requestHeader = new ServiceRequestHeader
+        requestHeader.invokingProcessRef = ctx.requestRef  // transfer the invoker
         val mdcContext = MDC.copyOfContextMap
         val f = executorService.submit [
             MDC.setContextMap(mdcContext) // Inherit MDC context and ensure old MDC of this worker is reset
-            requestProcessor.execute(rp, ctx.internalHeaderParameters.jwtInfo, ctx.internalHeaderParameters.encodedJwt, true)
+            requestProcessor.execute(requestHeader, rp, ctx.internalHeaderParameters.jwtInfo, ctx.internalHeaderParameters.encodedJwt, true)
         ]
         return f.get
     }

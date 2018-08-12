@@ -34,8 +34,8 @@ import java.util.UUID
 abstract class AbstractConnection extends ConnectionDefaults implements ITestConnection {
 
     // cache the last JWT / JwtInfo record
-    private String lastJwt = null;
-    private JwtInfo lastJwtInfo = null;
+    String lastJwt = null;
+    JwtInfo lastJwtInfo = null;
 
 
     // run a request and expect that it returns a SericeResponse

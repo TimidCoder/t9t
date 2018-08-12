@@ -41,19 +41,19 @@ class ITAuth {
     val String testUUID = "896d22d1-a332-438e-b2f8-2a539c29b8ca"
 
     @Test
-    def public void pingTest() {
+    def void pingTest() {
         val dlg = new Connection
         dlg.authentication = "API-Key " + testUUID
         dlg.okIO(new PingRequest)
     }
     @Test
-    def public void ping2Test() {
+    def void ping2Test() {
         val dlg = new Connection(UUID.fromString(testUUID))
 
         dlg.okIO(new PingRequest)
     }
     @Test
-    def public void createNewKeyTest() {
+    def void createNewKeyTest() {
         val dlg = new Connection(UUID.fromString(testUUID))
 
         dlg.okIO(new PingRequest)
@@ -62,17 +62,17 @@ class ITAuth {
     }
 
     @Test
-    def public void changePasswordFirstScenario() {
+    def void changePasswordFirstScenario() {
         val dlg = new Connection("userId", "changeMe", "changeMe2")
         dlg.changePassword("userId", "changeMe2", "changeMe3")
         dlg.changePassword("userId", "changeMe3", "changeMe")
     }
 
     @Test
-    def public void changePasswordSecondScenario() {
+    def void changePasswordSecondScenario() {
         val dlg = new Connection("userId", "changeMe")
 
-        var authModuleCfg = new AuthModuleCfgDTO => [
+        new AuthModuleCfgDTO => [
             passwordBlockingPeriod = 1
             passwordDifferPreviousN = 2
             passwordExpirationInDays = 60
@@ -87,7 +87,7 @@ class ITAuth {
         //checking password differ validation error
         dlg.errIO(authWithError("userId", "changeMe", "changeMe"), T9tAuthException.PASSWORD_VALIDATION_FAILED)
 
-        authModuleCfg = new AuthModuleCfgDTO => [
+        new AuthModuleCfgDTO => [
             passwordBlockingPeriod = 0
             passwordDifferPreviousN = 2
             passwordExpirationInDays = 60
@@ -103,10 +103,10 @@ class ITAuth {
     }
 
     @Test
-    def public void resetPasswordTest() {
+    def void resetPasswordTest() {
         val dlg = new Connection("userId", "changeMe")
 
-        val authModuleCfg = new AuthModuleCfgDTO => [
+        new AuthModuleCfgDTO => [
             passwordBlockingPeriod = 1
             passwordDifferPreviousN = 2
             passwordExpirationInDays = 60
@@ -115,7 +115,7 @@ class ITAuth {
             merge(dlg)
         ]
 
-        val docConfig = new DocConfigDTO => [
+        new DocConfigDTO => [
             documentId = "passwordReset"
             communicationFormat = MediaXType.of(MediaType.HTML)
             description = "forget password test configuration"
@@ -135,10 +135,10 @@ class ITAuth {
         dlg.okIO(request)
     }
 
-    private static final UUID PWR_UUID = UUID.fromString("896d22d1-9999-7777-b2f8-2a539c29b8ca")
+    static final UUID PWR_UUID = UUID.fromString("896d22d1-9999-7777-b2f8-2a539c29b8ca")
 
     @Test
-    def public void resetPasswordInSeparateClientTest() {
+    def void resetPasswordInSeparateClientTest() {
         val dlg = new Connection
 
         val setup = new SetupUserTenantRole(dlg)

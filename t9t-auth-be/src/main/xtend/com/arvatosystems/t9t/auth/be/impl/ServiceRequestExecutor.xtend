@@ -107,7 +107,7 @@ class ServiceRequestExecutor implements IUnauthenticatedServiceRequestExecutor {
                 errorMessage    = ApplicationException.codeToString(returnCode)
             ]
         } else {
-            return requestProcessor.execute(srq, adata.jwtInfo, adata.jwtToken, isTrusted)
+            return requestProcessor.execute(srq.requestHeader, srq.requestParameters, adata.jwtInfo, adata.jwtToken, isTrusted)
         }
     }
 }

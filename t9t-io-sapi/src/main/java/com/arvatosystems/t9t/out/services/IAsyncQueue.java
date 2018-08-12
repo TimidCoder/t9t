@@ -15,6 +15,12 @@
  */
 package com.arvatosystems.t9t.out.services;
 
+import java.util.List;
+
+import com.arvatosystems.t9t.base.T9tException;
+import com.arvatosystems.t9t.io.AsyncQueueDTO;
+import com.arvatosystems.t9t.io.request.QueueStatus;
+
 import de.jpaw.bonaparte.core.BonaPortable;
 
 /**
@@ -26,7 +32,22 @@ import de.jpaw.bonaparte.core.BonaPortable;
 public interface IAsyncQueue {
     /** Queues a messages. Returns null, or a QueueRef. */
     Long sendAsync(String asyncChannelId, BonaPortable payload, Long objectRef);
+
+    /** Initializes all queues. */
     default void open() {};
+
+    /** Closes all queues. */
     default void close() {};
+
+    /** Closes a specific queue (shuts it down). */
+    default void close(Long queueRef) {};
+
+    /** Clear all queues (queueRef = null) or a specific one. */
     default void clearQueue(Long queueRef) {};  // removes any items from the queue, required after removing dead items
+
+    /** Opens a specific new queue, if it did not exist before. */
+    default void open(AsyncQueueDTO queue) {};
+
+    /** returns the queue status for one or all queues. Only for queues supporting it. */
+    default QueueStatus getQueueStatus(Long queueRef, String queueId) { throw new T9tException(T9tException.NOT_YET_IMPLEMENTED); }
 }

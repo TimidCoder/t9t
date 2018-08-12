@@ -212,31 +212,35 @@ package (com.arvatosystems) t9t.auth {
      * user authenticates via the internal password logic, not if a user uses some external SSO or LDAP.
      */
     final class UserStatusKey extends CompositeKeyRef {
-        required f42Ref                             objectRef;                            // the user to whom this relates to
+        required f42Ref                             objectRef;                          // the user to whom this relates to
     }
     class UserStatusDTO RTTI 88 extends CompositeKeyBase {
-        required f42Ref                             objectRef;                            // the user to whom this relates to
+        required f42Ref                             objectRef;                          // the user to whom this relates to
         required int                                currentPasswordSerialNumber;        // current valid password serial number; allows a single fetch join
         required int                                numberOfIncorrectAttempts;          // for information to the user, also required to configure throttling of retries
-        optional Instant(0)                         accountThrottledUntil;              // set after n unsuccessful attempts, locks out user for 1 minute.
+        optional Instant                            accountThrottledUntil;              // set after n unsuccessful attempts, locks out user for 1 minute.
         optional Instant                            lastLogin;                          // for information to the user
         optional Instant                            lastLoginByPassword;                // for information to the user
         optional Instant                            lastLoginByApiKey;                  // for information to the user
         optional Instant                            lastLoginByX509;                    // for information to the user
+        optional Instant                            prevLogin;                          // for information to the user
+        optional Instant                            prevLoginByPassword;                // for information to the user
+        optional Instant                            prevLoginByApiKey;                  // for information to the user
+        optional Instant                            prevLoginByX509;                    // for information to the user
     }
 
     final class PasswordKey extends CompositeKeyRef {
-        required f42Ref                             objectRef;                            // the user to whom this relates to
+        required f42Ref                             objectRef;                          // the user to whom this relates to
         required int                                passwordSerialNumber;
     }
 
     class PasswordDTO RTTI 85 extends CompositeKeyBase {
-        required f42Ref                             objectRef;                            // the user to whom this relates to
+        required f42Ref                             objectRef;                          // the user to whom this relates to
         required int                                passwordSerialNumber;
         required passwordHash                       passwordHash;                       // salted hash
-        required Instant(0)                         passwordExpiry;                     // when this date is reached, the only allowed action is to renew the password
-        required Instant(0)                         userExpiry;                         // end of self service reset: when this date is reached, the user cannot log in any more (but every activity resets it)
-        required Instant(0)                         passwordCreation;                   // when this password was set
+        required Instant                            passwordExpiry;                     // when this date is reached, the only allowed action is to renew the password
+        required Instant                            userExpiry;                         // end of self service reset: when this date is reached, the user cannot log in any more (but every activity resets it)
+        required Instant                            passwordCreation;                   // when this password was set
         required f42Ref                             passwordSetByUser;                  // reference of (technical) user who set this password
     }
 

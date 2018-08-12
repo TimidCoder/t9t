@@ -32,8 +32,8 @@ class Connection extends AbstractConnection {
 
     // logical configuration
 
-    private final String baseUrl;
-    private final HttpPostClient dlg;
+    final String baseUrl;
+    final HttpPostClient dlg;
 
     def private static final String defaultUrl() {
         val myProtocol = if ("443" == initialPort) "https" else "http"

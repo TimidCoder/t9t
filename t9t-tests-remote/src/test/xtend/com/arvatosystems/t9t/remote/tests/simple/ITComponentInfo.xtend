@@ -23,7 +23,7 @@ import de.jpaw.bonaparte.util.ToStringHelper
 
 class ITComponentInfo {
     @Test
-    def public void infoTest() {
+    def void infoTest() {
         val dlg = new Connection
 
         val resp = dlg.typeIO(new RetrieveComponentInfoRequest, RetrieveComponentInfoResponse)

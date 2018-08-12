@@ -31,7 +31,7 @@ import org.junit.Test
 @AddLogger
 class Serialization {
     @Test
-    def public void serializationTest() {
+    def void serializationTest() {
         MessagingUtil.initializeBonaparteParsers
 
         val batchedTask = new BatchRequest => [
@@ -48,12 +48,12 @@ class Serialization {
         LOGGER.info("Serialized object has {} bytes length", compact.length)
         LOGGER.info("Serialized object is\n{}", ByteUtil.dump(compact, 1000))
 
-        val result = CompactByteArrayParser.unmarshal(compact, StaticMeta.OUTER_BONAPORTABLE, BatchRequest)
+        CompactByteArrayParser.unmarshal(compact, StaticMeta.OUTER_BONAPORTABLE, BatchRequest)
     }
 
 
     @Test
-    def public void serialization2Test() {
+    def void serialization2Test() {
         MessagingUtil.initializeBonaparteParsers
 
         val batchedTask = new BatchRequest => [
@@ -70,8 +70,6 @@ class Serialization {
         LOGGER.info("Serialized object has {} bytes length", compact.length)
         LOGGER.info("Serialized object is\n{}", ByteUtil.dump(compact, 1000))
 
-        val result = CompactByteArrayParser.unmarshal(compact, CannedRequestDTO.meta$$request, RequestParameters)
+        CompactByteArrayParser.unmarshal(compact, CannedRequestDTO.meta$$request, RequestParameters)
     }
-
-
 }

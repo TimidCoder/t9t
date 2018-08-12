@@ -20,6 +20,6 @@ package com.arvatosystems.t9t.remote.connect
  * The t9t core server supports JSON, BONAPARTE, COMPACT_BONAPARTE.
  * The REST connection supports XML, JSON.
  */
-public enum ConnectionTypes {
+enum ConnectionTypes {
     XML, JSON, BONAPARTE, COMPACT_BONAPARTE
 }

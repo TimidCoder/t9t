@@ -76,7 +76,7 @@ class StatefulServiceSession implements IStatefulServiceSession {
         if (!isOpen)
             throw new T9tException(T9tException.NOT_AUTHENTICATED)
         // OK, authenticated!
-        val resp = processor.execute(rp, jwtInfo, encodedJwt, false)
+        val resp = processor.execute(null, rp, jwtInfo, encodedJwt, false)
         if (resp.returnCode == 0) {
             if (resp instanceof AuthenticationResponse) {
                 // update JWT

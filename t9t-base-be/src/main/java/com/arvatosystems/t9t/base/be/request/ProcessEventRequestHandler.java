@@ -26,6 +26,7 @@ public class ProcessEventRequestHandler extends AbstractRequestHandler<ProcessEv
     @Override
     public ServiceResponse execute(final RequestContext ctx, final ProcessEventRequest rq) {
         final IEventHandler handler = Jdp.getRequired(IEventHandler.class, rq.getEventHandlerQualifier());
+        ctx.statusText = rq.getEventHandlerQualifier() + " => " + rq.getEventData().ret$PQON();
         final int returnCode = handler.execute(ctx, rq.getEventData());
         return this.ok(returnCode);
     }

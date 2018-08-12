@@ -35,7 +35,7 @@ class ITScheduler {
     val SCHEDULER_ID    = "fastPing4"
 
     @Test
-    def public void fastTriggerSchedulerTest() {
+    def void fastTriggerSchedulerTest() {
         val dlg = new Connection
 
         dlg.doIO(new ClearAllRequest)

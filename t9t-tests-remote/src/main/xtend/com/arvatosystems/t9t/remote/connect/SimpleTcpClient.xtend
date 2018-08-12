@@ -26,7 +26,7 @@ import javax.net.ssl.SSLSocket
 import javax.net.ssl.SSLSocketFactory
 
 @AddLogger
-public class SimpleTcpClient {
+class SimpleTcpClient {
 
     protected final InetAddress addr;
     protected final Socket conn;

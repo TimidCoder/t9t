@@ -53,6 +53,7 @@ import java.util.Map
 import java.util.Set
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentMap
+import com.arvatosystems.t9t.base.api.ServiceRequestHeader
 
 @AddLogger
 @Singleton
@@ -100,7 +101,7 @@ class AsyncProcessor implements IAsyncRequestProcessor {
                         val qualifier = getQualifierForTenant(eventTenantRef)
 
                         LOGGER.debug("Event {} with qualifier {} for tenant {} will now trigger a ProcessEventRequest", theEventId, qualifier, eventTenantRef)
-                        executeEvent(qualifier, new AuthenticationJwt(tentativeEventData.header.encodedJwt), tentativeEventData.data)
+                        executeEvent(qualifier, new AuthenticationJwt(tentativeEventData.header.encodedJwt), tentativeEventData.data, tentativeEventData.header?.invokingProcessRef)
                     }
                 } else { // otherwise deal with a raw json event without PQON
                     val theEventID = msgBody.getString("eventID")
@@ -121,7 +122,7 @@ class AsyncProcessor implements IAsyncRequestProcessor {
                             executeEvent(qualifier, new AuthenticationJwt(header.getString("encodedJwt")), new GenericEvent => [
                                     it.eventID = eventID
                                     it.z = z?.map
-                                    ])
+                                ], header.getLong("invokingProcessRef"))
                         }
                     }
                 }
@@ -176,15 +177,20 @@ class AsyncProcessor implements IAsyncRequestProcessor {
         handler.qualifierByTenantRef.put(tenantRef, qualifier)
     }
 
-    def private static void executeEvent(String qualifier, AuthenticationJwt authenticationJwt, EventParameters eventParams) {
+    def private static void executeEvent(String qualifier, AuthenticationJwt authenticationJwt, EventParameters eventParams, Long invokingProcessRef) {
         val rq = new ProcessEventRequest => [
-            eventHandlerQualifier = qualifier
-            eventData = eventParams
+            eventHandlerQualifier   = qualifier
+            eventData               = eventParams
         ]
         val srq = new ServiceRequest => [
-            requestParameters = rq
-            authentication = authenticationJwt
+            requestParameters       = rq
+            authentication          = authenticationJwt
         ]
+        if (invokingProcessRef !== null) {
+            val hdr                 = new ServiceRequestHeader
+            hdr.invokingProcessRef  = invokingProcessRef
+            srq.requestHeader       = hdr
+        }
         myVertx.runInWorkerThread(srq)
     }
 
@@ -220,7 +226,7 @@ class AsyncProcessor implements IAsyncRequestProcessor {
         registerSubscriber(eventID, T9tConstants.GLOBAL_TENANT_REF42, subscriber)
     }
 
-    def public static runInWorkerThread(Vertx vertx, ServiceRequest msgBody) {
+    def static runInWorkerThread(Vertx vertx, ServiceRequest msgBody) {
         if (asyncExecutorPool !== null && Boolean.TRUE != msgBody.requestHeader?.priorityRequest) {
             asyncExecutorPool.executeBlocking([
                 complete(serviceRequestExecutor.executeTrusted(msgBody))
@@ -251,7 +257,7 @@ class AsyncProcessor implements IAsyncRequestProcessor {
         }
     }
 
-    def public static register(Vertx vertx) {
+    def static register(Vertx vertx) {
         myVertx = vertx
         bus = vertx.eventBus
         bus.registerCodec(new CompactMessageCodec)

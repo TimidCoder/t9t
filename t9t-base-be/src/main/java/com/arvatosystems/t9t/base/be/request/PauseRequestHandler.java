@@ -19,9 +19,11 @@ import org.joda.time.Instant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.arvatosystems.t9t.base.T9tException;
 import com.arvatosystems.t9t.base.request.PauseRequest;
 import com.arvatosystems.t9t.base.request.PauseResponse;
 import com.arvatosystems.t9t.base.services.AbstractReadOnlyRequestHandler;
+import com.arvatosystems.t9t.base.services.RequestContext;
 
 
 /**
@@ -31,8 +33,7 @@ public class PauseRequestHandler extends AbstractReadOnlyRequestHandler<PauseReq
     private static final Logger LOGGER = LoggerFactory.getLogger(PauseRequestHandler.class);
 
     @Override
-    public PauseResponse execute(PauseRequest pingRequest) {
-//        LOGGER.info("Ping request handler called for {}", pingRequest);
+    public PauseResponse execute(RequestContext ctx, PauseRequest pingRequest) {
 
         PauseResponse response = new PauseResponse();
         response.setReturnCode(0);
@@ -42,9 +43,11 @@ public class PauseRequestHandler extends AbstractReadOnlyRequestHandler<PauseReq
         Integer delayInMillis = pingRequest.getDelayInMillis();
         if ((delayInMillis != null) && (delayInMillis.intValue() > 0)) {
             try {
+                ctx.statusText = "Sleep for " + delayInMillis.toString() + " ms";
                 Thread.sleep(delayInMillis);
             } catch (InterruptedException e) {
                 LOGGER.warn("A PauseRequest with delay {} milliseconds has been interrupted and sent the response earlier.", delayInMillis);
+                throw new T9tException(T9tException.THREAD_INTERRUPTED);
             }
         }
 

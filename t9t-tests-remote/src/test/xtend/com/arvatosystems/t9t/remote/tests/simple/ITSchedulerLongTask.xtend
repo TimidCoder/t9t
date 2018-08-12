@@ -37,7 +37,7 @@ class ITSchedulerLongTask {
     val SCHEDULER_ID    = "fastPause"
 
     @Test
-    def public void fastTriggerSchedulerTest() {
+    def void fastTriggerSchedulerTest() {
         val dlg = new Connection
 
         dlg.doIO(new ClearAllRequest)
@@ -94,7 +94,7 @@ class ITSchedulerLongTask {
     }
 
     @Test
-    def public void fastTriggerScheduler2Test() {
+    def void fastTriggerScheduler2Test() {
         val dlg = new Connection
 
         dlg.doIO(new ClearAllRequest)

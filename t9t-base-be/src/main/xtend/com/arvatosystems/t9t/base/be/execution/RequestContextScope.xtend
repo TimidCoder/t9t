@@ -64,6 +64,7 @@ class RequestContextScope extends JdpThreadLocalStrict<RequestContext> {
                 dto.pqon                = hdr.requestParameterPqon
                 dto.invokingProcessRef  = hdr.requestHeader?.invokingProcessRef
                 dto.progressCounter     = progressCounter
+                dto.callStack           = getCallStack();
                 if (statusText !== null) {
                     dto.statusText      = if (statusText.length <= 512) statusText else statusText.substring(0, 512)
                 }

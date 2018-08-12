@@ -13,7 +13,6 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 --
--- combined DBUPPDATES for all TBE-141 and TBE-158 related changes
 
 DROP TABLE IF EXISTS p42_int_async_messages CASCADE;
 DROP TABLE IF EXISTS p28_his_async_channel CASCADE;

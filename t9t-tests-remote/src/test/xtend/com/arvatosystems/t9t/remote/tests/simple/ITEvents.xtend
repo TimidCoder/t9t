@@ -26,7 +26,7 @@ import static extension com.arvatosystems.t9t.misc.extensions.MiscExtensions.*
 
 class ITEvents {
     @Test
-    def public void processLoggerEventTest() {
+    def void processLoggerEventTest() {
         val dlg = new Connection
 
         dlg.okIO(new ProcessEventRequest => [
@@ -39,7 +39,7 @@ class ITEvents {
     }
 
     @Test
-    def public void configureSubscriptionTest() {
+    def void configureSubscriptionTest() {
         val dlg = new Connection
 
         new SubscriberConfigDTO => [
@@ -51,7 +51,7 @@ class ITEvents {
     }
 
     @Test
-    def public void fireSomeCaughtEventTest() {
+    def void fireSomeCaughtEventTest() {
         val dlg = new Connection
 
         dlg.okIO(new PublishEventRequest => [
@@ -63,7 +63,7 @@ class ITEvents {
     }
 
     @Test
-    def public void fireSomeUncaughtEventTest() {
+    def void fireSomeUncaughtEventTest() {
         val dlg = new Connection
 
         dlg.okIO(new PublishEventRequest => [

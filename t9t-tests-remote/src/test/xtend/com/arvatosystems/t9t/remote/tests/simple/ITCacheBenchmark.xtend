@@ -122,7 +122,7 @@ class ITCacheBenchmark {
     }
 
     @Test
-    def public void fullBenchmarkTest() {
+    def void fullBenchmarkTest() {
         val dlg = new Connection
 
         val setup = new SetupUserTenantRoleForBenchmarks(dlg)

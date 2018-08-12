@@ -79,6 +79,7 @@ class Executor implements IExecutor, T9tConstants {
         val oldMdcRequestPqon = MDC.get(T9tConstants.MDC_REQUEST_PQON)
         try {
             MDC.put(T9tConstants.MDC_REQUEST_PQON, bp.pqon)
+            ctx.pushCallStack(params.ret$PQON);
             // check for alien requests
             if (!bp.pqon.startsWith("t9t.")) {
                 // call out to external system
@@ -123,6 +124,7 @@ class Executor implements IExecutor, T9tConstants {
             LOGGER.error("Execution problem: General error cause is: ", e) // create a service response that reports about the problem
             return T9tResponses.createServiceResponse(T9tException.GENERAL_EXCEPTION, causeChain)
         } finally {
+            ctx.popCallStack
             MDC.put(T9tConstants.MDC_REQUEST_PQON, oldMdcRequestPqon)
         }
     }
@@ -210,6 +212,7 @@ class Executor implements IExecutor, T9tConstants {
         val eventData           = new EventData
         eventData.header        = ctx.toHeader
         eventData.data          = data
+        eventData.header.freeze
         ctx.addPostCommitHook[ asyncProcessor.send(eventData) ]
     }
 
@@ -223,6 +226,7 @@ class Executor implements IExecutor, T9tConstants {
         val eventData           = new EventData
         eventData.header        = ctx.toHeader
         eventData.data          = data
+        eventData.header.freeze
         ctx.addPostCommitHook[ asyncProcessor.publish(eventData) ]
     }
 

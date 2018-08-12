@@ -201,4 +201,22 @@ package (com.arvatosystems) t9t.io.request {
         optional defaultExternalId                  refIdentifier;           // for debugging / maintenance: order ID, customer ID etc.
         optional f42Ref                             ref;                     // for debugging / maintenance: related objectRef
     }
+
+    /**
+     * Obtains the status of one or multiple queues, for monitoring.
+     */
+    class GetQueueStatusRequest extends RequestParameters return GetQueueStatusResponse {
+        required boolean                            onlyActive;              // if true, do not return status for inactive queues (DB criteria)
+        optional (AsyncQueueRef...)                 onlyQueue;               // if defined, gets status for this queue only, otherwise for all queues
+    }
+    class GetQueueStatusResponse extends ServiceResponse {
+        required (QueueStatus...) required List<>   status;
+    }
+    class QueueStatus {
+        required t9tShortId                         asyncQueueId;
+        required boolean                            running;
+        optional Boolean                            isGreen;                // if the queue is running: queue is empty or last message was OK
+        optional Boolean                            shuttingDown;           // if the queue is running: true if it currently shutting down
+        optional Instant                            lastMessageSent;        // if the queue is running: when was the last successful message sent?
+    }
 }

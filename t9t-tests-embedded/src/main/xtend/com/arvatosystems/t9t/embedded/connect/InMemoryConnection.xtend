@@ -42,7 +42,7 @@ import static extension de.jpaw.dp.JdpExtensions.*
  */
 class InMemoryConnection extends AbstractConnection {
 
-    private static final Object STATIC_INITIALIZER = {
+    static final Object STATIC_INITIALIZER = {
         val h2args = newLinkedList()
 
         if ("true".equalsIgnoreCase(System.getProperty("t9t.in-memory.h2.web", "true"))) {
@@ -111,7 +111,7 @@ class InMemoryConnection extends AbstractConnection {
     }
 
     @Alternative
-    public static class InMemoryEMFCustomizer extends EMFCustomizer {
+    static class InMemoryEMFCustomizer extends EMFCustomizer {
 
         override protected configureProperties(Map<String, Object> properties) {
             super.configureProperties(properties)

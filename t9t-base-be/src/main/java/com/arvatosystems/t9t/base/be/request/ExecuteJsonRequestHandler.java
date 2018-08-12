@@ -40,6 +40,7 @@ public class ExecuteJsonRequestHandler extends AbstractRequestHandler<ExecuteJso
         Map<String, Object> map = new JsonParser(request.getRequest(), false).parseObject();
         BonaPortable obj = MapParser.asBonaPortable(map, ServiceRequest.meta$$requestParameters);
         RequestParameters rp = (RequestParameters)obj;
+        ctx.statusText = rp.ret$PQON();
         return messaging.executeSynchronous(ctx, rp);
     }
 }

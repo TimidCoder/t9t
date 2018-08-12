@@ -144,12 +144,12 @@ abstract class AbstractRpcModule implements IServiceModule {
                         if (withServiceRequest) {
                             val rq = decoder.decode(body, ServiceRequest.meta$$this) as ServiceRequest;
                             MDC.put(T9tConstants.MDC_REQUEST_PQON, rq.ret$PQON)
-                            srq.response = requestProcessor.execute(rq, jwtInfo, encodedJwt as String, skipAuthorization);
+                            srq.response = requestProcessor.execute(rq.requestHeader, rq.requestParameters, jwtInfo, encodedJwt as String, skipAuthorization);
                             rq.requestParameters
                         } else {
                             val rq = decoder.decode(body, ServiceRequest.meta$$requestParameters) as RequestParameters;
                             MDC.put(T9tConstants.MDC_REQUEST_PQON, rq.ret$PQON)
-                            srq.response = requestProcessor.execute(rq, jwtInfo, encodedJwt as String, skipAuthorization);
+                            srq.response = requestProcessor.execute(null, rq, jwtInfo, encodedJwt as String, skipAuthorization);
                             rq
                         }
                     }

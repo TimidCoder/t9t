@@ -16,7 +16,6 @@
 package com.arvatosystems.t9t.base.services;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -28,12 +27,14 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.arvatosystems.t9t.base.MessagingUtil;
 import com.arvatosystems.t9t.base.T9tConstants;
 import com.arvatosystems.t9t.base.T9tException;
 import com.arvatosystems.t9t.base.api.RequestParameters;
 import com.arvatosystems.t9t.base.api.ServiceRequestHeader;
 import com.arvatosystems.t9t.base.api.ServiceResponse;
 import com.arvatosystems.t9t.base.event.BucketWriteKey;
+import com.arvatosystems.t9t.base.request.StackLevel;
 import com.arvatosystems.t9t.server.InternalHeaderParameters;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
@@ -63,10 +64,69 @@ public class RequestContext extends AbstractRequestContext {
     private List<IPostCommitHook> postCommitList = null;  // to be executed after successful requests / commits
     private List<IPostCommitHook> postFailureList = null; // to be executed after failures
     private final AtomicInteger progressCounter = new AtomicInteger(0);
-    private final Map<BucketWriteKey, Integer> bucketsToWrite = new HashMap<BucketWriteKey, Integer>();
+    private final Map<BucketWriteKey, Integer> bucketsToWrite = new ConcurrentHashMap<BucketWriteKey, Integer>();
     private final Map<Long, Semaphore> OWNED_JVM_LOCKS = new ConcurrentHashMap<>();  // all locks held by this thread / request context (by ref)
     public volatile String statusText;
     private volatile boolean priorityRequest = false;   // can be set explicitly, or via ServiceRequestHeader
+    // keeping track of call stack...
+    private String currentPQON;                 // if a subrequest is called, this field keeps track of the innermost request type
+    int depth = -1;                             // the current call stack depth. -1 = initialization, 0 = in main request, 1... in subrequest
+    int numberOfCallsThisLevel = 0;             // the number of calls which have been started at this stack level
+    //int numberOfCallsTotal = 0;                 // the total number of subexecutions
+    private List<StackLevel> callStack = new ArrayList<StackLevel>();  // needs to be concurrent because the processStatus request will read it!
+    private final Boolean lockForNesting = new Boolean(false);
+
+    public void pushCallStack(String newPQON) {
+        synchronized (lockForNesting) {
+            ++depth;
+            if (depth > 0) {
+                ++numberOfCallsThisLevel;
+                StackLevel level = new StackLevel(numberOfCallsThisLevel, progressCounter.get(), currentPQON, statusText);
+                level.freeze();
+                callStack.add(level);
+                currentPQON = newPQON;
+                numberOfCallsThisLevel = 0;
+            }
+        }
+    }
+    public void popCallStack() {
+        synchronized (lockForNesting) {
+            --depth;
+            if (depth >= 0) {
+                int d = callStack.size();
+                if (d > 0) {
+                    StackLevel prev = callStack.remove(d - 1);
+                    // restore status and PQON
+                    currentPQON = prev.getPqon();
+                    statusText  = prev.getStatusText();
+                    numberOfCallsThisLevel = prev.getNumberOfCallsThisLevel();
+                    progressCounter.set(prev.getProgressCounter());
+                }
+                if (d == 0)
+                    LOGGER.error("Internal error: popping more data than was added!");
+            }
+        }
+    }
+
+    /**
+     * Return a call stack for the process status call (called by another thread, which is the reason for the synchronization).
+     * The returned list has at least one element and the status text is truncated to the allowed size.
+     */
+    public List<StackLevel> getCallStack() {
+        synchronized (lockForNesting) {
+            final List<StackLevel> copy = new ArrayList<>(callStack.size() + 1);
+            final int maxLen = StackLevel.meta$$statusText.getLength();
+            for (StackLevel sl: callStack) {
+                final String status = sl.getStatusText();
+                if (status == null || status.length() <= maxLen)
+                    copy.add(sl);
+                else
+                    copy.add(new StackLevel(numberOfCallsThisLevel, progressCounter.get(), sl.getPqon(), status.substring(0, maxLen)));  // use a truncated message text
+            }
+            copy.add(new StackLevel(numberOfCallsThisLevel, progressCounter.get(), currentPQON, MessagingUtil.truncField(statusText, maxLen)));  // add one more for the current level
+            return copy;
+        }
+    }
 
     public void incrementProgress() {
         progressCounter.incrementAndGet();
@@ -99,6 +159,7 @@ public class RequestContext extends AbstractRequestContext {
         this.internalHeaderParameters = internalHeaderParameters;
         this.customization = customizationProvider.getTenantCustomization(tenantRef, tenantId);
         this.tenantMapping = customizationProvider.getTenantMapping(tenantRef, tenantId);
+        this.currentPQON = internalHeaderParameters.getRequestParameterPqon();
     }
 
     public void fillResponseStandardFields(ServiceResponse response) {

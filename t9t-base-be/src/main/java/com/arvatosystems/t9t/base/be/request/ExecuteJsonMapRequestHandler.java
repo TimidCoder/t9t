@@ -36,6 +36,7 @@ public class ExecuteJsonMapRequestHandler extends AbstractRequestHandler<Execute
     public ServiceResponse execute(RequestContext ctx, ExecuteJsonMapRequest request) {
         BonaPortable obj = MapParser.asBonaPortable(request.getRequest(), ServiceRequest.meta$$requestParameters);
         RequestParameters rp = (RequestParameters)obj;
+        ctx.statusText = rp.ret$PQON();
         return messaging.executeSynchronous(ctx, rp);
     }
 }

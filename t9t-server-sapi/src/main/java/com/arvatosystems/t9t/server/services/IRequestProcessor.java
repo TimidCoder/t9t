@@ -16,7 +16,7 @@
 package com.arvatosystems.t9t.server.services;
 
 import com.arvatosystems.t9t.base.api.RequestParameters;
-import com.arvatosystems.t9t.base.api.ServiceRequest;
+import com.arvatosystems.t9t.base.api.ServiceRequestHeader;
 import com.arvatosystems.t9t.base.api.ServiceResponse;
 import com.arvatosystems.t9t.server.InternalHeaderParameters;
 
@@ -27,22 +27,12 @@ import de.jpaw.bonaparte.pojos.api.auth.JwtInfo;
  * This is a specialized & streamlined version of bonaparte.api.auth.IRequestProcessor, without the support methods required by generics. */
 
 public interface IRequestProcessor {
-
-    /** execute a request. For server implementations, authentication has been performed,jwtInfo is the decoded user / session information,
+    /** Execute a request. For server implementations, authentication has been performed and jwtInfo is the decoded user / session information,
      * and encodedJwt provides the signed token in case nested executions have to be performed.
      * Implementations have to catch all exceptions and populate a return code and error details in case anything fails.
-     * skipAuthorization can be set to true, if the caller is known to orignate from an internal context and has been pre-authorized (i.e. for sub services).
+     * skipAuthorization can be set to true, if the caller is known to originate from an internal context and has been pre-authorized (i.e. for sub services).
      */
-    ServiceResponse execute(ServiceRequest rq, JwtInfo jwtInfo, String encodedJwt, boolean skipAuthorization);
-
-    /** execute a request. For server implementations, authentication has been performed,jwtInfo is the decoded user / session information,
-     * and encodedJwt provides the signed token in case nested executions have to be performed.
-     * Implementations have to catch all exceptions and populate a return code and error details in case anything fails.
-     * skipAuthorization can be set to true, if the caller is known to orignate from an internal context and has been pre-authorized (i.e. for sub services).
-     */
-    default ServiceResponse execute(RequestParameters rp, JwtInfo jwtInfo, String encodedJwt, boolean skipAuthorization) {
-        return execute(new ServiceRequest(null, rp, null), jwtInfo, encodedJwt, skipAuthorization);
-    }
+    ServiceResponse execute(ServiceRequestHeader hdr, RequestParameters rq, JwtInfo jwtInfo, String encodedJwt, boolean skipAuthorization);
 
     <T extends ServiceResponse> T executeSynchronousAndCheckResult(RequestParameters params, InternalHeaderParameters ihdr, Class<T> requiredType, boolean skipAuthorization);
 }

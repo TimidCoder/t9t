@@ -58,7 +58,7 @@ import io.vertx.core.AsyncResult
 class T9tAuthVertx extends T9tJwtAuthHandlerImpl implements IServiceModule {
 
     @Inject IAuthenticate authModule;
-    @Inject private IRequestProcessor requestProcessor;
+    @Inject IRequestProcessor requestProcessor;
 
     override getExceptionOffset() {
         return 1_000
@@ -230,7 +230,7 @@ class T9tAuthVertx extends T9tJwtAuthHandlerImpl implements IServiceModule {
             val ctx = it
             vertx.<ServiceResponse>executeBlocking([
                 try {
-                    complete(requestProcessor.execute(new GetTenantLogoRequest, jwtInfo, encodedJwt as String, false));
+                    complete(requestProcessor.execute(null, new GetTenantLogoRequest, jwtInfo, encodedJwt as String, false));
                 } catch (Exception e) {
                     LOGGER.info("{} in request: {}", e.class.simpleName, e.message)
                     fail(e)

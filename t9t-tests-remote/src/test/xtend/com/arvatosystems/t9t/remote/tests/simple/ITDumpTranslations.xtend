@@ -22,13 +22,13 @@ import org.junit.Test
 
 class ITDumpTranslations {
     @Test
-    def public void dumpTranslationHeadersTest() {
+    def void dumpTranslationHeadersTest() {
         val dlg = new Connection
 
         dlg.okIO(new DumpUntranslatedHeadersRequest)
     }
     @Test
-    def public void dumpTranslationDefaultsTest() {
+    def void dumpTranslationDefaultsTest() {
         val dlg = new Connection
 
         dlg.okIO(new DumpUntranslatedDefaultsRequest)

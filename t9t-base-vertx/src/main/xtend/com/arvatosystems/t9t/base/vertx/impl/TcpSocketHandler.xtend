@@ -77,7 +77,7 @@ class TcpSocketHandler {
                     ]
                 return NOT_AUTHENTICATED
             }
-            val resp = requestProcessor.execute(rq, jwtInfo, encodedJwt, false)
+            val resp = requestProcessor.execute(null, rq, jwtInfo, encodedJwt, false)
             // check for switch tenant etc.
             if (resp instanceof AuthenticationResponse) {
                 encodedJwt  = resp.encodedJwt

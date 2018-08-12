@@ -98,7 +98,7 @@ class ServiceSession implements IServiceSession {
         if (jwtInfo === null)
             return deny(request.requestHeader)
         // OK, authenticated!
-        val resp = processor.execute(request, jwtInfo, encodedJwt, false)
+        val resp = processor.execute(request.requestHeader, rp, jwtInfo, encodedJwt, false)
         if (resp.returnCode == 0) {
             if (resp instanceof AuthenticationResponse) {
                 // update JWT

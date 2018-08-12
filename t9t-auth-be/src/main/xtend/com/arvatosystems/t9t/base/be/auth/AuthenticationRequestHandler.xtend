@@ -196,15 +196,15 @@ class AuthenticationRequestHandler extends AbstractRequestHandler<Authentication
         resp.jwtInfo.name           = userDto.name
         resp.passwordExpires        = authResult.authExpires
         if (authResult.userStatus !== null) {
-            resp.lastLoginUser      = authResult.userStatus.lastLogin
-            resp.lastLoginMethod    = authResult.userStatus.lastLoginByPassword
+            resp.lastLoginUser      = authResult.userStatus.prevLogin
+            resp.lastLoginMethod    = authResult.userStatus.prevLoginByPassword
             resp.numberOfIncorrentAttempts = authResult.userStatus.numberOfIncorrectAttempts
         }
         resp.returnCode             = authResult.returnCode
         return resp
     }
 
-    /** Authenticates a user via username / password. Relevant information for the JWT is taken from the ApiKeyDTO, then the UserDTO, finally the TenantDTO. */
+    /** Authenticates a user via API key. Relevant information for the JWT is taken from the ApiKeyDTO, then the UserDTO, finally the TenantDTO. */
     def protected dispatch AuthenticationResponse auth(RequestContext ctx, ApiKeyAuthentication ap, String locale, String zoneinfo) {
         val authResult = persistenceAccess.getByApiKey(ctx.executionStart, ap.apiKey)
         if (authResult === null || authResult.returnCode != 0) {
@@ -232,8 +232,8 @@ class AuthenticationRequestHandler extends AbstractRequestHandler<Authentication
         resp.tenantName             = tenantDto.name
         resp.passwordExpires        = authResult.authExpires
         if (authResult.userStatus !== null) {
-            resp.lastLoginUser      = authResult.userStatus.lastLogin
-            resp.lastLoginMethod    = authResult.userStatus.lastLoginByApiKey
+            resp.lastLoginUser      = authResult.userStatus.prevLogin
+            resp.lastLoginMethod    = authResult.userStatus.prevLoginByApiKey
         }
         return resp
     }

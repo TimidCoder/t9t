@@ -24,7 +24,7 @@ import org.junit.Test
 
 class ITSessions {
     @Test
-    def public void querySessionsTest() {
+    def void querySessionsTest() {
         val dlg = new Connection
 
         val results = dlg.typeIO((new SessionSearchRequest => [

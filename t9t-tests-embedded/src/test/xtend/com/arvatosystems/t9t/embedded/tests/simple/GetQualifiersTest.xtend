@@ -15,7 +15,6 @@
  */
 package com.arvatosystems.t9t.embedded.tests.simple
 
-import com.arvatosystems.t9t.base.ITestConnection
 import com.arvatosystems.t9t.base.T9tException
 import com.arvatosystems.t9t.base.request.GetQualifiersRequest
 import com.arvatosystems.t9t.base.request.GetQualifiersResponse

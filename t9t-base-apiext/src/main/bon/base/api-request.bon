@@ -81,6 +81,18 @@ package (com.arvatosystems) t9t.base.request {
         required Json                               request;                    // the request to perform in JSON
     }
 
+    /** Execute a request until a certain number of executions have been done,
+     * of until a certain time has elapsed, whichever is first.
+     * If no parameters are passed, the subrequest will be executed until it throws an exception.
+     */
+    class PerformUntilRequest extends RequestParameters {
+        required boolean                            allowNo;                    // stop when the request returns a code 1xxx (if false, only stop at errors 2xxx and above)
+        optional Integer                            maxNumberOfRuns;
+        optional Integer                            maxNumberOfMilliseconds;
+        optional Instant                            stopAt;                     // also stop once this time has been reached
+        required (RequestParameters...)             request;                    // The request to perform
+    }
+
     /** The simplest service request parameter, which provides no further information and requests just "is alive" response,
      * but using the BPMN 2.0 engine.
      */
@@ -136,6 +148,13 @@ package (com.arvatosystems) t9t.base.request {
         optional userId                             userId;                     // filter by userId
     }
 
+    class StackLevel {
+        required int                                numberOfCallsThisLevel;     // the number of calls which have been started at this stack level
+        required int                                progressCounter;            // progress counter for this level
+        required pqon                               pqon;                       // request class PQON
+        optional Unicode(512)                       statusText;                 // task defined general status text
+    }
+
     class ProcessStatusDTO {
         required Long                               threadId;                   // thread identifier
         required long                               ageInMs;                    // age in milliseconds
@@ -149,6 +168,7 @@ package (com.arvatosystems) t9t.base.request {
         required int                                progressCounter;            // numeric progress counter, 1 per exported record for data exports, usually 1 per processed data record for batches
         optional Unicode(512)                       statusText;                 // task defined general status text
         optional Unicode(64)                        createdByThread;            // the name of the thread which created this context (which usually also is the one executing it)
+        required (StackLevel) List<>                callStack;                  // the invocation call stack
     }
 
     class ProcessStatusResponse extends ServiceResponse {

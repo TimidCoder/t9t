@@ -13,7 +13,6 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 --
--- combined DBUPPDATES for all TBE-141 and TBE-158 related changes
 
 WHENEVER SQLERROR CONTINUE NONE
 DROP TABLE p42_int_async_messages CASCADE;

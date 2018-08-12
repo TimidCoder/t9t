@@ -45,7 +45,7 @@ abstract class AbstractConnection implements ITestConnection {
     public static final String INITIAL_USER_ID      = "admin";
     public static final String INITIAL_PASSWORD     = "changeMe";
 
-    static private final SessionParameters SESSION_PARAMETERS = new SessionParameters => [
+    static final SessionParameters SESSION_PARAMETERS = new SessionParameters => [
         dataUri                 = System.getProperty("user.name")   // optional identifier of the local host
         locale                  = "en-US"                           // BCP 47 language tag (ISO630 language code)
         userAgent               = "t9t-local-tests"                 // any string to identify the client
@@ -54,7 +54,7 @@ abstract class AbstractConnection implements ITestConnection {
         freeze
     ]
 
-    static private final Object DUMMY_INIT_1 = {
+    static final Object DUMMY_INIT_1 = {
         System.setProperty("org.jboss.logging.provider", "slf4j");              // configure hibernate to use slf4j
         System.setProperty("org.terracotta.quartz.skipUpdateCheck", "true");
         return null
@@ -93,7 +93,7 @@ abstract class AbstractConnection implements ITestConnection {
     // just a proxy
     def final ServiceResponse doIO(RequestParameters rp) {
         if (userAuthenticatedCredentials) {
-            return requestProcessor.execute(rp, jwtInfo, encodedJwt, skipAuthorization)
+            return requestProcessor.execute(null, rp, jwtInfo, encodedJwt, skipAuthorization)
         } else {
             return serviceRequestExecutor.execute(new ServiceRequest(null, rp, authentication))
         }

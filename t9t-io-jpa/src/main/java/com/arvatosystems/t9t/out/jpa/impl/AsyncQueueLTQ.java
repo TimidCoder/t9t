@@ -16,20 +16,21 @@
 package com.arvatosystems.t9t.out.jpa.impl;
 
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedTransferQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.TypedQuery;
 
+import org.joda.time.Instant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,6 +46,7 @@ import com.arvatosystems.t9t.io.AsyncHttpResponse;
 import com.arvatosystems.t9t.io.AsyncQueueDTO;
 import com.arvatosystems.t9t.io.InMemoryMessage;
 import com.arvatosystems.t9t.io.jpa.entities.AsyncMessageEntity;
+import com.arvatosystems.t9t.io.request.QueueStatus;
 import com.arvatosystems.t9t.out.services.IAsyncMessageUpdater;
 import com.arvatosystems.t9t.out.services.IAsyncQueue;
 import com.arvatosystems.t9t.out.services.IAsyncSender;
@@ -63,20 +65,49 @@ import de.jpaw.util.ExceptionUtil;
 @Named("LTQ")
 public class AsyncQueueLTQ<R extends BonaPortable> implements IAsyncQueue {
     private static final Logger LOGGER = LoggerFactory.getLogger(AsyncQueueLTQ.class);
+    private static final Cache<ChannelCacheKey, AsyncChannelDTO> channelCache = CacheBuilder.newBuilder().expireAfterWrite(60, TimeUnit.SECONDS).build();
+
     private final Provider<RequestContext> ctxProvider = Jdp.getProvider(RequestContext.class);
     private final IAsyncMessageUpdater messageUpdater = Jdp.getRequired(IAsyncMessageUpdater.class);
-    private final AsyncTransmitterConfiguration globalServerConfig = ConfigProvider.getConfiguration().getAsyncMsgConfiguration();
-    private final AtomicBoolean shutdownInProgress = new AtomicBoolean();
-    private final EntityManagerFactory emf = Jdp.getRequired(EntityManagerFactory.class);
-    private final Cache<String, AsyncChannelDTO> channelCache = CacheBuilder.newBuilder().expireAfterWrite(30, TimeUnit.SECONDS).build();
-    private final Map<Long, AsyncQueueDTO> queueConfigs;
-    private final Map<Long, WriterThread> writerThreads;
-    private final AtomicInteger threadCounter = new AtomicInteger();
+    private final ConcurrentMap<Long, QueueData> queueData;
 
-    private ExecutorService executor = null;
+    public static class ChannelCacheKey {
+        public final Long   tenantRef;
+        public final String channelId;
+        public ChannelCacheKey(Long tenantRef, String channelId) {
+            this.tenantRef = tenantRef;
+            this.channelId = channelId;
+        }
+    }
 
-    private final String defaultThreadName(Runnable r) {
-        return r instanceof AsyncQueueLTQ.WriterThread ? ((WriterThread)r).threadName : "t9t-AsyncTx-" + threadCounter.incrementAndGet();
+    /** Keeps the queue configuration and the references to their threads. */
+    private static class QueueData {
+        private final WriterThread    writerThread;
+        private final ExecutorService executor;
+
+        private QueueData(AsyncQueueDTO queueConfig) {
+            queueConfig.freeze();
+            executor = Executors.newSingleThreadExecutor(t -> new Thread(t, "t9t-AsyncTx-" + queueConfig.getAsyncQueueId()));
+            this.writerThread = new WriterThread(queueConfig);
+            executor.submit(writerThread);
+        }
+
+        private void shutdown(int timeout) {
+            writerThread.close();
+            writerThread.shutdownInProgress.set(true);
+            executor.shutdown();
+            if (timeout < 1000)
+                timeout = 1000;
+            try {
+                if (executor.awaitTermination(timeout, TimeUnit.MILLISECONDS)) {
+                    LOGGER.info("Normal completion of shutting down async transmitter");
+                } else {
+                    LOGGER.warn("Timeout during shutdown of async transmitter");
+                }
+            } catch (InterruptedException e) {
+                LOGGER.warn("Shutdown of async transmitter was interrupted");
+            }
+        }
     }
 
     public AsyncQueueLTQ() {
@@ -84,34 +115,33 @@ public class AsyncQueueLTQ<R extends BonaPortable> implements IAsyncQueue {
 
         // read the configured queues and launch a thread for each of them...
         final List<AsyncQueueDTO> queueDTOs = messageUpdater.getActiveQueues();
-        queueConfigs = new ConcurrentHashMap<>(2 * queueDTOs.size());
-        writerThreads = new ConcurrentHashMap<>(2 * queueDTOs.size());
+        queueData = new ConcurrentHashMap<>(3 * queueDTOs.size());
         if (queueDTOs.size() > 0) {
             // do not use fixed size pool, because it will create an initial thread before the writers are submitted,
             // which means we do not yet have access to their name.
-            executor = Executors.newCachedThreadPool(r -> new Thread(r, defaultThreadName(r)));
             for (AsyncQueueDTO q: queueDTOs) {
-                q.freeze();
-                queueConfigs.put(q.getObjectRef(), q);
                 try {
-                    WriterThread thread = new WriterThread(q);
-                    executor.submit(thread);
-                    writerThreads.put(q.getObjectRef(), thread);
+                    queueData.put(q.getObjectRef(), new QueueData(q));
                 } catch (Exception e) {
-                    LOGGER.error("Cannot launch async writer thread due to {}", ExceptionUtil.causeChain(e));
+                    LOGGER.error("Cannot launch async writer thread for queue {} due to {}", q.getAsyncQueueId(), ExceptionUtil.causeChain(e));
                 }
             }
         }
     }
 
-    private class WriterThread implements Runnable {
+    private static class WriterThread implements Runnable {
         private final LinkedTransferQueue<InMemoryMessage> queue = new LinkedTransferQueue<>();
         private final String threadName;
         private final Boolean lock = new Boolean(true);  // separate object used as semaphore
         private final AtomicBoolean gate = new AtomicBoolean();  // true is GREEN, false is RED
+        private final AtomicBoolean shutdownInProgress = new AtomicBoolean();
         private final AsyncTransmitterConfiguration serverConfig;
         private final AsyncQueueDTO myQueueCfg;
         private final IAsyncSender sender;
+        private final EntityManagerFactory emf = Jdp.getRequired(EntityManagerFactory.class);
+        private final IAsyncMessageUpdater messageUpdater = Jdp.getRequired(IAsyncMessageUpdater.class);
+        private final AsyncTransmitterConfiguration globalServerConfig = ConfigProvider.getConfiguration().getAsyncMsgConfiguration();
+        private final AtomicReference<Instant> lastMessageSent = new AtomicReference<>();
 
         private WriterThread(AsyncQueueDTO myCfg) {
             myQueueCfg = myCfg;
@@ -150,6 +180,7 @@ public class AsyncQueueLTQ<R extends BonaPortable> implements IAsyncQueue {
                             Thread.sleep(serverConfig.waitAfterExtError);
                         } else {
                             // eat message, it was sent successfully
+                            lastMessageSent.set(new Instant());
                             if (queue.poll() == null) {
                                 LOGGER.error("ILE: queue element no longer available!");
                             }
@@ -176,7 +207,9 @@ public class AsyncQueueLTQ<R extends BonaPortable> implements IAsyncQueue {
                     }
                 }
             }
-            LOGGER.info("Stopping async thread {} for queue {} due to system shutdown", threadName, myQueueCfg.getAsyncQueueId());
+            LOGGER.info("Stopping async thread {} for queue {} due to shutdown request: closing sender", threadName, myQueueCfg.getAsyncQueueId());
+            sender.close();
+            LOGGER.info("Stopping async thread {} for queue {} due to shutdown request: finished", threadName, myQueueCfg.getAsyncQueueId());
         }
 
         // fills the queue from the DB. Returns true if there was at least one element (or an exception has occurred), else false.
@@ -260,7 +293,7 @@ public class AsyncQueueLTQ<R extends BonaPortable> implements IAsyncQueue {
             try {
                 LOGGER.info("Sending message to channel {} of type {}", nextMsg.getAsyncChannelId(), nextMsg.getPayload().ret$PQON());
                 // obtain (cached) channel config
-                final AsyncChannelDTO channelDto = getCachedChannelConfig(channelId, tenantRef);
+                final AsyncChannelDTO channelDto = channelCache.get(new ChannelCacheKey(tenantRef, channelId), () -> messageUpdater.readChannelConfig(channelId, tenantRef));
                 if (!channelDto.getIsActive()) {
                     LOGGER.debug("Discarding async message to inactive channel {}", channelId);
                     newStatus = ExportStatusEnum.RESPONSE_OK;
@@ -298,78 +331,93 @@ public class AsyncQueueLTQ<R extends BonaPortable> implements IAsyncQueue {
         }
     }
 
-    private AsyncChannelDTO getCachedChannelConfig(String asyncChannelId, Long tenantRef) throws ExecutionException {
-        return channelCache.get(asyncChannelId, () -> messageUpdater.readChannelConfig(asyncChannelId, tenantRef));
-    }
-
     @Override
     public Long sendAsync(final String asyncChannelId, BonaPortable payload, Long objectRef) {
         final RequestContext ctx = ctxProvider.get();
         // redundant check to see if the channel exists (to get exception in sync thread already). Should not cost too much time due to caching
         try {
-            final AsyncChannelDTO cfg = getCachedChannelConfig(asyncChannelId, ctx.tenantRef);
+            final AsyncChannelDTO cfg = channelCache.get(new ChannelCacheKey(ctx.tenantRef, asyncChannelId), () -> messageUpdater.readChannelConfig(asyncChannelId, ctx.tenantRef));
             if (!cfg.getIsActive() || cfg.getAsyncQueueRef() == null) {
                 LOGGER.debug("Discarding async message to inactive or unassociated channel {}", asyncChannelId);
                 return null;
             }
             final Long asyncQueueRef = cfg.getAsyncQueueRef().getObjectRef();
-            LOGGER.debug("checking queueRef {}", asyncQueueRef);
-            final AsyncQueueDTO queue = queueConfigs.get(asyncQueueRef);
-            if (queue == null) {
-                LOGGER.debug("Discarding async message to channel {}: Not associated with an active queue!", asyncChannelId);
-                return null;
-            }
+            final QueueData queue = queueData.get(asyncQueueRef);
 
-            // build the in-memory message
-            final InMemoryMessage m = new InMemoryMessage();
-            m.setTenantRef(ctx.tenantRef);       // obtain the tenantRef and store it
-            m.setAsyncChannelId(asyncChannelId);
-            m.setObjectRef(objectRef);
-            m.setPayload(payload);
-
-            WriterThread w = writerThreads.get(queue.getObjectRef());
-            if (w == null) {
-                LOGGER.error("Cannot find cached writer thread for channel {}, cannot send now!", asyncChannelId);
-            } else {
-                w.send(ctx, m);
+            if (queue != null) {
+                // queue is currently active: build the in-memory message and transmit it
+                final InMemoryMessage m = new InMemoryMessage();
+                m.setTenantRef(ctx.tenantRef);       // obtain the tenantRef and store it
+                m.setAsyncChannelId(asyncChannelId);
+                m.setObjectRef(objectRef);
+                m.setPayload(payload);
+                queue.writerThread.send(ctx, m);
             }
-            return queue.getObjectRef();
+            return asyncQueueRef;
         } catch (ExecutionException e) {
             LOGGER.error("Cannot get cache configuration for channelId {}: {}", asyncChannelId, ExceptionUtil.causeChain(e));
             throw new T9tException(T9tException.RECORD_DOES_NOT_EXIST, "ChannelId " + asyncChannelId);
         }
     }
 
+    protected void shutdown(QueueData w) {
+        w.shutdown(ConfigProvider.getConfiguration().getAsyncMsgConfiguration().timeoutShutdown);
+    }
+
     @Override
     public void close() {
-        for (WriterThread w: writerThreads.values())
-            w.close();
-        shutdownInProgress.set(true);
-        executor.shutdown();
-        try {
-            if (executor.awaitTermination(globalServerConfig.timeoutShutdown, TimeUnit.MILLISECONDS)) {
-                LOGGER.info("Normal completion of shutting down async transmitter");
-            } else {
-                LOGGER.warn("Timeout during shutdown of async transmitter");
-            }
-        } catch (InterruptedException e) {
-            LOGGER.warn("Shutdown of async transmitter was interrupted");
+        for (QueueData w: queueData.values()) {
+            shutdown(w);
+        }
+        queueData.clear();
+    }
+
+    @Override
+    public void close(Long queueRef) {
+        QueueData w = queueData.get(queueRef);
+        if (w != null) {
+            shutdown(w);
+            queueData.remove(queueRef);
+        } else {
+            LOGGER.error("Cannot find queue data for {}", queueRef);
         }
     }
 
     @Override
     public void clearQueue(Long queueRef) {
         if (queueRef == null) {
-            for (WriterThread w: writerThreads.values()) {
-                w.clearQueue();
+            for (QueueData w: queueData.values()) {
+                w.writerThread.clearQueue();
             }
         } else {
-            WriterThread w = writerThreads.get(queueRef);
+            QueueData w = queueData.get(queueRef);
             if (w != null) {
-                w.clearQueue();
+                w.writerThread.clearQueue();
             } else {
-                LOGGER.error("Cannot find writer thread for {}", queueRef);
+                LOGGER.error("Cannot find queue data for {}", queueRef);
             }
         }
+    }
+
+    @Override
+    public void open(AsyncQueueDTO queue) {
+        queueData.computeIfAbsent(queue.getObjectRef(), (x) -> new QueueData(queue));
+    }
+
+    @Override
+    public QueueStatus getQueueStatus(Long queueRef, String queueId) {
+        final QueueData w = queueData.get(queueRef);
+        final QueueStatus status = new QueueStatus();
+        status.setAsyncQueueId(queueId);
+        if (w == null) {
+            status.setRunning(false);
+        } else {
+            final WriterThread wt = w.writerThread;
+            status.setRunning(true);
+            status.setIsGreen(wt.gate.get());
+            status.setLastMessageSent(wt.lastMessageSent.get());
+            status.setShuttingDown(wt.shutdownInProgress.get());
+        }
+        return status;
     }
 }

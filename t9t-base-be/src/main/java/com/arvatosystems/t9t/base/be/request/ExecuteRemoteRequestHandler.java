@@ -49,6 +49,7 @@ public class ExecuteRemoteRequestHandler extends AbstractRequestHandler<ExecuteR
         if (!allowed) {
             throw new T9tException(T9tException.ACCESS_DENIED, "No EXECUTE permission on {}.{}", PermissionType.EXTERNAL, remoteRequest.ret$PQON());
         }
+        ctx.statusText = remoteRequest.ret$PQON();
         // obtain an remoter for single use
         SimpleCallOutExecutor remoteClient = new SimpleCallOutExecutor(request.getUrl(), MediaType.COMPACT_BONAPARTE);
         return remoteClient.execute(ctx, request.getRemoteRequest());
