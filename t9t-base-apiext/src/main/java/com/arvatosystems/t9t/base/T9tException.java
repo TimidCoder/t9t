@@ -250,6 +250,8 @@ public class T9tException extends ApplicationException {
     // General event handling errors
     public static final int INVALID_EVENT_TYPE = OFFSET + 980;
     public static final int THREAD_INTERRUPTED = OFFSET_TIMEOUT + 991;
+    public static final int UNSUPPORTED_OPERATION = OFFSET + 992;
+    public static final int UNSUPPORTED_OPERAND = OFFSET + 993;
 
 
     // CHECKSTYLE.ON: DeclarationOrder
@@ -470,6 +472,8 @@ public class T9tException extends ApplicationException {
 
             codeToDescription.put(INVALID_EVENT_TYPE, "Can't handle this type of event");
             codeToDescription.put(THREAD_INTERRUPTED, "The thread was interrupted (got a termination signal)");
+            codeToDescription.put(UNSUPPORTED_OPERATION, "The requested operation is not supported");
+            codeToDescription.put(UNSUPPORTED_OPERAND, "The provided operand or parameter is not supported");
     }
 
     /**
