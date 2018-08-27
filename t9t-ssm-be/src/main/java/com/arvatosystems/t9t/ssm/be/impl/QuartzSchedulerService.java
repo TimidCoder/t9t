@@ -92,7 +92,7 @@ public class QuartzSchedulerService implements ISchedulerService {
         } catch (Exception underlyingException) {
             String message = "Failed to create job with description=" + setup.toString();
             LOGGER.error(message + " Caught exception: ", underlyingException);
-            throw new T9tSsmException(T9tSsmException.SCHEDULER_CREATE_JOB_EXCEPTION, message, underlyingException);
+            throw new T9tException(T9tSsmException.SCHEDULER_CREATE_JOB_EXCEPTION, message, underlyingException);
         }
     }
 
@@ -113,7 +113,7 @@ public class QuartzSchedulerService implements ISchedulerService {
         } catch (SchedulerException | ParseException underlyingException) {
             String message = "Failed to update scheduled job with description=" + setup.toString();
             LOGGER.error(message + " Caught exception: ", underlyingException);
-            throw new T9tSsmException(T9tSsmException.SCHEDULER_UPDATE_JOB_EXCEPTION, message, underlyingException);
+            throw new T9tException(T9tSsmException.SCHEDULER_UPDATE_JOB_EXCEPTION, message, underlyingException);
         }
     }
 
@@ -132,7 +132,7 @@ public class QuartzSchedulerService implements ISchedulerService {
         } catch (Exception underlyingException) {
             String message = ctxProvider.get().tenantId + "." + schedulerId;
             LOGGER.error("Failed to delete scheduled job {}", message, underlyingException);
-            throw new T9tSsmException(T9tSsmException.SCHEDULER_UPDATE_JOB_EXCEPTION, message, underlyingException);
+            throw new T9tException(T9tSsmException.SCHEDULER_UPDATE_JOB_EXCEPTION, message, underlyingException);
         }
     }
 
@@ -226,11 +226,11 @@ public class QuartzSchedulerService implements ISchedulerService {
         switch (setup.getRecurrencyType()) {
         case SECONDLY:
             if (setup.getIntervalMinutes() != null && setup.getIntervalMinutes() == 1 && setup.getIntervalOffset() != null && setup.getIntervalOffset() > 0) {
-                throw new T9tSsmException(T9tSsmException.SCHEDULE_SETUP_INTERVAL_VALIDATION_ERR,
+                throw new T9tException(T9tSsmException.SCHEDULE_SETUP_INTERVAL_VALIDATION_ERR,
                         "For SECONDLY recurrencyType, we don't work on smaller unit than second.");
 
             } else if (setup.getIntervalMinutes() != null && setup.getIntervalOffset() != null && setup.getIntervalOffset() > setup.getIntervalMinutes()) {
-                throw new T9tSsmException(T9tSsmException.SCHEDULE_SETUP_INTERVAL_VALIDATION_ERR,
+                throw new T9tException(T9tSsmException.SCHEDULE_SETUP_INTERVAL_VALIDATION_ERR,
                         "intervalOffset should be < intervalMinutes.");
             }
 
@@ -244,7 +244,7 @@ public class QuartzSchedulerService implements ISchedulerService {
         case MINUTELY:
             if (setup.getIntervalMilliseconds() != null || (setup.getSetOfWeekdays() != null && !setup.getSetOfWeekdays().isEmpty())
                     || setup.getExecutionTime() != null) {
-                throw new T9tSsmException(T9tSsmException.IRRELEVANT_SCHEDULER_PARAM_ERR,
+                throw new T9tException(T9tSsmException.IRRELEVANT_SCHEDULER_PARAM_ERR,
                         "For MINUTELY recurrencyType, only intervalMinutes, intervalOffset, startHour and endHour is relevant.");
             }
 
@@ -264,7 +264,7 @@ public class QuartzSchedulerService implements ISchedulerService {
 
         case HOURLY:
             if (setup.getExecutionTime() != null && setup.getRepeatCount() != null && setup.getIntervalMilliseconds() != null) {
-                throw new T9tSsmException(T9tSsmException.IRRELEVANT_SCHEDULER_PARAM_ERR,
+                throw new T9tException(T9tSsmException.IRRELEVANT_SCHEDULER_PARAM_ERR,
                         "For HOURLY recurrencyType, only startTime(optional), endTime(optional), intervalMinutes(interval) and intervalOffset(offset) should be set.");
             }
 
@@ -292,12 +292,12 @@ public class QuartzSchedulerService implements ISchedulerService {
 
         case DAILY:
             if (setup.getEndHour() != null || setup.getStartHour() != null || setup.getIntervalMilliseconds() != null || (setup.getSetOfWeekdays() != null && !setup.getSetOfWeekdays().isEmpty())) {
-                throw new T9tSsmException(T9tSsmException.IRRELEVANT_SCHEDULER_PARAM_ERR,
+                throw new T9tException(T9tSsmException.IRRELEVANT_SCHEDULER_PARAM_ERR,
                         "For DAILY reccurencyType, only executionTime should be set.");
             }
 
             if (setup.getExecutionTime() == null) {
-                throw new T9tSsmException(T9tSsmException.REQUIRED_SCHEDULER_PARAM_MISSING,
+                throw new T9tException(T9tSsmException.REQUIRED_SCHEDULER_PARAM_MISSING,
                         "For DAILY reccurencyType, executionTime is required.");
             }
 
@@ -311,12 +311,12 @@ public class QuartzSchedulerService implements ISchedulerService {
 
         case WEEKLY: {
             if (setup.getRepeatCount() != null || setup.getIntervalMilliseconds() != null || setup.getEndHour() != null || setup.getStartHour() != null) {
-                throw new T9tSsmException(T9tSsmException.IRRELEVANT_SCHEDULER_PARAM_ERR,
+                throw new T9tException(T9tSsmException.IRRELEVANT_SCHEDULER_PARAM_ERR,
                         "For WEEKLY recurrencyType, only execution time and either of setOfWeekdays or interval are relevant.");
             }
 
             if ((setup.getSetOfWeekdays() != null && !setup.getSetOfWeekdays().isEmpty()) && (setup.getIntervalMinutes() != null || setup.getIntervalOffset() != null)) {
-                throw new T9tSsmException(T9tSsmException.SCHEDULE_SETUP_PARAM_VALIDATION_ERR,
+                throw new T9tException(T9tSsmException.SCHEDULE_SETUP_PARAM_VALIDATION_ERR,
                         "For reccurencyType WEEKLY, if setOfWeekdays is set, intervalMinutes and intervalOffset shouldn't be set.");
             }
 
@@ -343,16 +343,16 @@ public class QuartzSchedulerService implements ISchedulerService {
 
         case MONTHLY: {
             if (setup.getIntervalMilliseconds() != null && setup.getStartHour() != null && setup.getEndHour() != null) {
-                throw new T9tSsmException(T9tSsmException.IRRELEVANT_SCHEDULER_PARAM_ERR,
+                throw new T9tException(T9tSsmException.IRRELEVANT_SCHEDULER_PARAM_ERR,
                         "For MONTHLY recurrencyType, only executionTime is relevant.");
             }
             if (setup.getExecutionTime() == null) {
-                throw new T9tSsmException(T9tSsmException.REQUIRED_SCHEDULER_PARAM_MISSING,
+                throw new T9tException(T9tSsmException.REQUIRED_SCHEDULER_PARAM_MISSING,
                         "For MONTHLY recurrencyType, executionTime can't be null.");
             }
 
             if (setup.getValidFrom() == null){
-                throw new T9tSsmException(T9tSsmException.SCHEDULE_VALID_FROM_NOT_PROVIDED,
+                throw new T9tException(T9tSsmException.SCHEDULE_VALID_FROM_NOT_PROVIDED,
                         "Valid From Date is missing when setup Monthly Schedule.");
             }
 
@@ -369,15 +369,15 @@ public class QuartzSchedulerService implements ISchedulerService {
 
         case YEARLY: {
             if (setup.getIntervalMilliseconds() != null && setup.getStartHour() != null && setup.getEndHour() != null) {
-                throw new T9tSsmException(T9tSsmException.IRRELEVANT_SCHEDULER_PARAM_ERR,
+                throw new T9tException(T9tSsmException.IRRELEVANT_SCHEDULER_PARAM_ERR,
                         "For MONTHLY recurrencyType, only executionTime is relevant.");
             }
             if (setup.getExecutionTime() == null) {
-                throw new T9tSsmException(T9tSsmException.REQUIRED_SCHEDULER_PARAM_MISSING,
+                throw new T9tException(T9tSsmException.REQUIRED_SCHEDULER_PARAM_MISSING,
                         "For MONTHLY recurrencyType, executionTime can't be null.");
             }
             if (setup.getValidFrom() == null){
-                throw new T9tSsmException(T9tSsmException.SCHEDULE_VALID_FROM_NOT_PROVIDED,
+                throw new T9tException(T9tSsmException.SCHEDULE_VALID_FROM_NOT_PROVIDED,
                         "Valid From Date is missing when setup Yearly Schedule.");
             }
 
@@ -403,11 +403,11 @@ public class QuartzSchedulerService implements ISchedulerService {
                     || setup.getIntervalOffset() != null || (setup.getSetOfWeekdays() != null && !setup.getSetOfWeekdays().isEmpty())
                     || setup.getRepeatCount() != null) {
                 LOGGER.error("for CRON native, only cronExpression is relevant");
-                throw new T9tSsmException(T9tSsmException.SCHEDULE_CRON_EXPRESSION_MISSING);
+                throw new T9tException(T9tSsmException.SCHEDULE_CRON_EXPRESSION_MISSING);
             }
 
             if (setup.getCronExpression() == null || !setup.getCronExpression().matches(CRON_REGEX_PATTERN)) {
-                throw new T9tSsmException(T9tSsmException.SCHEDULE_CRON_REGEX_PATTERN_MISMATCH);
+                throw new T9tException(T9tSsmException.SCHEDULE_CRON_REGEX_PATTERN_MISMATCH);
             }
 
             return setup.getCronExpression();
@@ -458,7 +458,7 @@ public class QuartzSchedulerService implements ISchedulerService {
                 throw new T9tException(T9tException.GENERAL_EXCEPTION_CENTRAL);
             }
         } catch (IllegalArgumentException e) {
-            throw new T9tSsmException(T9tSsmException.SCHEDULE_SETUP_INTERVAL_VALIDATION_ERR, e.getMessage());
+            throw new T9tException(T9tSsmException.SCHEDULE_SETUP_INTERVAL_VALIDATION_ERR, e.getMessage());
         }
     }
 }

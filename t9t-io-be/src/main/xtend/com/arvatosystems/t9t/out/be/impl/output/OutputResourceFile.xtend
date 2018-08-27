@@ -36,6 +36,7 @@ import java.io.OutputStream
 import java.nio.charset.Charset
 import java.util.zip.GZIPOutputStream
 import com.arvatosystems.t9t.io.CamelExecutionScheduleType
+import com.arvatosystems.t9t.base.T9tException
 
 @AddLogger
 @Named("FILE")  // name of CommunicationTargetChannelType instance
@@ -91,13 +92,13 @@ class OutputResourceFile implements IOutputResource {
         LOGGER.info("Writing to absolute path {}", absolutePath)
 
         if (!myFile.isAbsolute()) {
-            throw new T9tIOException(T9tIOException.OUTPUT_FILE_PATH_NOT_ABSOLUTE, absolutePath);
+            throw new T9tException(T9tIOException.OUTPUT_FILE_PATH_NOT_ABSOLUTE, absolutePath);
         }
 
         fileUtil.createFileLocation(absolutePath); // create folders for file
 
         if (myFile.isDirectory()) {
-            throw new T9tIOException(T9tIOException.OUTPUT_FILE_IS_DIRECTORY, absolutePath);
+            throw new T9tException(T9tIOException.OUTPUT_FILE_IS_DIRECTORY, absolutePath);
         }
 
         try {
@@ -107,7 +108,7 @@ class OutputResourceFile implements IOutputResource {
             }
         } catch (IOException ex) {
             LOGGER.error(ex.getMessage() + ": " + absolutePath, ex);
-            throw new T9tIOException(T9tIOException.OUTPUT_FILE_OPEN_EXCEPTION, absolutePath);
+            throw new T9tException(T9tIOException.OUTPUT_FILE_OPEN_EXCEPTION, absolutePath);
         }
     }
 

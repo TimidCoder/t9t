@@ -28,6 +28,7 @@ import org.slf4j.LoggerFactory;
 
 import com.arvatosystems.t9t.auth.UserDTO;
 import com.arvatosystems.t9t.auth.request.UserSearchRequest;
+import com.arvatosystems.t9t.base.T9tException;
 import com.arvatosystems.t9t.base.search.ReadAllResponse;
 import com.arvatosystems.t9t.base.services.IAutonomousExecutor;
 import com.arvatosystems.t9t.base.services.ICrossModuleRefResolver;
@@ -90,7 +91,7 @@ public class ReportMailNotifierImpl implements IReportMailNotifier {
                 mediaData.setRawData(new ByteArray(byteArray));
             } catch (IOException e) {
                 LOGGER.error("Unable to send report email due to", e);
-                throw new T9tRepException(T9tRepException.UNABLE_TO_NOTIFY_REPORT_COMPLETION);
+                throw new T9tException(T9tRepException.UNABLE_TO_NOTIFY_REPORT_COMPLETION);
             }
 
             NewDocumentRequest request = new NewDocumentRequest();

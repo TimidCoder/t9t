@@ -18,6 +18,7 @@ package com.arvatosystems.t9t.out.be.impl.formatgenerator;
 import java.io.IOException;
 import java.nio.charset.Charset;
 
+import com.arvatosystems.t9t.base.T9tException;
 import com.arvatosystems.t9t.base.output.OutputSessionParameters;
 import com.arvatosystems.t9t.io.DataSinkDTO;
 import com.arvatosystems.t9t.io.T9tIOException;
@@ -41,7 +42,7 @@ public abstract class AbstractFormatGenerator implements ICommunicationFormatGen
 
     protected void openHook() throws IOException, ApplicationException {
         if (foldableParams != null) {
-            throw new T9tIOException(T9tIOException.NO_FOLDING_SUPPORT, effectiveType.name());
+            throw new T9tException(T9tIOException.NO_FOLDING_SUPPORT, effectiveType.name());
         }
     }
 
@@ -60,7 +61,7 @@ public abstract class AbstractFormatGenerator implements ICommunicationFormatGen
 
     @Override
     public void generateData(int recordNo, int mappedRecordNo, long recordId, BonaPortable record) throws IOException, ApplicationException {
-        throw new T9tIOException(T9tIOException.NO_RECORD_BASED_OUTPUT, effectiveType.name());
+        throw new T9tException(T9tIOException.NO_RECORD_BASED_OUTPUT, effectiveType.name());
     }
 
     @Override

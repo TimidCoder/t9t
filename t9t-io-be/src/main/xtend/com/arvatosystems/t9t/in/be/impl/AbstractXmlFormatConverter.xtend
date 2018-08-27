@@ -30,6 +30,7 @@ import javax.xml.bind.JAXBContext
 import javax.xml.bind.JAXBException
 import javax.xml.bind.Unmarshaller
 import javax.xml.stream.XMLStreamReader
+import com.arvatosystems.t9t.base.T9tException
 
 @AddLogger
 abstract class AbstractXmlFormatConverter extends AbstractInputFormatConverter {
@@ -65,7 +66,7 @@ abstract class AbstractXmlFormatConverter extends AbstractInputFormatConverter {
             m = context.createUnmarshaller();
         } catch (JAXBException e) {
             LOGGER.error(e.getMessage(), e);
-            throw new T9tIOException(T9tIOException.XML_SETUP_ERROR, ExceptionUtil.causeChain(e));
+            throw new T9tException(T9tIOException.XML_SETUP_ERROR, ExceptionUtil.causeChain(e));
         }
     }
 }

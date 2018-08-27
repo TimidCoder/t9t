@@ -28,9 +28,9 @@ import java.nio.charset.StandardCharsets
 
 @Singleton
 class TenantLogoDtoResolver extends AbstractModuleConfigResolver<TenantLogoDTO, TenantLogoEntity> implements ITenantLogoDtoResolver {
-    private static final byte [] TRANSPARENT_1X1 =
+    static final byte [] TRANSPARENT_1X1 =
         "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=".getBytes(StandardCharsets.UTF_8)
-    private static final TenantLogoDTO DEFAULT_MODULE_CFG = new TenantLogoDTO(
+    static final TenantLogoDTO DEFAULT_MODULE_CFG = new TenantLogoDTO(
         null,                       // Json z
         new MediaData => [
             mediaType   = MediaTypes.MEDIA_XTYPE_PNG
@@ -38,11 +38,11 @@ class TenantLogoDtoResolver extends AbstractModuleConfigResolver<TenantLogoDTO, 
         ]
     );
 
-    public new() {
+    new() {
         super(ITenantLogoEntityResolver)
     }
 
-    override public TenantLogoDTO getDefaultModuleConfiguration() {
+    override TenantLogoDTO getDefaultModuleConfiguration() {
         return DEFAULT_MODULE_CFG;
     }
 }

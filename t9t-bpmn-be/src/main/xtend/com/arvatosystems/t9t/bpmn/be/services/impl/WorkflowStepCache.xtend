@@ -15,15 +15,16 @@
  */
 package com.arvatosystems.t9t.bpmn.be.services.impl
 
+import com.arvatosystems.t9t.base.T9tException
 import com.arvatosystems.t9t.bpmn.IBPMObjectFactory
 import com.arvatosystems.t9t.bpmn.IWorkflowStep
 import com.arvatosystems.t9t.bpmn.T9tBPMException
 import com.arvatosystems.t9t.bpmn.services.IWorkflowStepCache
+import com.google.common.collect.ImmutableMap
 import de.jpaw.annotations.AddLogger
 import de.jpaw.dp.Jdp
 import de.jpaw.dp.Singleton
 import java.util.Map
-import com.google.common.collect.ImmutableMap
 
 @AddLogger
 @Singleton
@@ -64,14 +65,14 @@ class WorkflowStepCache implements IWorkflowStepCache {
     override getBPMObjectFactoryForName(String name) {
         val factory = bpmObjectFactories.get(name)
         if (factory === null)
-            throw new T9tBPMException(T9tBPMException.BPM_OBJECT_FACTORY_NOT_FOUND, name);
+            throw new T9tException(T9tBPMException.BPM_OBJECT_FACTORY_NOT_FOUND, name);
         return factory;
     }
 
     override getWorkflowStepForName(String name) {
         val step = workflowSteps.get(name)
         if (step === null)
-            throw new T9tBPMException(T9tBPMException.BPM_STEP_NOT_FOUND, name);
+            throw new T9tException(T9tBPMException.BPM_STEP_NOT_FOUND, name);
         return step;
     }
 

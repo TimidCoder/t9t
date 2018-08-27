@@ -23,7 +23,7 @@ import com.arvatosystems.t9t.base.search.Description
 import de.jpaw.dp.Jdp
 
 class LeanUserSearchRequestHandler extends AbstractLeanSearchRequestHandler<LeanUserSearchRequest, UserEntity> {
-    public new() {
+    new() {
         super(Jdp.getRequired(IUserEntityResolver),
             [ return new Description(null, userId, name, false, false) ]
         )

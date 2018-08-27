@@ -81,12 +81,4 @@ public class T9tBPMException extends T9tException {
         codeToDescription.put(BPM_NO_ERROR,                        "Workflow returned ERROR, but no (integral) returnCode was set");
         codeToDescription.put(BPM_NO_BPMN_ENGINE,                  "No BPMN Engine found.");
     }
-
-    public T9tBPMException(final int errorCode) {
-        super(errorCode);
-    }
-
-    public T9tBPMException(final int errorCode, final Object... detailParameters) {
-        super(errorCode, detailParameters);
-    }
 }

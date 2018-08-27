@@ -27,7 +27,7 @@ import com.arvatosystems.t9t.auth.jpa.persistence.ITenantEntityResolver
 import com.arvatosystems.t9t.auth.jpa.persistence.IUserEntityResolver
 
 @AutoMap42
-public class SessionMappers {
+class SessionMappers {
     ISessionEntityResolver resolver
     ITenantEntityResolver  tenantResolver
     IUserEntityResolver    userResolver

@@ -264,7 +264,7 @@ public class RunReportRequestHandler extends AbstractRequestHandler<RunReportReq
 
             MediaXType tmpType = outputSession.getCommunicationFormatType(); // get merged type (with configuration)
             if (tmpType == null || !(tmpType.getBaseEnum() instanceof MediaType)) {
-                throw new T9tRepException(T9tRepException.JASPER_REPORT_CREATION_JR_EXCEPTION, "null or bad OFT");
+                throw new T9tException(T9tRepException.JASPER_REPORT_CREATION_JR_EXCEPTION, "null or bad OFT");
             }
             outputFileType = (MediaType)(tmpType.getBaseEnum());
             switch (outputFileType) {
@@ -307,7 +307,7 @@ public class RunReportRequestHandler extends AbstractRequestHandler<RunReportReq
 //            outputSession.close();
         } catch (JRException e) {
             LOGGER.error("Jasper throw an exception:", e);
-            throw new T9tRepException(T9tRepException.JASPER_REPORT_CREATION_JR_EXCEPTION, e.getMessage());
+            throw new T9tException(T9tRepException.JASPER_REPORT_CREATION_JR_EXCEPTION, e.getMessage());
         }
 
         if (reportParamsDTO.getMailingGroupRef() != null) {

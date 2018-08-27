@@ -36,7 +36,7 @@ import java.nio.charset.Charset
 @Named("S3")  // name of CommunicationTargetChannelType instance
 @Dependent
 class OutputResourceS3 implements IOutputResource {
-    private static final char DELIMITER = ':'
+    static final char DELIMITER = ':'
 
     protected static final String GZIP_EXTENSION = ".gz";
 
@@ -104,7 +104,7 @@ class OutputResourceS3 implements IOutputResource {
             os = new ByteArrayOutputStream  // FIXME: there is currently no way to write to S3 via stream. Has to buffer and upload then
         } catch (IOException ex) {
             LOGGER.error(ex.getMessage(), ex);
-            throw new T9tIOException(T9tIOException.OUTPUT_FILE_OPEN_EXCEPTION);
+            throw new T9tException(T9tIOException.OUTPUT_FILE_OPEN_EXCEPTION);
         }
     }
 

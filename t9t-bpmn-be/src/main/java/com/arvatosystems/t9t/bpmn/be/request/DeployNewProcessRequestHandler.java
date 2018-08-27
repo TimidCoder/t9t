@@ -18,6 +18,7 @@ package com.arvatosystems.t9t.bpmn.be.request;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.arvatosystems.t9t.base.T9tException;
 import com.arvatosystems.t9t.base.services.AbstractRequestHandler;
 import com.arvatosystems.t9t.base.services.IRequestHandler;
 import com.arvatosystems.t9t.base.services.RequestContext;
@@ -42,7 +43,7 @@ public class DeployNewProcessRequestHandler extends AbstractRequestHandler<Deplo
         DeployNewProcessResponse response = new DeployNewProcessResponse();
         if (bpmService == null) {
             LOGGER.error("Fail to lookup implementation for IBpmService. Please check your deployment package");
-            throw new T9tBPMException(T9tBPMException.BPM_NO_BPMN_ENGINE);
+            throw new T9tException(T9tBPMException.BPM_NO_BPMN_ENGINE);
         }
 
         try {

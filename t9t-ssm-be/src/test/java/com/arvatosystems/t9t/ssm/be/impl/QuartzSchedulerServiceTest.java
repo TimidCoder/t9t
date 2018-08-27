@@ -23,6 +23,7 @@ import org.junit.Test;
 import org.mockito.Mockito;
 import org.quartz.Scheduler;
 
+import com.arvatosystems.t9t.base.T9tException;
 import com.arvatosystems.t9t.base.services.RequestContext;
 import com.arvatosystems.t9t.ssm.SchedulerSetupDTO;
 import com.arvatosystems.t9t.ssm.SchedulerSetupRecurrenceType;
@@ -216,7 +217,7 @@ public class QuartzSchedulerServiceTest {
         Assert.assertEquals("0 30 12 * * ?", cronExpression);
     }
 
-    @Test(expected=T9tSsmException.class)
+    @Test(expected=T9tException.class)
     public void testDailyWithStartHourAndEndHour() {
         SchedulerSetupDTO setup = new SchedulerSetupDTO();
         setup.setRecurrencyType(SchedulerSetupRecurrenceType.DAILY);
@@ -227,7 +228,7 @@ public class QuartzSchedulerServiceTest {
         service.determineCronExpression(setup);
     }
 
-    @Test(expected=T9tSsmException.class)
+    @Test(expected=T9tException.class)
     public void testMonthly() {
         SchedulerSetupDTO setup = new SchedulerSetupDTO();
         setup.setRecurrencyType(SchedulerSetupRecurrenceType.MONTHLY);
@@ -258,7 +259,7 @@ public class QuartzSchedulerServiceTest {
         Assert.assertEquals("0 30 12 10 1/10 ?", cronExpression);
     }
 
-    @Test(expected=T9tSsmException.class)
+    @Test(expected=T9tException.class)
     public void testYearly() {
         SchedulerSetupDTO setup = new SchedulerSetupDTO();
         setup.setRecurrencyType(SchedulerSetupRecurrenceType.YEARLY);
@@ -301,7 +302,7 @@ public class QuartzSchedulerServiceTest {
         Assert.assertEquals("0 30 12 ? * 2,4", cronExpression);
     }
 
-    @Test(expected=T9tSsmException.class)
+    @Test(expected=T9tException.class)
     public void testWeeklyWithBothSetOfWeekdaysAndIntervalParams() {
         SchedulerSetupDTO setup = new SchedulerSetupDTO();
         setup.setRecurrencyType(SchedulerSetupRecurrenceType.WEEKLY);
@@ -386,7 +387,7 @@ public class QuartzSchedulerServiceTest {
         Assert.assertEquals("* 0-59/3 10/3 * * ? 2017,2018-2020", cronExpression);
     }
 
-    @Test(expected=T9tSsmException.class)
+    @Test(expected=T9tException.class)
     public void testNativeCRONGibberishValue() {
         SchedulerSetupDTO setup = new SchedulerSetupDTO();
         setup.setRecurrencyType(SchedulerSetupRecurrenceType.CRON_NATIVE);
@@ -395,7 +396,7 @@ public class QuartzSchedulerServiceTest {
         service.determineCronExpression(setup);
     }
 
-    @Test(expected=T9tSsmException.class)
+    @Test(expected=T9tException.class)
     public void testExceptionIntervalRange() {
         SchedulerSetupDTO setup = new SchedulerSetupDTO();
         setup.setRecurrencyType(SchedulerSetupRecurrenceType.HOURLY);
@@ -406,7 +407,7 @@ public class QuartzSchedulerServiceTest {
         Assert.assertEquals("0 0 10/3 ? * *", cronExpression);
     }
 
-    @Test(expected=T9tSsmException.class)
+    @Test(expected=T9tException.class)
     public void testExceptionSettingSmallerOffsetOnSecondly() {
         SchedulerSetupDTO setup = new SchedulerSetupDTO();
         setup.setRecurrencyType(SchedulerSetupRecurrenceType.SECONDLY);

@@ -23,10 +23,6 @@ import com.arvatosystems.t9t.base.T9tException;
  *
  */
 public class T9tIOException extends T9tException {
-
-    /**
-     *
-     */
     private static final long serialVersionUID = -8665896096651910L;
     private static final int OFFSET = (CL_PARAMETER_ERROR * CLASSIFICATION_FACTOR) + 180000;
     private static final int OFFSET_NO = (CL_DENIED * CLASSIFICATION_FACTOR) + 180000;
@@ -111,13 +107,5 @@ public class T9tIOException extends T9tException {
         codeToDescription.put(UNDEFINED_CAMEL_SUCCESS_DEST_PATH_ERROR, "Unknown destination where to move a file after successful Camel routing.");
         codeToDescription.put(UNDEFINED_CAMEL_FAILURE_DEST_PATH_ERROR, "Unknown destination where to move a file after failed Camel routing.");
         codeToDescription.put(OUTPUT_COMM_CHANNEL_NO_SRC_HANDLER, "No data source handler available for type");
-    }
-
-    public T9tIOException(final int errorCode, final Object... detailParameters) {
-        super(errorCode, detailParameters);
-    }
-
-    public T9tIOException(final int errorCode) {
-        super(errorCode);
     }
 }

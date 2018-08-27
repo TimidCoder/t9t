@@ -18,17 +18,10 @@ package com.arvatosystems.t9t.doc;
 import com.arvatosystems.t9t.base.T9tException;
 
 /**
- * This class contains all exception codes used in ssm module.
+ * This class contains all exception codes used in doc module.
  */
 public class T9tDocExtException extends T9tException {
-
-    /**
-     *
-     */
     private static final long serialVersionUID = -7128619681841773722L;
-    /**
-     * generated serial version id.
-     */
 
     /*
      * Offset for all codes in this class.
@@ -78,24 +71,5 @@ public class T9tDocExtException extends T9tException {
         codeToDescription.put(IMAGE_NOT_FOUND_ERROR,            "Image file not found.");
         codeToDescription.put(CONFIGURATION_NOT_FOUND_ERROR,    "Configuration data not found.");
         codeToDescription.put(TEMPLATE_UNSUPPORTED_ENCODING,    "Unsupported encoding for template.");
-    }
-
-    public T9tDocExtException(int errorCode) {
-        super(errorCode);
-    }
-
-
-    /**
-     * Create an exception for a specific error code. Please do not put redundant text (duplicating the text of the error code) into detailParameter, only
-     * additional info.
-     *
-     * @param errorCode
-     *            The unique code describing the error cause.
-     * @param detailParameter
-     *            Any additional information / parameter. Do not put redundant text from the error code itself here! In most cases this should be just the value
-     *            causing the problem.
-     */
-    public T9tDocExtException(int errorCode, Object... detailParameters) {
-        super(errorCode, detailParameters);
     }
 }

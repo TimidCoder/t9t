@@ -26,7 +26,7 @@ import com.arvatosystems.t9t.auth.jpa.persistence.IUserEntityResolver
 import com.arvatosystems.t9t.auth.jpa.persistence.IUserTenantRoleEntityResolver
 
 @AutoMap42
-public class UserTenantRoleMappers {
+class UserTenantRoleMappers {
     IUserTenantRoleEntityResolver entityResolver
     IUserDescriptionMapper userMapper
     IRoleDTOMapper roleMapper

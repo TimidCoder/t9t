@@ -28,7 +28,7 @@ import static extension com.arvatosystems.t9t.doc.be.converters.impl.ConverterHt
 import de.jpaw.dp.Inject
 
 final class ConverterHtmlUtil {
-    def static public getDimension(Map<String, Object> z, String key) {
+    def static getDimension(Map<String, Object> z, String key) {
         val o = z.get(key)
         if (o !== null && o instanceof Number)
             return o.toString + "px"
@@ -36,7 +36,7 @@ final class ConverterHtmlUtil {
             return o?.toString
     }
 
-    def static public String sizeSpec(Map<String, Object> z) {
+    def static String sizeSpec(Map<String, Object> z) {
         if (z !== null) {
             val widthStr    = z.getDimension("width")
             val heightStr   = z.getDimension("height")
@@ -46,12 +46,12 @@ final class ConverterHtmlUtil {
         return null
     }
 
-    def static public String addSpec(Map<String, Object> z, String keyword) {
+    def static String addSpec(Map<String, Object> z, String keyword) {
         val str = z?.get(keyword)
         return if (str !== null) ''' «keyword»="«HtmlEscapers.htmlEscaper.escape(str.toString)»"'''
     }
 
-    def static public String addBoolean(Map<String, Object> z, String keyword) {
+    def static String addBoolean(Map<String, Object> z, String keyword) {
         val str = z?.get(keyword)
         return if (str !== null && str instanceof Boolean && (str as Boolean).booleanValue) " " + keyword
     }

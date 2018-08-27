@@ -15,12 +15,13 @@
  */
 package com.arvatosystems.t9t.doc.be.impl
 
+import com.arvatosystems.t9t.base.T9tException
 import com.arvatosystems.t9t.base.output.OutputSessionParameters
 import com.arvatosystems.t9t.base.services.IOutputSession
-import com.arvatosystems.t9t.doc.T9tDocException
 import com.arvatosystems.t9t.doc.T9tDocExtException
 import com.arvatosystems.t9t.doc.api.DocumentSelector
 import com.arvatosystems.t9t.doc.recipients.RecipientArchive
+import com.arvatosystems.t9t.doc.services.DocArchiveResult
 import com.arvatosystems.t9t.doc.services.IDocArchiveDistributor
 import de.jpaw.annotations.AddLogger
 import de.jpaw.bonaparte.api.media.MediaTypes
@@ -33,7 +34,6 @@ import java.io.IOException
 import java.io.OutputStream
 import java.util.HashMap
 import java.util.function.Function
-import com.arvatosystems.t9t.doc.services.DocArchiveResult
 
 @Singleton
 @AddLogger
@@ -78,7 +78,7 @@ class DocArchiveDistributor implements IDocArchiveDistributor {
             return new DocArchiveResult(sinkRef, fileOrQueueName)
         } catch (IOException e) {
             LOGGER.error("Unable to open the output session or write to it, due to : {} ", e);
-            throw new T9tDocException(T9tDocExtException.DOCUMENT_CREATION_ERROR);
+            throw new T9tException(T9tDocExtException.DOCUMENT_CREATION_ERROR);
         } finally {
             try {
                 if (outputStream !== null) {

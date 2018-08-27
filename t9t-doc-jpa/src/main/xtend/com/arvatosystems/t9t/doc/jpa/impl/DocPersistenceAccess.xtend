@@ -47,11 +47,12 @@ import java.util.concurrent.ConcurrentHashMap
 import javax.persistence.TypedQuery
 
 import static extension com.arvatosystems.t9t.base.services.CollectionExtensions.*
+import com.arvatosystems.t9t.base.T9tException
 
 @Singleton
 @AddLogger
-public class DocPersistenceAccess implements IDocPersistenceAccess, DocConstants, T9tConstants {
-    private static final Map<String,MediaData> NO_COMPONENTS = ImmutableMap.of();
+class DocPersistenceAccess implements IDocPersistenceAccess, DocConstants, T9tConstants {
+    static final Map<String,MediaData> NO_COMPONENTS = ImmutableMap.of();
 
     @Inject IDocConfigEntityResolver        docConfigResolver
     @Inject IDocConfigDTOMapper             docConfigMapper
@@ -62,7 +63,7 @@ public class DocPersistenceAccess implements IDocPersistenceAccess, DocConstants
     @Inject IDocComponentEntityResolver     docComponentResolver
 
 
-    override public DocConfigDTO getDocConfigDTO(String templateId) {
+    override DocConfigDTO getDocConfigDTO(String templateId) {
         return docConfigMapper.mapToDto(docConfigResolver.getEntityData(new DocConfigKey(templateId), true));
     }
 
@@ -87,7 +88,7 @@ public class DocPersistenceAccess implements IDocPersistenceAccess, DocConstants
         entityQuery.setParameter("globalTenantRef", if (considerGlobalTenant) GLOBAL_TENANT_REF42 else tenantRef);
     }
 
-    override public DocEmailCfgDTO getDocEmailCfgDTO(DocModuleCfgDTO moduleCfg, String templateId, DocumentSelector selector) {
+    override DocEmailCfgDTO getDocEmailCfgDTO(DocModuleCfgDTO moduleCfg, String templateId, DocumentSelector selector) {
         val Class<? extends DocEmailCfgEntity> entityClass = docEmailCfgResolver.entityClass
         val query = getQueryStringForTextOrBinaryComponents(entityClass.simpleName, "documentId", true);
 
@@ -100,13 +101,13 @@ public class DocPersistenceAccess implements IDocPersistenceAccess, DocConstants
 
         if (docEmailCfgEntities.nullOrEmpty) {
             LOGGER.error("docEmailCfg not found for ID {}, language {}", templateId, selector.languageCode);
-            throw new T9tDocExtException(T9tDocExtException.CONFIGURATION_NOT_FOUND_ERROR);
+            throw new T9tException(T9tDocExtException.CONFIGURATION_NOT_FOUND_ERROR);
         }
         // select the best fit
         return docEmailCfgMapper.mapToDto(docEmailCfgEntities.ofMaxWeight [ getWeight(moduleCfg) ]);
     }
 
-    override public DocTemplateDTO getDocTemplateDTO(DocModuleCfgDTO moduleCfg, String templateId, DocumentSelector selector) {
+    override DocTemplateDTO getDocTemplateDTO(DocModuleCfgDTO moduleCfg, String templateId, DocumentSelector selector) {
         val Class<? extends DocTemplateEntity> entityClass = docTemplateResolver.entityClass
         val query = getQueryStringForTextOrBinaryComponents(entityClass.simpleName, "documentId", true);
 
@@ -119,7 +120,7 @@ public class DocPersistenceAccess implements IDocPersistenceAccess, DocConstants
 
         if (docTemplateEntities.nullOrEmpty) {
             LOGGER.error("docTemplate not found for ID {}, language {}", templateId, selector.languageCode);
-            throw new T9tDocExtException(T9tDocExtException.CONFIGURATION_NOT_FOUND_ERROR);
+            throw new T9tException(T9tDocExtException.CONFIGURATION_NOT_FOUND_ERROR);
         }
         // select the best fit
         return docTemplateMapper.mapToDto(docTemplateEntities.ofMaxWeight [ getWeight(moduleCfg) ]);
@@ -153,7 +154,7 @@ public class DocPersistenceAccess implements IDocPersistenceAccess, DocConstants
             (if (DEFAULT_LANGUAGE_CODE == languageCode) 0 else moduleCfg.weightLanguageMatch * languageCode.length)
     }
 
-    override public Map<String,MediaData> getDocComponents (DocModuleCfgDTO moduleCfg, DocumentSelector selector) {
+    override Map<String,MediaData> getDocComponents (DocModuleCfgDTO moduleCfg, DocumentSelector selector) {
         val Class<? extends DocComponentEntity> entityClass = docComponentResolver.entityClass
         val query = getQueryStringForTextOrBinaryComponents(entityClass.simpleName, "documentId", false);
 

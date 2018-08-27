@@ -26,7 +26,7 @@ import de.jpaw.bonaparte.pojos.api.media.MediaData
 import de.jpaw.dp.Inject
 import java.util.HashMap
 
-public class FormatDocumentRequestHandler extends AbstractRequestHandler<FormatDocumentRequest>  {
+class FormatDocumentRequestHandler extends AbstractRequestHandler<FormatDocumentRequest>  {
 
     @Inject IDocFormatter docFormatter
 

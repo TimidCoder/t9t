@@ -44,7 +44,7 @@ import static extension de.jpaw.dp.Jdp.*
 @AddLogger
 class SendEditedEmailRequestHandler extends AbstractRequestHandler<SendEditedEmailRequest> {
 
-    private static final DocEmailReceiverDTO BLANK_EMAIL_SETTINGS = new DocEmailReceiverDTO()
+    static final DocEmailReceiverDTO BLANK_EMAIL_SETTINGS = new DocEmailReceiverDTO()
 
     @Inject IDocPersistenceAccess persistenceAccess
     @Inject IDocModuleCfgDtoResolver moduleConfigResolver

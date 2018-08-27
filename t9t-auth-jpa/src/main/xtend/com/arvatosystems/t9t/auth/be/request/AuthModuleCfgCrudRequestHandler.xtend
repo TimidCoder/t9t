@@ -31,7 +31,7 @@ class AuthModuleCfgCrudRequestHandler extends AbstractCrudModuleCfg42RequestHand
     @Inject IAuthModuleCfgEntityResolver resolver
     @Inject IAuthModuleCfgDTOMapper mapper
 
-    override public ServiceResponse execute(RequestContext ctx, AuthModuleCfgCrudRequest params) {
+    override ServiceResponse execute(RequestContext ctx, AuthModuleCfgCrudRequest params) {
         return execute(ctx, mapper, resolver, params);
     }
 }

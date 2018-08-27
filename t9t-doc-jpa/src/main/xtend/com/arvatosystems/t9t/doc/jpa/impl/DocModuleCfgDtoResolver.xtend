@@ -25,11 +25,11 @@ import de.jpaw.dp.Singleton
 @Singleton
 class DocModuleCfgDtoResolver extends AbstractModuleConfigResolver<DocModuleCfgDTO, DocModuleCfgEntity> implements IDocModuleCfgDtoResolver {
 
-    public new() {
+    new() {
         super(IDocModuleCfgEntityResolver)
     }
 
-    override public DocModuleCfgDTO getDefaultModuleConfiguration() {
+    override DocModuleCfgDTO getDefaultModuleConfiguration() {
         return DEFAULT_MODULE_CFG;
     }
 }

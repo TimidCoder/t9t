@@ -54,9 +54,9 @@ import static extension de.jpaw.dp.Jdp.*
 // also a good read: https://sendgrid.com/blog/keep-email-looking-great-in-any-inbox/
 
 @AddLogger
-public class NewDocumentRequestHandler extends AbstractRequestHandler<NewDocumentRequest>  {
-    private static final List<String>   EMPTY_LIST = #[]
-    private static final DocEmailReceiverDTO BLANK_EMAIL_SETTINGS = new DocEmailReceiverDTO()
+class NewDocumentRequestHandler extends AbstractRequestHandler<NewDocumentRequest>  {
+    static final List<String>   EMPTY_LIST = #[]
+    static final DocEmailReceiverDTO BLANK_EMAIL_SETTINGS = new DocEmailReceiverDTO()
 
     @Inject IDocPersistenceAccess       persistenceAccess
     @Inject IDocModuleCfgDtoResolver    moduleConfigResolver

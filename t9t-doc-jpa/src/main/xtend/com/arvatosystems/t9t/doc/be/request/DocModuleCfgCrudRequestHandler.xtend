@@ -25,13 +25,12 @@ import com.arvatosystems.t9t.doc.jpa.persistence.IDocModuleCfgEntityResolver
 import com.arvatosystems.t9t.doc.request.DocModuleCfgCrudRequest
 import de.jpaw.dp.Inject
 
-class DocModuleCfgCrudRequestHandler extends AbstractCrudModuleCfg42RequestHandler<DocModuleCfgDTO,
-        DocModuleCfgCrudRequest, DocModuleCfgEntity> {
+class DocModuleCfgCrudRequestHandler extends AbstractCrudModuleCfg42RequestHandler<DocModuleCfgDTO, DocModuleCfgCrudRequest, DocModuleCfgEntity> {
 
     @Inject IDocModuleCfgEntityResolver resolver
     @Inject IDocModuleCfgDTOMapper mapper
 
-    override public ServiceResponse execute(RequestContext ctx, DocModuleCfgCrudRequest params) {
+    override ServiceResponse execute(RequestContext ctx, DocModuleCfgCrudRequest params) {
         return execute(ctx, mapper, resolver, params);
     }
 }

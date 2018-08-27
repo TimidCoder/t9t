@@ -26,7 +26,7 @@ import java.util.Map
 import static extension com.arvatosystems.t9t.doc.be.converters.impl.ConverterCssUtil.*
 
 final class ConverterCssUtil {
-    def static public getDimension(Map<String, Object> z, String key) {
+    def static getDimension(Map<String, Object> z, String key) {
         val o = z.get(key)
         if (o !== null && o instanceof Number)
             return o.toString + "px"
@@ -34,7 +34,7 @@ final class ConverterCssUtil {
             return o?.toString
     }
 
-    def static public String sizeSpec(Map<String, Object> z) {
+    def static String sizeSpec(Map<String, Object> z) {
         if (z !== null) {
             val widthStr    = z.getDimension("width")
             val heightStr   = z.getDimension("height")

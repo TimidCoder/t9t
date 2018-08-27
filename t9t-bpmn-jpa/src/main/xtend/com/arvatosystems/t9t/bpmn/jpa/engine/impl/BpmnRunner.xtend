@@ -192,7 +192,7 @@ class BpmnRunner implements IBpmnRunner {
         for (var int i = 0; i < steps.size; i += 1)
             if (steps.get(i).label == label)
                 return i
-        throw new T9tBPMException(T9tBPMException.BPM_LABEL_NOT_FOUND, pd.processDefinitionId + ": " + label)
+        throw new T9tException(T9tBPMException.BPM_LABEL_NOT_FOUND, pd.processDefinitionId + ": " + label)
     }
 
     def protected WorkflowReturnCode dealWithError(ProcessExecStatusEntity statusEntity, Map<String, Object> parameters) {

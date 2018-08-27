@@ -40,7 +40,7 @@ class ResetPasswordRequestHandler extends AbstractRequestHandler<ResetPasswordRe
     @Inject IUserEntityResolver userEntityResolver
     @Inject IPasswordSettingService passwordSettingService
 
-    private static final String RESET_PASSWORD_DOC_ID = "passwordReset"
+    static final String RESET_PASSWORD_DOC_ID = "passwordReset"
 
     def protected UserEntity getUserIgnoringTenant(String userId) {
         val query = userEntityResolver.getEntityManager().createQuery(

@@ -257,6 +257,11 @@ public class T9tException extends ApplicationException {
     // CHECKSTYLE.ON: DeclarationOrder
     // CHECKSTYLE.ON: JavadocVariable
 
+    /** Protected no args constructor - just there to avoid that instances of subclasses are created. */
+    protected T9tException() {
+        super(0);
+    }
+
     public T9tException(int errorCode) {
         super(errorCode);
     }
@@ -270,7 +275,6 @@ public class T9tException extends ApplicationException {
      *            Any additional informations / parameters. Do not put redundant text from the error code itself here! In most cases this should be just the value causing the problem.
      */
     public T9tException(int errorCode, Object... detailParameters) {
-
         super(errorCode, createParamsString(detailParameters));
     }
 
@@ -485,18 +489,18 @@ public class T9tException extends ApplicationException {
     private static final String createParamsString(Object... detailParameters) {
 
         if ((detailParameters != null) && (detailParameters.length > 0)) {
-            if (detailParameters.length == 1)
-             {
+            if (detailParameters.length == 1) {
                 return detailParameters[0].toString();  // shortcut in case a single parameter exists: avoid GC due to object creation
             }
 
-            StringBuilder paramsSb = new StringBuilder();
+            final StringBuilder paramsSb = new StringBuilder();
             paramsSb.append("[ ");
             for (int i = 0; i < detailParameters.length; i++) {
                 if (i != 0) {
                     paramsSb.append(", ");
                 }
-                paramsSb.append(toString(detailParameters[i]));
+                final Object obj = detailParameters[i];
+                paramsSb.append(obj == null ? "NULL" : obj.toString());
             }
             paramsSb.append(" ]");
             return paramsSb.toString();
@@ -517,13 +521,5 @@ public class T9tException extends ApplicationException {
     /** returns a text representation of an error code */
     public static String codeToString(int errorCode) {
         return new T9tException(errorCode).getStandardDescription();
-    }
-
-    private static String toString(final Object obj) {
-        if (obj == null) {
-            return null;
-        }
-
-        return obj.toString();
     }
 }

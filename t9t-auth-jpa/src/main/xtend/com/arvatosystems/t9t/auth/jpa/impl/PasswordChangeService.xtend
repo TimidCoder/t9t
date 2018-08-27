@@ -30,6 +30,7 @@ import org.joda.time.Instant
 import org.joda.time.LocalDateTime
 import com.arvatosystems.t9t.auth.services.IAuthModuleCfgDtoResolver
 import com.arvatosystems.t9t.auth.services.IAuthPersistenceAccess
+import com.arvatosystems.t9t.base.T9tException
 
 @AddLogger
 @Singleton
@@ -38,7 +39,7 @@ class PasswordChangeService {
     @Inject IPasswordEntityResolver passwordResolver
     @Inject IAuthModuleCfgDtoResolver authModuleCfgResolver
 
-    def public changePassword(String newPassword, UserEntity userEntity, UserStatusEntity userStatusEntity) {
+    def changePassword(String newPassword, UserEntity userEntity, UserStatusEntity userStatusEntity) {
         val authModuleCfg = authModuleCfgResolver.moduleConfiguration ?: IAuthPersistenceAccess.DEFAULT_MODULE_CFG
 
         // minimum check length
@@ -73,7 +74,7 @@ class PasswordChangeService {
         if (passwordMinimumLength !== null && passwordMinimumLength > 0) {
             if (newPassword.length < passwordMinimumLength) {
                 LOGGER.error("Password doesn't fulfill the minimum length of {}", passwordMinimumLength)
-                throw new T9tAuthException(T9tAuthException.PASSWORD_VALIDATION_FAILED)
+                throw new T9tException(T9tAuthException.PASSWORD_VALIDATION_FAILED)
             }
         }
     }
@@ -91,7 +92,7 @@ class PasswordChangeService {
                 if (oldPassword.passwordHash.equals(newPasswordHash)) {
                     LOGGER.error("Password should differ from its previous entry for {} times",
                         passwordDifferPreviousN)
-                    throw new T9tAuthException(T9tAuthException.PASSWORD_VALIDATION_FAILED)
+                    throw new T9tException(T9tAuthException.PASSWORD_VALIDATION_FAILED)
                 }
             ]
         }
@@ -109,7 +110,7 @@ class PasswordChangeService {
                     .plusDays(passwordBlockingPeriod)
             if (earliestDatePasswordCanBeUsedAgain.isAfter(new LocalDateTime)) {
                 LOGGER.error("Can't reuse password before {}", earliestDatePasswordCanBeUsedAgain)
-                throw new T9tAuthException(T9tAuthException.PASSWORD_VALIDATION_FAILED)
+                throw new T9tException(T9tAuthException.PASSWORD_VALIDATION_FAILED)
             }
         }
     }

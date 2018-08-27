@@ -24,7 +24,7 @@ import de.jpaw.dp.Singleton
 
 @Singleton
 class AuthModuleCfgDtoResolver extends AbstractModuleConfigResolver<AuthModuleCfgDTO, AuthModuleCfgEntity> implements IAuthModuleCfgDtoResolver {
-    private static final AuthModuleCfgDTO DEFAULT_MODULE_CFG = new AuthModuleCfgDTO(
+    static final AuthModuleCfgDTO DEFAULT_MODULE_CFG = new AuthModuleCfgDTO(
         null,       // Json z
         720,        // maxTokenValidityInMinutes:  how many minutes can a JWT token last max.? (default 12 hrs)
         10,         // passwordMinimumLength:      minimum length for a password in characters
@@ -36,11 +36,11 @@ class AuthModuleCfgDtoResolver extends AbstractModuleConfigResolver<AuthModuleCf
         0           // passwordBlockingPeriod:     Period in days saying how long an old password will be blocked before it can be used again. "0" Disables this feature
     );
 
-    public new() {
+    new() {
         super(IAuthModuleCfgEntityResolver)
     }
 
-    override public AuthModuleCfgDTO getDefaultModuleConfiguration() {
+    override AuthModuleCfgDTO getDefaultModuleConfiguration() {
         return DEFAULT_MODULE_CFG;
     }
 }

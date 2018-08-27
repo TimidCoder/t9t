@@ -21,10 +21,6 @@ import com.arvatosystems.t9t.base.T9tException;
  * This class contains all exception codes used in ssm module.
  */
 public class T9tSsmException extends T9tException {
-
-    /**
-     * generated serial version id.
-     */
     private static final long serialVersionUID = -2311386486424675268L;
 
     /*
@@ -91,22 +87,5 @@ public class T9tSsmException extends T9tException {
         codeToDescription.put(IRRELEVANT_SCHEDULER_PARAM_ERR, "Found irrelevant scheduler parameter");
         codeToDescription.put(REQUIRED_SCHEDULER_PARAM_MISSING, "Missing relevant scheduler parameter.");
         codeToDescription.put(SCHEDULE_SETUP_PARAM_VALIDATION_ERR, "Validation on required setup parameter failed");
-    }
-
-
-    public T9tSsmException(int errorCode) {
-        super(errorCode);
-    }
-
-    /**
-     * Create an exception for a specific error code. Please do not put redundant text (duplicating the text of the error code) into detailParameter, only additional info.
-     *
-     * @param errorCode
-     *            The unique code describing the error cause.
-     * @param detailParameter
-     *            Any additional information / parameter. Do not put redundant text from the error code itself here! In most cases this should be just the value causing the problem.
-     */
-    public T9tSsmException(int errorCode, Object... detailParameter) {
-        super(errorCode, detailParameter);
     }
 }

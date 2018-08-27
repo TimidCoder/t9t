@@ -23,7 +23,7 @@ import com.arvatosystems.t9t.base.search.Description
 import de.jpaw.dp.Jdp
 
 class LeanRoleSearchRequestHandler extends AbstractLeanSearchRequestHandler<LeanRoleSearchRequest, RoleEntity> {
-    public new() {
+    new() {
         super(Jdp.getRequired(IRoleEntityResolver),
             [ return new Description(null, roleId, name, false, false) ]
         )

@@ -21,14 +21,7 @@ import com.arvatosystems.t9t.base.T9tException;
  * This class contains all exception codes used in email module.
  */
 public class T9tEmailException extends T9tException {
-
-    /**
-     *
-     */
     private static final long serialVersionUID = -71286196818412432L;
-    /**
-     * generated serial version id.
-     */
 
     /*
      * Offset for all codes in this class.
@@ -49,24 +42,5 @@ public class T9tEmailException extends T9tException {
         codeToDescription.put(EMAIL_SEND_ERROR,                 "Error occured during sending email.");
         codeToDescription.put(SMTP_ERROR,                       "Error occured during sending email. (SMTP layer)");
         codeToDescription.put(MIME_MESSAGE_COMPOSITION_PROBLEM, "Problem composing MIME message.");
-    }
-
-    public T9tEmailException(int errorCode) {
-        super(errorCode);
-    }
-
-
-    /**
-     * Create an exception for a specific error code. Please do not put redundant text (duplicating the text of the error code) into detailParameter, only
-     * additional info.
-     *
-     * @param errorCode
-     *            The unique code describing the error cause.
-     * @param detailParameter
-     *            Any additional information / parameter. Do not put redundant text from the error code itself here! In most cases this should be just the value
-     *            causing the problem.
-     */
-    public T9tEmailException(int errorCode, Object... detailParameters) {
-        super(errorCode, detailParameters);
     }
 }

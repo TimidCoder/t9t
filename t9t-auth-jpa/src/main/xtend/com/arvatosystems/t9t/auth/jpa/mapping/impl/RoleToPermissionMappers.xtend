@@ -24,7 +24,7 @@ import com.arvatosystems.t9t.auth.jpa.persistence.IRoleEntityResolver
 import com.arvatosystems.t9t.auth.jpa.persistence.IRoleToPermissionEntityResolver
 
 @AutoMap42
-public class RoleToPermissionMappers {
+class RoleToPermissionMappers {
     IRoleToPermissionEntityResolver entityResolver
     IRoleDTOMapper roleMapper
     IRoleEntityResolver roleResolver

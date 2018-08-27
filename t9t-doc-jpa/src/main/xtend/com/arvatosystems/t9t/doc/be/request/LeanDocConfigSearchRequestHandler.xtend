@@ -23,7 +23,7 @@ import com.arvatosystems.t9t.doc.request.LeanDocConfigSearchRequest
 import de.jpaw.dp.Jdp
 
 class LeanDocConfigSearchRequestHandler extends AbstractLeanSearchRequestHandler<LeanDocConfigSearchRequest, DocConfigEntity> {
-    public new() {
+    new() {
         super(Jdp.getRequired(IDocConfigEntityResolver),
             [ return new Description(null, documentId, description, false, false) ]
         )

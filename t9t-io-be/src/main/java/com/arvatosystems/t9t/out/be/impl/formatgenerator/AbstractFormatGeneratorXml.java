@@ -41,6 +41,7 @@ import javax.xml.stream.XMLStreamWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.arvatosystems.t9t.base.T9tException;
 import com.arvatosystems.t9t.io.T9tIOException;
 import com.arvatosystems.t9t.out.be.IStandardNamespaceWriter;
 
@@ -122,7 +123,7 @@ public class AbstractFormatGeneratorXml extends AbstractFormatGenerator {
             m = context.createMarshaller();
         } catch (JAXBException e) {
             LOGGER.error(e.getMessage(), e);
-            throw new T9tIOException(T9tIOException.XML_SETUP_ERROR, ExceptionUtil.causeChain(e));
+            throw new T9tException(T9tIOException.XML_SETUP_ERROR, ExceptionUtil.causeChain(e));
         }
         try {
             m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);      // does not work with the XMLStreamWriter without a separate indenting writer
@@ -130,7 +131,7 @@ public class AbstractFormatGeneratorXml extends AbstractFormatGenerator {
             m.setProperty(Marshaller.JAXB_FRAGMENT, Boolean.TRUE);
         } catch (PropertyException e) {
             LOGGER.error(e.getMessage(), e);
-            throw new T9tIOException(T9tIOException.XML_SET_PROPERTY_ERROR, ExceptionUtil.causeChain(e));
+            throw new T9tException(T9tIOException.XML_SET_PROPERTY_ERROR, ExceptionUtil.causeChain(e));
         }
         try {
             XMLOutputFactory factory = XMLOutputFactory.newFactory();
@@ -153,7 +154,7 @@ public class AbstractFormatGeneratorXml extends AbstractFormatGenerator {
             }
         } catch (XMLStreamException | FactoryConfigurationError | JAXBException e1) {
             LOGGER.error(e1.getMessage(), e1);
-            throw new T9tIOException(T9tIOException.XML_MARSHALLING_ERROR, e1.getClass().getSimpleName() + ": " + e1.getMessage());
+            throw new T9tException(T9tIOException.XML_MARSHALLING_ERROR, e1.getClass().getSimpleName() + ": " + e1.getMessage());
         }
     }
 
@@ -165,7 +166,7 @@ public class AbstractFormatGeneratorXml extends AbstractFormatGenerator {
             nl();
         } catch (JAXBException | XMLStreamException e) {
             LOGGER.error(e.getMessage(), e);
-            throw new T9tIOException(T9tIOException.XML_MARSHALLING_ERROR, ExceptionUtil.causeChain(e));
+            throw new T9tException(T9tIOException.XML_MARSHALLING_ERROR, ExceptionUtil.causeChain(e));
         }
     }
 
@@ -177,7 +178,7 @@ public class AbstractFormatGeneratorXml extends AbstractFormatGenerator {
             writer.close();
         } catch (XMLStreamException e) {
             LOGGER.error(e.getMessage(), e);
-            throw new T9tIOException(T9tIOException.XML_MARSHALLING_ERROR, ExceptionUtil.causeChain(e));
+            throw new T9tException(T9tIOException.XML_MARSHALLING_ERROR, ExceptionUtil.causeChain(e));
         }
     }
 

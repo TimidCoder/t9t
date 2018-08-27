@@ -47,7 +47,7 @@ import org.joda.time.Instant
 @Startup(50010)
 @AddLogger
 class AuthStartup implements StartupOnly, T9tConstants {
-    private static final long ONE_DAY_IN_MS = 1000L * 24L * 3600L;
+    static final long ONE_DAY_IN_MS = 1000L * 24L * 3600L;
 
     @Inject Provider<PersistenceProviderJPA> jpaContextProvider
 
