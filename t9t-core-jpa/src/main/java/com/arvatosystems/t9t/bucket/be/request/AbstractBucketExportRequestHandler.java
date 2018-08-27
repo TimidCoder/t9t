@@ -54,7 +54,7 @@ public abstract class AbstractBucketExportRequestHandler<T extends AbstractBucke
     protected final IAutonomousExecutor          autoExecutor    = Jdp.getRequired(IAutonomousExecutor.class);
     protected final Provider<IOutputSession> outputSessionprovider = Jdp.getProvider(IOutputSession.class);
 
-    abstract void exportChunk(IOutputSession os, List<Long> refs, T request, String qualifier, int bucketNoToSelect);
+    abstract protected void exportChunk(IOutputSession os, List<Long> refs, T request, String qualifier, int bucketNoToSelect);
 
     protected List<Long> getRefs(String qualifier, int bucketNoToSelect) {
         EntityManager em = entryResolver.getEntityManager();

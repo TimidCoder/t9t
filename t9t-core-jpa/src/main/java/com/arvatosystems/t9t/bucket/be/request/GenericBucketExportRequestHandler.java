@@ -27,12 +27,12 @@ import de.jpaw.dp.Jdp;
 public class GenericBucketExportRequestHandler extends AbstractBucketExportRequestHandler<GenericBucketExportRequest> {
 
     @Override
-    void exportChunk(IOutputSession os, List<Long> refs, GenericBucketExportRequest request, String qualifier, int bucketNoToSelect) {
+    protected void exportChunk(IOutputSession os, List<Long> refs, GenericBucketExportRequest request, String qualifier, int bucketNoToSelect) {
         IBucketEntryMapper mapper = Jdp.getRequired(IBucketEntryMapper.class, request.getQualifier());
         boolean withMore = request.getWithTrackingAndMore();
 
         // expands refs to Entries
         Map<Long, Integer> entries = withMore || mapper.alwaysNeedModes() ? super.getModes(qualifier, bucketNoToSelect, refs) : null;
-        mapper.writeEntities(refs, entries, withMore, os);
+        mapper.writeEntities(request, refs, entries, withMore, os);
     }
 }

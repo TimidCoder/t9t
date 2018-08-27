@@ -19,10 +19,14 @@ import java.util.List;
 import java.util.Map;
 
 import com.arvatosystems.t9t.base.services.IOutputSession;
+import com.arvatosystems.t9t.bucket.request.GenericBucketExportRequest;
 
-/** Interface, implementations convert from a BucketEntry to a DataWithTrackingAndMore.
- * Implementations are singletons, @Named with a qualifier. */
+/**
+ * Interface, implementations convert from a BucketEntry to a DataWithTrackingAndMore, or just data.
+ * Implementations are singletons, @Named with a qualifier.
+ * Implementations must implement one of the default methods.
+ *  */
 public interface IBucketEntryMapper {
     default boolean alwaysNeedModes() { return false; }
-    void writeEntities(List<Long> refs, Map<Long, Integer> entries, boolean withTrackingAndMore, IOutputSession os);
+    void writeEntities(GenericBucketExportRequest rp, List<Long> refs, Map<Long, Integer> entries, boolean withTrackingAndMore, IOutputSession os);
 }
