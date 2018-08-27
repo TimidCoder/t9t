@@ -44,6 +44,7 @@ import java.util.Map
 import org.joda.time.Instant
 import org.slf4j.MDC
 import java.util.Objects
+import de.jpaw.util.ExceptionUtil
 
 @Singleton
 @AddLogger
@@ -167,6 +168,12 @@ class BpmnRunner implements IBpmnRunner {
                             // nothing to do?
                         }
                     }
+                } catch (Exception e) {
+                    // the JPA transaction is probably broken, so converting this into an Error return won't help much, but at least we can log the error
+                    LOGGER.error("Unexpected exception in workflow step {}: {}", nextStep.ret$PQON, ExceptionUtil.causeChain(e));
+                    if (e instanceof NullPointerException)
+                        LOGGER.error("NPE Stack trace is ", e)
+                    throw e;
                 } finally {
                     MDC.remove(T9tConstants.MDC_BPMN_STEP);
                 }

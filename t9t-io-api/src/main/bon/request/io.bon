@@ -52,6 +52,7 @@ package (com.arvatosystems) t9t.io.request {
     class AsyncQueueSearchRequest               extends SearchRequest               <AsyncQueueDTO, FullTrackingWithVersion> {}
     class AsyncQueueCrudRequest                 extends CrudSurrogateKeyRequest     <AsyncQueueRef, AsyncQueueDTO, FullTrackingWithVersion> {}
     class LeanAsyncQueueSearchRequest           extends LeanSearchRequest {}
+    class AsyncMessageCrudRequest               extends CrudSurrogateKeyRequest     <AsyncMessageRef, AsyncMessageDTO, WriteTracking> {}
 
     /** Stores a pre-filled sinkDTO. Technical support method, only required because input data processing is done from outside request scope. */
     class StoreSinkRequest                      extends RequestParameters return SinkCreatedResponse {
@@ -218,5 +219,10 @@ package (com.arvatosystems) t9t.io.request {
         optional Boolean                            isGreen;                // if the queue is running: queue is empty or last message was OK
         optional Boolean                            shuttingDown;           // if the queue is running: true if it currently shutting down
         optional Instant                            lastMessageSent;        // if the queue is running: when was the last successful message sent?
+    }
+
+    class UpdateAsyncMessageStatusRequest extends RequestParameters {
+        required f42Ref                             asyncMessageRef;        // the objectRef of the message
+        required enum ExportStatusEnum              newStatus;
     }
 }

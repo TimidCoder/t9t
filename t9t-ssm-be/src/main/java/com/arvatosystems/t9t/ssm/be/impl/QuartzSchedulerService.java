@@ -351,7 +351,7 @@ public class QuartzSchedulerService implements ISchedulerService {
                         "For MONTHLY recurrencyType, executionTime can't be null.");
             }
 
-            if(setup.getValidFrom() ==  null){
+            if (setup.getValidFrom() == null){
                 throw new T9tSsmException(T9tSsmException.SCHEDULE_VALID_FROM_NOT_PROVIDED,
                         "Valid From Date is missing when setup Monthly Schedule.");
             }
@@ -376,7 +376,7 @@ public class QuartzSchedulerService implements ISchedulerService {
                 throw new T9tSsmException(T9tSsmException.REQUIRED_SCHEDULER_PARAM_MISSING,
                         "For MONTHLY recurrencyType, executionTime can't be null.");
             }
-            if(setup.getValidFrom() ==  null){
+            if (setup.getValidFrom() == null){
                 throw new T9tSsmException(T9tSsmException.SCHEDULE_VALID_FROM_NOT_PROVIDED,
                         "Valid From Date is missing when setup Yearly Schedule.");
             }

@@ -58,6 +58,9 @@ public class DefaultAsyncTransmitter implements IAsyncTransmitter {
 
     @Override
     public Long transmitMessage(String asyncChannelId, BonaPortable payload, Long ref, String category, String identifier) {
+        // check if the message is valid (due to the asynchronous nature, invalid messages would cause hard to detect problems)
+        payload.validate();
+
         final Long objectRef = asyncMessageResolver.createNewPrimaryKey();
         final Long queueRef  = asyncQueueSender.sendAsync(asyncChannelId, payload, objectRef);
         persistInDb(objectRef, queueRef, asyncChannelId, payload, ref, category, identifier);

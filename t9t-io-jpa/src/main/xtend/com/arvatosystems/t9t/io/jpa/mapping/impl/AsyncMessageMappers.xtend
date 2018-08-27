@@ -29,7 +29,7 @@ class AsyncMessageMappers {
     IAsyncQueueEntityResolver queueResolver
     IAsyncQueueDTOMapper queueMapper
 
-    @AutoHandler("S42")
+    @AutoHandler("SC42")
     def void e2dAsyncMessageDTO(AsyncMessageEntity entity, AsyncMessageDTO dto) {
         if (entity.lastAttempt !== null && entity.whenSent !== null)
             dto.latency = entity.lastAttempt.millis - entity.whenSent.millis

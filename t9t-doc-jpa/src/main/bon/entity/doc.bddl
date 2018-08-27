@@ -20,7 +20,7 @@ import t9t.core.jpa.entities.*
 import t9t.base.entities.*
 import t9t.doc.*
 
-package(com.arvatosystems) t9t.doc.jpa.entities owner fortytwo prefix p28 {
+package (com.arvatosystems) t9t.doc.jpa.entities owner fortytwo prefix p28 {
 
     embeddable DocEmailReceiverEmbeddable is DocEmailReceiverDTO {}
 

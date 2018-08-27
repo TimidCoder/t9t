@@ -20,7 +20,7 @@ import t9t.core.jpa.entities.*
 import t9t.base.entities.*
 import t9t.voice.*
 
-package(com.arvatosystems) t9t.voice.jpa.entities owner fortytwo prefix p28 {
+package (com.arvatosystems) t9t.voice.jpa.entities owner fortytwo prefix p28 {
 
     entity VoiceModuleCfgEntity is VoiceModuleCfgDTO inherits ModuleConfigEntity {
         cacheable
