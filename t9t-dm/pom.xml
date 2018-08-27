@@ -675,7 +675,7 @@
             </dependency>
             <dependency>
                 <groupId>com.arvato-systems.t9t</groupId>
-                <artifactId>t9t-bpmn2-jpa</artifactId>
+                <artifactId>t9t-bpmn2-camunda-be</artifactId>
                 <version>${project.version}</version>
                 <classifier>sql</classifier>
             </dependency>
