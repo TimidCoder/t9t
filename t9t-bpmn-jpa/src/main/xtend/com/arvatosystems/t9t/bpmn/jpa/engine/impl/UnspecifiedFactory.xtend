@@ -15,7 +15,9 @@
  */
 package com.arvatosystems.t9t.bpmn.jpa.engine.impl
 
+import com.arvatosystems.t9t.base.T9tException
 import com.arvatosystems.t9t.bpmn.IBPMObjectFactory
+import com.arvatosystems.t9t.bpmn.T9tBPMException
 
 /** A dummy object which is used in workflow execution when no factory has been specified. */
 class UnspecifiedFactory {
@@ -23,7 +25,7 @@ class UnspecifiedFactory {
     private new() {}
 
     /** A factory to return the INSTANCE. */
-    public static class UFactory implements IBPMObjectFactory<Object> {
+    static class UFactory implements IBPMObjectFactory<Object> {
         private new() {}
 
         override getRefForLock(Long objectRef) {
@@ -32,6 +34,10 @@ class UnspecifiedFactory {
 
         override read(Long objectRef, Long lockObjectRef, boolean jvmLockAcquired) {
             return INSTANCE  // returns the same instance for any parameter
+        }
+
+        override getVariable(String path, Object workflowData) {
+            throw new T9tException(T9tBPMException.BPM_INVALID_VARIABLE_NAME, path);
         }
     }
 

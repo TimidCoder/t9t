@@ -20,6 +20,7 @@ public enum WorkflowReturnCode {
     COMMIT_RESTART,                 // end this transaction, but launch immediate further processing
     YIELD,                          // commit and end for now, but the workflow will be resumed later (after some time gate probably). The current step will be executed again.
     YIELD_NEXT,                     // commit and end for now, but the workflow will be resumed later (after some time gate probably). The next step will be executed. (It is like COMMIT_RESTART with a delay).
-    ERROR,                          // execution encountered an error, stored returnCode and maybe errorDetails. Execution will not proceed
+    ERROR,                          // execution encountered an error, stored in "returnCode" and maybe "errorDetails". Execution will not proceed
+    GOTO,                           // internal code, instructs to jump to next step as already stored in status entity. Apart from that, identical to COMMIT_RESTART. 
     DONE                            // mark the workflow as completed, the entry is deleted from the workflow processing table
 }

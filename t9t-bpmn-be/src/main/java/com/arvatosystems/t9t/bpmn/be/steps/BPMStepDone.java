@@ -13,17 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.arvatosystems.t9t.bpmn;
+package com.arvatosystems.t9t.bpmn.be.steps;
 
-public interface IBPMObjectFactory<T> {
-    /** Returns the object ref on which a lock should be performed while executing this workflow, or null if no locking is required. */
-    Long getRefForLock(Long objectRef);
+import java.util.Map;
 
-    /** Reads an object specified by its ref from disk.
-     * instances are qualified by the object identifier, for example salesOrder, deliveryOrder etc.
-     */
-    T read(Long objectRef, Long lockObjectRef, boolean jvmLockAcquired);
+import com.arvatosystems.t9t.bpmn.WorkflowReturnCode;
 
-    /** Returns the data object for a certain path. */
-    Object getVariable(String path, T data);
+import de.jpaw.dp.Named;
+import de.jpaw.dp.Singleton;
+
+@Singleton
+@Named("done")
+public class BPMStepDone extends AbstractAlwaysRunnableNoFactoryWorkflowStep {
+
+    @Override
+    public WorkflowReturnCode execute(Object data, Map<String, Object> parameters) {
+        return WorkflowReturnCode.DONE;
+    }
 }

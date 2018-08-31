@@ -51,6 +51,8 @@ public class T9tBPMException extends T9tException {
     public static final int BPM_LABEL_NOT_FOUND = OFFSET + 52;
     public static final int BPM_NO_ERROR = OFFSET + 53;
     public static final int BPM_NO_BPMN_ENGINE = OFFSET + 54;
+    public static final int BPM_INVALID_VARIABLE_NAME = OFFSET + 55;
+    public static final int BPM_NO_LABEL = OFFSET + 56;
 
 
     /**
@@ -80,5 +82,7 @@ public class T9tBPMException extends T9tException {
         codeToDescription.put(BPM_LABEL_NOT_FOUND,                 "Referenced label not found in BPM workflow");
         codeToDescription.put(BPM_NO_ERROR,                        "Workflow returned ERROR, but no (integral) returnCode was set");
         codeToDescription.put(BPM_NO_BPMN_ENGINE,                  "No BPMN Engine found.");
+        codeToDescription.put(BPM_INVALID_VARIABLE_NAME,           "A variable of this pathname is not supported.");
+        codeToDescription.put(BPM_NO_LABEL,                        "No label provided for workflow step at top level");
     }
 }

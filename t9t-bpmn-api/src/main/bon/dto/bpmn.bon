@@ -64,7 +64,7 @@ package (com.arvatosystems) t9t.bpmn {
     }
 
     abstract class T9tAbstractWorkflowStep {
-        required defaultExternalId                      label;
+        optional defaultExternalId                      label;
         optional shortText                              comment;
     }
 
@@ -76,19 +76,63 @@ package (com.arvatosystems) t9t.bpmn {
         required Json                                   parameters;   // map of key / value pairs
     }
 
+    /** Go to the specified label. (Commit and restart at label). */
     final class T9tWorkflowStepGoto extends T9tAbstractWorkflowStep {
         required defaultExternalId                      toLabel;
+    }
+
+    /** Restart workflow at beginning. (commit and restart at beginning)*/
+    final class T9tWorkflowStepRestart extends T9tAbstractWorkflowStep {
     }
 
     final class T9tWorkflowStepYield extends T9tAbstractWorkflowStep {
         required int                                    waitSeconds;  // 0 means continue immediately
     }
 
+    /**
+     * The condition workflow step evaluates the condition (which usually requires application specific extensions).
+     * It then either executes the list of thenDo or elseDo steps, until a step results in an error, or returns a YIELD or DONE.
+     * The workflow step returns the WorkflowReturnCode of the last step executed (which usually is WorkflowReturnCode.PROCEED_NEXT),
+     * however any COMMIT_RESTART in intermediate steps is postponed and overrides any last PROCEED_NEXT.
+     */
+    final class T9tWorkflowStepCondition extends T9tAbstractWorkflowStep {
+        required (T9tAbstractWorkflowCondition...)              condition;
+        required (T9tAbstractWorkflowStep...) List<>     thenDo;
+        required (T9tAbstractWorkflowStep...) List<>     elseDo;
+    }
+
     class T9tWorkflow {
         required (T9tAbstractWorkflowStep...) required List<> steps;
     }
 
+    // workflow conditions
+    abstract class T9tAbstractWorkflowCondition {}
 
+    final class T9tWorkflowConditionAnd extends T9tAbstractWorkflowCondition {
+        required (T9tAbstractWorkflowCondition...) required List<> conditions;
+    }
+    final class T9tWorkflowConditionOr extends T9tAbstractWorkflowCondition {
+        required (T9tAbstractWorkflowCondition...) required List<> conditions;
+    }
+    final class T9tWorkflowConditionNot extends T9tAbstractWorkflowCondition {
+        required (T9tAbstractWorkflowCondition...)       condition;
+    }
+    abstract class T9tAbstractWorkflowConditionVariable extends T9tAbstractWorkflowCondition {
+        required meta.identifier                         variableName;
+        required boolean                                 fromMap;  // if true, get the variable from the parameter map, else from the data object
+    }
+    final class T9tWorkflowConditionVariableIsNull extends T9tAbstractWorkflowConditionVariable {}
+    final class T9tWorkflowConditionVariableIsTrue extends T9tAbstractWorkflowConditionVariable {}
+    final class T9tWorkflowConditionVariableEquals extends T9tAbstractWorkflowConditionVariable {
+        required Element                                 value;
+    }
+    final class T9tWorkflowConditionVariableStartsOrEndsWith extends T9tAbstractWorkflowConditionVariable {
+        required Unicode(255)                            pattern;
+        required boolean                                 ends;
+    }
+    final class T9tWorkflowConditionVariableIsIn extends T9tAbstractWorkflowConditionVariable {
+        required Element required Set<>                 values;
+    }
 
     // workflow status:
     class ProcessExecutionStatusRef extends Ref {}

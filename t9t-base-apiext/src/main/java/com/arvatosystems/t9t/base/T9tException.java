@@ -490,7 +490,7 @@ public class T9tException extends ApplicationException {
 
         if ((detailParameters != null) && (detailParameters.length > 0)) {
             if (detailParameters.length == 1) {
-                return detailParameters[0].toString();  // shortcut in case a single parameter exists: avoid GC due to object creation
+                return detailParameters[0] == null ? "NULL" : detailParameters[0].toString();  // shortcut in case a single parameter exists: avoid GC due to object creation
             }
 
             final StringBuilder paramsSb = new StringBuilder();

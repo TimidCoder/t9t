@@ -15,12 +15,17 @@
  */
 package com.arvatosystems.t9t.bpmn.be.request;
 
+import java.util.List;
+
+import com.arvatosystems.t9t.base.T9tException;
 import com.arvatosystems.t9t.base.crud.CrudSurrogateKeyResponse;
 import com.arvatosystems.t9t.base.entities.FullTrackingWithVersion;
 import com.arvatosystems.t9t.base.jpa.impl.AbstractCrudSurrogateKey42RequestHandler;
 import com.arvatosystems.t9t.base.services.IExecutor;
 import com.arvatosystems.t9t.bpmn.ProcessDefinitionDTO;
 import com.arvatosystems.t9t.bpmn.ProcessDefinitionRef;
+import com.arvatosystems.t9t.bpmn.T9tAbstractWorkflowStep;
+import com.arvatosystems.t9t.bpmn.T9tBPMException;
 import com.arvatosystems.t9t.bpmn.jpa.entities.ProcessDefinitionEntity;
 import com.arvatosystems.t9t.bpmn.jpa.mapping.IProcessDefinitionDTOMapper;
 import com.arvatosystems.t9t.bpmn.jpa.persistence.IProcessDefinitionEntityResolver;
@@ -37,5 +42,22 @@ public class ProcessDefinitionCrudRequestHandler extends AbstractCrudSurrogateKe
     public CrudSurrogateKeyResponse<ProcessDefinitionDTO, FullTrackingWithVersion> execute(final ProcessDefinitionCrudRequest request) throws Exception {
         executor.clearCache(ProcessDefinitionDTO.class.getSimpleName(), null);
         return execute(mapper, resolver, request);
+    }
+
+    protected void validateSteps(List<T9tAbstractWorkflowStep> steps) {
+        for (T9tAbstractWorkflowStep step: steps) {
+            if (step.getLabel() == null) {
+                throw new T9tException(T9tBPMException.BPM_NO_LABEL, step.getComment());
+            }
+        }
+    }
+
+    @Override
+    protected void validateUpdate(ProcessDefinitionEntity current, ProcessDefinitionDTO intended) {
+        validateSteps(intended.getWorkflow().getSteps());
+    }
+    @Override
+    protected void validateCreate(ProcessDefinitionDTO intended) {
+        validateSteps(intended.getWorkflow().getSteps());
     }
 }
