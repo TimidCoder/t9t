@@ -365,7 +365,7 @@ class BpmnRunner implements IBpmnRunner {
     //
     // WORKFLOW CONDITIONS
     //
-    
+
     def dispatch protected boolean evaluateCondition(T9tWorkflowConditionAnd it, IBPMObjectFactory<Object> factory, Object workflowObject, Map<String, Object> parameters) {
         for (cond: conditions) {
             if (!evaluateCondition(cond, factory, workflowObject, parameters))

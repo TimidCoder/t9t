@@ -27,7 +27,7 @@ import de.jpaw.annotations.AddLogger
 import de.jpaw.dp.Inject
 
 @AddLogger
-public class SliceTrackingCrudRequestHandler extends AbstractCrudSurrogateKeyBERequestHandler<SliceTrackingRef, SliceTrackingDTO, FullTrackingWithVersion, SliceTrackingCrudRequest> {
+class SliceTrackingCrudRequestHandler extends AbstractCrudSurrogateKeyBERequestHandler<SliceTrackingRef, SliceTrackingDTO, FullTrackingWithVersion, SliceTrackingCrudRequest> {
     @Inject ISliceTrackingResolver resolver
 
     override ServiceResponse execute(RequestContext ctx, SliceTrackingCrudRequest crudRequest) {

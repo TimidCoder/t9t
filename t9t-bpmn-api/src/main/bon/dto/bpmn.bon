@@ -54,13 +54,33 @@ package (com.arvatosystems) t9t.bpmn {
         required processDefinitionId                    processDefinitionId properties notupdatable; // the key which defines the process. This does NOT contain any tenant part
         required boolean                                isActive            properties active;
         required shortText                              name;
-        optional defaultExternalId                      factoryName;           // @Named qualifier for the workflow target object factory
+        optional defaultExternalId                      factoryName properties qualifierFor="bpmn.IBPMObjectFactory"; // @Named qualifier for the workflow target object factory
         optional Json                                   initialParams;         // if blank, the empty map
         required (T9tWorkflow...)                       workflow  properties serialized, length="60000";
         required boolean                                alwaysRestartAtStep1;  // fortytwo compatibility: ignore current position and always restart at the first step
         required boolean                                useExclusiveLock;      // if true, a lock of the factory defined lock object will be obtained during execution
         optional Ascii(8)                               engine;                // uses the internal state machine if blank
         optional Long                                   jvmLockTimeoutInMillis; //JVM locks not set will use the default 5000 ms
+    }
+
+    /** For UI only use. */
+    enum WorkflowStepType {
+        JAVA_TASK, ADD_PARAMETER, STEP_GOTO, RESTART, YIELD, CONDITION
+    }
+
+    /** For UI only use. Flat version of the workflow step. */
+    final class UiOnlyWorkflowStep {
+        required enum WorkflowStepType                  workflowStepType;
+        required defaultExternalId                      label;
+        required shortText                              comment;
+        optional defaultExternalId                      stepName properties qualifierFor="bpmn.IWorkflowStep";
+        optional Json                                   parameters;
+        optional defaultExternalId                      toLabel;
+        optional Integer                                waitSeconds;
+        optional (T9tAbstractWorkflowCondition...)      condition;
+        optional (T9tAbstractWorkflowStep...) List<>    thenDo;
+        optional (T9tAbstractWorkflowStep...) List<>    elseDo;
+
     }
 
     abstract class T9tAbstractWorkflowStep {

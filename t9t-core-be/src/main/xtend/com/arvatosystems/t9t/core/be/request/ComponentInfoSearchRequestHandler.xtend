@@ -24,7 +24,6 @@ import com.arvatosystems.t9t.base.services.IExecutor
 import com.arvatosystems.t9t.base.services.IExporterTool
 import com.arvatosystems.t9t.base.services.RequestContext
 import com.arvatosystems.t9t.core.request.ComponentInfoSearchRequest
-import com.google.common.collect.ImmutableList
 import de.jpaw.bonaparte.pojos.api.AndFilter
 import de.jpaw.bonaparte.pojos.api.NoTracking
 import de.jpaw.bonaparte.pojos.api.SearchFilter
@@ -78,29 +77,13 @@ class ComponentInfoSearchRequestHandler extends AbstractSearchRequestHandler<Com
         }
     }
 
-    def protected <E> List<E> cut(List<E> input, int offset, int limit) {
-        if (offset == 0 && limit == 0)
-            return input;
-        if (limit == 0) {
-            // offset to end...
-            if (offset >= input.size)
-                return ImmutableList.of  // empty...
-            return input.subList(offset, input.size)
-        }
-        if (offset >= input.size)
-            return ImmutableList.of  // empty...
-        if (offset + limit >= input.size)
-            return input.subList(offset, input.size)  // offset to end
-        return input.subList(offset, offset + limit)
-    }
-
     override ReadAllResponse<ComponentInfoDTO, NoTracking> execute(RequestContext ctx, ComponentInfoSearchRequest rq) {
         // map generic search filters to the specific parameters
         val cmd = new RetrieveComponentInfoRequest
         val components   = executor.executeSynchronousAndCheckResult(ctx, cmd, RetrieveComponentInfoResponse).components
         val filteredList = if (rq.searchFilter === null)   components   else rq.searchFilter.applyFilters(components)
         val sortedList   = if (rq.sortColumns.nullOrEmpty) filteredList else rq.sortColumns.get(0).applySort(filteredList)
-        val limitedList  = sortedList.cut(rq.offset, rq.limit)
+        val limitedList  = exporter.cut(sortedList, rq.offset, rq.limit)
         val dataList     = new ArrayList<DataWithTrackingW<ComponentInfoDTO, NoTracking>>(limitedList.size)
         for (dto: limitedList) {
             val dwt = new DataWithTrackingW<ComponentInfoDTO, NoTracking>

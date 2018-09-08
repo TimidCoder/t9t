@@ -15,7 +15,6 @@
  */
 package com.arvatosystems.t9t.rep.be.request;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.util.Date;
 import java.util.HashMap;
@@ -51,11 +50,9 @@ import com.arvatosystems.t9t.rep.services.IReportMailNotifier;
 import com.arvatosystems.t9t.rep.services.impl.T9tJasperParameterEnricher;
 import com.google.common.base.Strings;
 
-import de.jpaw.bonaparte.pojos.api.media.MediaData;
 import de.jpaw.bonaparte.pojos.api.media.MediaType;
 import de.jpaw.bonaparte.pojos.api.media.MediaXType;
 import de.jpaw.dp.Jdp;
-import de.jpaw.util.ByteArray;
 import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.JasperCompileManager;
 import net.sf.jasperreports.engine.JasperFillManager;
@@ -193,21 +190,19 @@ public class RunReportRequestHandler extends AbstractRequestHandler<RunReportReq
 
     @Override
     public SinkCreatedResponse execute(RunReportRequest request) throws Exception {
-        ReportParamsDTO reportParamsDTO;
-        ReportConfigDTO reportConfigDTO;
         Long sinkRef; // holds the result
-        Map<String, Object> outputSessionAdditionalParametersList = new HashMap<String, Object>(10);
+        final Map<String, Object> outputSessionAdditionalParametersList = new HashMap<String, Object>(10);
         // @Inject
         final RequestContext ctx = Jdp.getRequired(RequestContext.class);
 
-        if (request.getReportParamsRef() instanceof ReportParamsDTO) {
+        final ReportParamsDTO reportParamsDTO = (request.getReportParamsRef() instanceof ReportParamsDTO) ?
             // nothing to do, all data has been provided (adhoc report request)
-            reportParamsDTO = (ReportParamsDTO) request.getReportParamsRef();
-        } else {
-            reportParamsDTO = dpl.getParamsDTO(request.getReportParamsRef());
-        }
+            (ReportParamsDTO) request.getReportParamsRef()
+        :
+            dpl.getParamsDTO(request.getReportParamsRef())
+        ;
 
-        reportConfigDTO = dpl.getConfigDTO(reportParamsDTO.getReportConfigRef());
+        final ReportConfigDTO reportConfigDTO = dpl.getConfigDTO(reportParamsDTO.getReportConfigRef());
 
         outputSessionAdditionalParametersList.put("reportConfigId", reportConfigDTO.getReportConfigId());
         outputSessionAdditionalParametersList.put("reportParamsId", reportParamsDTO.getReportParamsId());

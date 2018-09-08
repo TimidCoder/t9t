@@ -75,7 +75,6 @@ public class InitContainers {
     /** Full initialization - for backend server or UI. */
     public static Reflections [] initializeT9t() {
         UiGridConfigPrefs.reset();  // clear all view model containers and reset error counter
-        checkUTC();
 
         final Reflections [] scannedPackages = initializeT9tForClients();
         collectCrudViewModels(scannedPackages);
@@ -90,6 +89,10 @@ public class InitContainers {
 
     /** Subset of the initialization - for remote tests. */
     public static Reflections [] initializeT9tForClients() {
+        final String javaVersion = System.getProperty("java.version");
+        LOGGER.info("Running Java version {}", javaVersion != null ? javaVersion : "(UNDEFINED)");
+
+        checkUTC();
         MessagingUtil.initializeBonaparteParsers();
         final Reflections [] scannedPackages = ReflectionsPackageCache.getAll(MessagingUtil.PACKAGES_TO_SCAN_FOR_XENUMS);
 

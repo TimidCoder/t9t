@@ -15,6 +15,7 @@
  */
 package com.arvatosystems.t9t.base.be.impl;
 
+import java.util.Collections;
 import java.util.List;
 
 import com.arvatosystems.t9t.base.output.OutputSessionParameters;
@@ -66,5 +67,22 @@ public class ExporterTool<DTO extends BonaPortable, TRACKING extends TrackingBas
             resp.setDataList(ImmutableList.<DataWithTrackingW<DTO,TRACKING>>of());
         }
         return resp;
+    }
+
+    @Override
+    public <X> List<X> cut(List<X> dataList, int offset, int limit) {
+        if (offset == 0 && limit == 0)
+            return dataList;
+        final int len = dataList.size();
+        if (len <= offset) {
+            // we skip at least as many entries as exist
+            return Collections.emptyList();
+        }
+        if (limit == 0 || len <= offset + limit) {
+            // no truncation of items, just skip the beginning
+            return dataList.subList(offset, len);
+        }
+        // there is a limit, and we truncate at the end
+        return dataList.subList(offset, offset + limit);
     }
 }

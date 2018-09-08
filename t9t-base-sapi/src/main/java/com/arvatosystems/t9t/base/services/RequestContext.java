@@ -74,7 +74,7 @@ public class RequestContext extends AbstractRequestContext {
     int numberOfCallsThisLevel = 0;             // the number of calls which have been started at this stack level
     //int numberOfCallsTotal = 0;                 // the total number of subexecutions
     private List<StackLevel> callStack = new ArrayList<StackLevel>();  // needs to be concurrent because the processStatus request will read it!
-    private final Boolean lockForNesting = new Boolean(false);
+    private final Object lockForNesting = new Object();
 
     public void pushCallStack(String newPQON) {
         synchronized (lockForNesting) {

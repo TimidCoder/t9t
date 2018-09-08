@@ -34,7 +34,7 @@ import de.jpaw.dp.Singleton;
 @Singleton
 public class StandardT9tNamespaceWriter implements IStandardNamespaceWriter {
     private static final Logger LOGGER = LoggerFactory.getLogger(StandardT9tNamespaceWriter.class);
-    private final Boolean lock = new Boolean(true);
+    private final Object lock = new Object();
     private final AtomicReference<JAXBContext> context = new AtomicReference<JAXBContext>();
 
     @Override

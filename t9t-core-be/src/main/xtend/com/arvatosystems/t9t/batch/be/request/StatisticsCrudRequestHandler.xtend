@@ -27,7 +27,7 @@ import de.jpaw.dp.Inject
 import com.arvatosystems.t9t.batch.services.IStatisticsResolver
 
 @AddLogger
-public class StatisticsCrudRequestHandler extends AbstractCrudSurrogateKeyBERequestHandler<StatisticsRef, StatisticsDTO, WriteTracking, StatisticsCrudRequest> {
+class StatisticsCrudRequestHandler extends AbstractCrudSurrogateKeyBERequestHandler<StatisticsRef, StatisticsDTO, WriteTracking, StatisticsCrudRequest> {
     @Inject IStatisticsResolver resolver
 
     override ServiceResponse execute(RequestContext ctx, StatisticsCrudRequest crudRequest) {

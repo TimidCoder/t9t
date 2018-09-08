@@ -73,7 +73,9 @@ class ProcessStatusSearchRequestHandler extends AbstractSearchRequestHandler<Pro
             dwt.tenantRef = ctx.tenantRef  // avoid having null here
             dataList.add(dwt)
         }
-        if (!rq.sortColumns.nullOrEmpty) {
+        val finalSort = if (rq.sortColumns.nullOrEmpty) {
+            dataList
+        } else {
             // sort by one column is supported
             val sortColumn = rq.sortColumns.get(0)
             LOGGER.debug("Result list of {} entries should be sorted by {} {}",
@@ -93,9 +95,8 @@ class ProcessStatusSearchRequestHandler extends AbstractSearchRequestHandler<Pro
             case "statusText":          dataList.sortBy[data.statusText         ].toList
             default: dataList  // no sort...
             }
-            val finalSort = if (sortColumn.descending) sortedList.reverse else sortedList
-            return exporter.returnOrExport(finalSort, rq.getSearchOutputTarget());
+            if (sortColumn.descending) sortedList.reverse else sortedList  // expression assigned to finalSort
         }
-        return exporter.returnOrExport(dataList, rq.getSearchOutputTarget());
+        return exporter.returnOrExport(exporter.cut(finalSort, rq.offset, rq.limit), rq.getSearchOutputTarget());
     }
 }

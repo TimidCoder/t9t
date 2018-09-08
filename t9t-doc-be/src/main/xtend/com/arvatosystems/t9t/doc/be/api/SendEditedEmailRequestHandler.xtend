@@ -40,6 +40,8 @@ import java.util.HashMap
 import java.util.function.Function
 
 import static extension de.jpaw.dp.Jdp.*
+import com.arvatosystems.t9t.doc.T9tDocExtException
+import com.arvatosystems.t9t.base.T9tException
 
 @AddLogger
 class SendEditedEmailRequestHandler extends AbstractRequestHandler<SendEditedEmailRequest> {
@@ -57,14 +59,11 @@ class SendEditedEmailRequestHandler extends AbstractRequestHandler<SendEditedEma
 
         if (docConfigDto === null) {
             LOGGER.error("Document Config for documentID {} is not being setup.", request.documentId)
-            new SendEditedEmailResponse => [
-                errorMessage = "Document Config for documentID {} is not being setup."
-            ]
+            throw new T9tException(T9tDocExtException.CONFIGURATION_NOT_FOUND_ERROR, "DocumentId " + request.documentId)
         }
 
         val docEmailReceiverDTO = (if (docConfigDto.emailConfigPerSelector) {
-            persistenceAccess.getDocEmailCfgDTO(moduleCfg, request.documentId,
-            request.documentSelector)?.emailSettings
+            persistenceAccess.getDocEmailCfgDTO(moduleCfg, request.documentId, request.documentSelector)?.emailSettings
         } else {
             docConfigDto.emailSettings
         }) ?: BLANK_EMAIL_SETTINGS
