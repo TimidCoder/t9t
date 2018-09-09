@@ -32,13 +32,19 @@ import com.arvatosystems.t9t.bpmn.T9tWorkflowConditionOr
 import com.arvatosystems.t9t.bpmn.T9tWorkflowConditionVariableEquals
 import com.arvatosystems.t9t.bpmn.T9tWorkflowConditionVariableIsIn
 import com.arvatosystems.t9t.bpmn.T9tWorkflowConditionVariableIsNull
+import com.arvatosystems.t9t.bpmn.T9tWorkflowConditionVariableIsTrue
+import com.arvatosystems.t9t.bpmn.T9tWorkflowConditionVariableStartsOrEndsWith
 import com.arvatosystems.t9t.bpmn.T9tWorkflowStepAddParameters
 import com.arvatosystems.t9t.bpmn.T9tWorkflowStepCondition
+import com.arvatosystems.t9t.bpmn.T9tWorkflowStepGoto
 import com.arvatosystems.t9t.bpmn.T9tWorkflowStepJavaTask
+import com.arvatosystems.t9t.bpmn.T9tWorkflowStepRestart
 import com.arvatosystems.t9t.bpmn.T9tWorkflowStepYield
 import com.arvatosystems.t9t.bpmn.WorkflowReturnCode
 import com.arvatosystems.t9t.bpmn.jpa.entities.ProcessExecStatusEntity
 import com.arvatosystems.t9t.bpmn.jpa.persistence.IProcessExecStatusEntityResolver
+import com.arvatosystems.t9t.bpmn.request.PerformSingleStepRequest
+import com.arvatosystems.t9t.bpmn.request.PerformSingleStepResponse
 import com.arvatosystems.t9t.bpmn.services.IBpmnEngineRunner
 import com.arvatosystems.t9t.bpmn.services.IBpmnRunner
 import com.arvatosystems.t9t.bpmn.services.IProcessDefinitionCache
@@ -51,12 +57,9 @@ import de.jpaw.util.ExceptionUtil
 import java.util.HashMap
 import java.util.Map
 import java.util.Objects
+import java.util.concurrent.atomic.AtomicInteger
 import org.joda.time.Instant
 import org.slf4j.MDC
-import com.arvatosystems.t9t.bpmn.T9tWorkflowConditionVariableIsTrue
-import com.arvatosystems.t9t.bpmn.T9tWorkflowConditionVariableStartsOrEndsWith
-import com.arvatosystems.t9t.bpmn.T9tWorkflowStepRestart
-import com.arvatosystems.t9t.bpmn.T9tWorkflowStepGoto
 
 @Singleton
 @AddLogger
@@ -64,6 +67,7 @@ class BpmnRunner implements IBpmnRunner {
     @Inject IProcessExecStatusEntityResolver statusResolver
     @Inject IWorkflowStepCache workflowStepCache
     @Inject IProcessDefinitionCache pdCache
+    val dbgCtr = new AtomicInteger(886688000)
 
     def protected getFactory(ProcessDefinitionDTO pd) {
         if (pd.factoryName === null)
@@ -81,6 +85,13 @@ class BpmnRunner implements IBpmnRunner {
             LOGGER.info("Process status entry {} has disappeared... which implies end of the workflow process")
             return false
         }
+
+        // EXTRA DEBUG to find StaleExceptions for Orsay
+        val id = '''serial «dbgCtr.incrementAndGet»: «statusEntity.objectRef» of «statusEntity.processDefinitionId»:«statusEntity.targetObjectRef» step «statusEntity.nextStep»'''
+        LOGGER.debug("XYZZY START {}", id)
+        ctx.addPostCommitHook([ LOGGER.debug("XYZZY DONE {}", id) ])
+        ctx.addPostFailureHook([ LOGGER.error("XYZZY FAILED {}", id) ])
+
         // 2.) get process configuration
         val pd = pdCache.getCachedProcessDefinitionDTO(ctx.tenantId, statusEntity.processDefinitionId)
         ctx.statusText = ctx.tenantId + ":" + pd.processDefinitionId + "(" + statusRef.toString + ")"
@@ -100,6 +111,28 @@ class BpmnRunner implements IBpmnRunner {
         }
         // execute with the default engine
         return run(ctx, statusEntity, pd, factory, refToLock, refToLock !== null)
+    }
+
+    override PerformSingleStepResponse singleStep(RequestContext ctx, PerformSingleStepRequest rq) {
+        // get process configuration
+        val pd = pdCache.getCachedProcessDefinitionDTO(ctx.tenantId, rq.processDefinitionId)
+
+        // obtain a factory to initialize the object (or use a dummy)
+        val factory = pd.factory
+
+        // decide if the execution must set a lock
+        val refToLock = if (pd.useExclusiveLock) factory.getRefForLock(rq.targetObjectRef);
+        if (refToLock !== null) {
+            ctx.lockRef(refToLock, pd.jvmLockTimeoutInMillis ?: T9tConstants.DEFAULT_JVM_LOCK_TIMEOUT)
+        }
+        // execute with the default engine. Fake a status entity
+        val workflowObject = factory.read(rq.targetObjectRef, refToLock, refToLock !== null)
+        val statusEntity = statusResolver.newEntityInstance
+        val resp = new PerformSingleStepResponse
+        val parameters = if (rq.parameters !== null) new HashMap(rq.parameters) else new HashMap
+        resp.workflowReturnCode = rq.workflowStep.execute(ctx, pd, statusEntity, workflowObject, parameters)
+        resp.parameters = parameters
+        return resp
     }
 
     def protected boolean run(RequestContext ctx, ProcessExecStatusEntity statusEntity, ProcessDefinitionDTO pd, IBPMObjectFactory<?> factory, Long lockObjectRef, boolean jvmLockAcquired) {

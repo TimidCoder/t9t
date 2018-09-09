@@ -13,19 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.arvatosystems.t9t.bpmn.services;
+package com.arvatosystems.t9t.bpmn.be.request;
 
-import com.arvatosystems.t9t.base.T9tException;
+import com.arvatosystems.t9t.base.services.AbstractRequestHandler;
 import com.arvatosystems.t9t.base.services.RequestContext;
 import com.arvatosystems.t9t.bpmn.request.PerformSingleStepRequest;
 import com.arvatosystems.t9t.bpmn.request.PerformSingleStepResponse;
+import com.arvatosystems.t9t.bpmn.services.IBpmnRunner;
 
-public interface IBpmnRunner {
-    /** Perform workflow steps. Returns true if the workflow should rerun immediately (intermediate commit), false in any other case. */
-    boolean run(RequestContext ctx, Long statusRef);
+import de.jpaw.dp.Jdp;
 
-    /** For debugging. */
-    default PerformSingleStepResponse singleStep(RequestContext ctx, PerformSingleStepRequest rq) {
-        throw new T9tException(T9tException.NOT_YET_IMPLEMENTED, "Not available for this engine");
+public class PerformSingleStepRequestHandler extends AbstractRequestHandler<PerformSingleStepRequest> {
+    private final IBpmnRunner bpmService = Jdp.getRequired(IBpmnRunner.class);
+
+    @Override
+    public PerformSingleStepResponse execute(RequestContext ctx, final PerformSingleStepRequest request) {
+        return bpmService.singleStep(ctx, request);
     }
 }

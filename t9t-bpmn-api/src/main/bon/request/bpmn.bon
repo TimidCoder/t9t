@@ -71,6 +71,19 @@ package (com.arvatosystems) t9t.bpmn.request {
         required f42Ref                         processStatusRef;           // ref into the status table
     }
 
+    /** Performs a single step (only for state machine). Does not use nor update any statusEntity. */
+    class PerformSingleStepRequest extends RequestParameters return PerformSingleStepResponse {
+        required processDefinitionId            processDefinitionId;
+        required f42Ref                         targetObjectRef;
+        required (T9tAbstractWorkflowStep...)   workflowStep;
+        optional Json                           parameters;
+    }
+    
+    class PerformSingleStepResponse extends ServiceResponse {
+        required enum WorkflowReturnCode        workflowReturnCode;
+        required Json                           parameters;
+    }
+
     /** Starts execution of all current processes.
      * If minAgeInSeconds has been specified, only processes with this age are run.
      * If onlyThisProcessId is specified, only processes with this definitionId are run.

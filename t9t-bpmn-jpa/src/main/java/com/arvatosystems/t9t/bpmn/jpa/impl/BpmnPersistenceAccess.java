@@ -21,6 +21,8 @@ import java.util.List;
 import javax.persistence.TypedQuery;
 
 import org.joda.time.Instant;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.arvatosystems.t9t.base.T9tException;
 import com.arvatosystems.t9t.base.entities.FullTrackingWithVersion;
@@ -48,6 +50,7 @@ import de.jpaw.dp.Singleton;
 
 @Singleton
 public class BpmnPersistenceAccess implements IBpmnPersistenceAccess {
+    private final static Logger LOGGER = LoggerFactory.getLogger(BpmnPersistenceAccess.class);
     protected final IProcessDefinitionEntityResolver resolver = Jdp.getRequired(IProcessDefinitionEntityResolver.class);
     protected final IProcessDefinitionDTOMapper mapper = Jdp.getRequired(IProcessDefinitionDTOMapper.class);
     protected final IProcessExecStatusEntityResolver statusResolver = Jdp.getRequired(IProcessExecStatusEntityResolver.class);
@@ -142,6 +145,7 @@ public class BpmnPersistenceAccess implements IBpmnPersistenceAccess {
         if (existingEntity != null) { // use object ref to prevent searching for existing entity every time
             // Existing status: check what to do
             if (rq.getIfEntryExists() == WorkflowActionEnum.ERROR) {
+                LOGGER.error("Attempted to recreate an existing business process entry: {}:{}", rq.getProcessDefinitionId(), rq.getTargetObjectRef());
                 throw new T9tException(T9tBPMException.BPM_CURRENT_PROCESS_EXISTS, rq.getProcessDefinitionId() + ":" + rq.getTargetObjectRef());
             }
             if (rq.getIfEntryExists() == WorkflowActionEnum.NO_ACTIVITY) {
@@ -158,6 +162,7 @@ public class BpmnPersistenceAccess implements IBpmnPersistenceAccess {
             objectRef = existingEntity.getObjectRef();
         } else {
             if (rq.getIfNoEntryExists() == WorkflowActionEnum.ERROR) {
+                LOGGER.error("Missing an existing business process entry: {}:{}", rq.getProcessDefinitionId(), rq.getTargetObjectRef());
                 throw new T9tException(T9tBPMException.BPM_NO_CURRENT_PROCESS, rq.getProcessDefinitionId() + ":" + rq.getTargetObjectRef());
             }
             if (rq.getIfEntryExists() == WorkflowActionEnum.NO_ACTIVITY) {
