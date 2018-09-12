@@ -112,10 +112,10 @@ public abstract class AbstractBucketExportRequestHandler<T extends AbstractBucke
         final boolean deleteBucket = !Boolean.FALSE.equals(rp.getDeleteBeforeSwitch());  // delete target bucket unless explicitly told not to do so
         final BucketCounterEntity counterEntity = counterResolver.findByQualifier(false, qualifier);
         final int oldBucketNo = counterEntity.getCurrentVal();
-        int newBucketNo = oldBucketNo + 1;
+        int newBucketNo = oldBucketNo + 1;  // new number - but only valid if switching
         if (newBucketNo >= counterEntity.getMaxVal())
             newBucketNo = 0;  // restart
-        final int bucketNoToSelect = rp.getBucketNo() != null ? rp.getBucketNo() : oldBucketNo;
+        final int bucketNoToSelect = rp.getBucketNo() != null ? rp.getBucketNo() : (switchBucket ? oldBucketNo : (oldBucketNo > 0 ? oldBucketNo - 1 : counterEntity.getMaxVal() - 1));
 
         // first, delete the target bucket, unless disabled
         if (deleteBucket && switchBucket) {

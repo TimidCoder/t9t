@@ -86,7 +86,6 @@ class BpmnRunner implements IBpmnRunner {
             return false
         }
 
-        // EXTRA DEBUG to find StaleExceptions for Orsay
         val id = '''serial «dbgCtr.incrementAndGet»: «statusEntity.objectRef» of «statusEntity.processDefinitionId»:«statusEntity.targetObjectRef» step «statusEntity.nextStep»'''
         LOGGER.debug("XYZZY START {}", id)
         ctx.addPostCommitHook([ LOGGER.debug("XYZZY DONE {}", id) ])
