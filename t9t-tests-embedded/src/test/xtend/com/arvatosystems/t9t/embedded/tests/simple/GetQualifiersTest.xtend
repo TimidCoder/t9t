@@ -34,18 +34,18 @@ class GetQualifiersTest {
 
     @Test
     def void goodQualifierTest() {
-        val result = dlg.typeIO(new GetQualifiersRequest("com.arvatosystems.t9t.out.services.IMarshallerExt"), GetQualifiersResponse);
+        val result = dlg.typeIO(new GetQualifiersRequest(#[ "com.arvatosystems.t9t.out.services.IMarshallerExt" ]), GetQualifiersResponse);
         Assert.assertEquals(1, result.qualifiers.size)
         Assert.assertEquals("XML", result.qualifiers.iterator.next)
     }
     @Test
     def void noQualifiersTest() {
-        val result = dlg.typeIO(new GetQualifiersRequest("com.arvatosystems.t9t.base.services.IExecutor"), GetQualifiersResponse);
+        val result = dlg.typeIO(new GetQualifiersRequest(#[ "com.arvatosystems.t9t.base.services.IExecutor" ]), GetQualifiersResponse);
         Assert.assertEquals(0, result.qualifiers.size)  // only unqualified implementations exist
     }
     @Test
     def void badClassTest() {
-        val result = dlg.doIO(new GetQualifiersRequest("com.arvatosystems.t9t.thereIsNoSuch.Class"));
+        val result = dlg.doIO(new GetQualifiersRequest(#[ "com.arvatosystems.t9t.thereIsNoSuch.Class" ]));
         Assert.assertEquals(T9tException.INVALID_REQUEST_PARAMETER_TYPE, result.returnCode)
     }
 }

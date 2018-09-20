@@ -187,6 +187,24 @@ package (com.arvatosystems) t9t.base.search {
         required (Description) required List<>  descriptions;
     }
 
+    /**
+     * Base class for searches with a very reduced result set, which return results grouped by some criteria.
+     * Usually used to populate dropdowns for the UI which depend on some additional attribute.
+     */
+    abstract class LeanGroupedSearchRequest extends SearchCriteria return LeanGroupedSearchResponse {}
+
+    class DescriptionList {
+        required (Description) required List<>  descriptions;
+    }
+
+    /**
+     * Response class for searches with a very reduced result set, grouped by some criteria,
+     * which is some object reference in most cases, but could be integral or even boolean as well (with 0 = false, 1 = true).
+     */
+    class LeanGroupedSearchResponse extends ServiceResponse {
+        required (DescriptionList) required Map<Long> results;
+    }
+
     abstract class MassResolverRequest extends SearchCriteria return MassResolverResponse {}
 
     /** Response which returns a list of surrogate keys for a given query on DTOs which inherit from Ref. */

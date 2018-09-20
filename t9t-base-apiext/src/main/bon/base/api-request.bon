@@ -273,7 +273,7 @@ package (com.arvatosystems) t9t.base.request {
      * Intended to support dropdowns.
      */
     class GetQualifiersRequest extends RequestParameters return GetQualifiersResponse {
-        required meta.identifier                    fullyQualifiedClassName;
+        required meta.identifier required List<>    fullyQualifiedClassNames;
     }
     class GetQualifiersResponse extends ServiceResponse {
         required meta.identifier required Set<>     qualifiers;

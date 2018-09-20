@@ -174,8 +174,8 @@ package (com.arvatosystems) t9t.io {
         required Unicode(255)                           fileOrQueueNamePattern;     // substitutions: DAY/TIME, TENANT,
         required boolean                                compressed;                 // if true and the output type is a file, then it should be compressed (gzipped) on the fly
         optional Ascii(8)                               originatorModule;           // REP, COMM, AROMA etc...
-        optional customizationQualifier                 preTransformerName properties qualifierFor="out.be.IPreOutputDataTransformer";     // custom pre-transform to transform output data before storing it
-        optional customizationQualifier                 commFormatName     properties qualifierFor="out.be.ICommunicationFormatGenerator"; // custom communication format name (done through DI lookup)
+        optional customizationQualifier                 preTransformerName properties qualifierFor="out.be.IPreOutputDataTransformer,in.services.IInputDataTransformer";     // custom pre-transform to transform output data before storing it
+        optional customizationQualifier                 commFormatName     properties qualifierFor="out.be.ICommunicationFormatGenerator,in.services.IInputFormatConverter"; // custom communication format name (done through DI lookup)
         required xenum DataSinkCategoryXType            category;                   // the type of data sink
         // 42: this is a ref there. in 28, it cannot be, because callbacks are defined in a different module
         optional f42Ref                                 callbackRef     properties dropdown="cannedRequestId";                // link to CannedRequestRef   ...  the request handler to call for operation results (when an entry is finished or aborted with an error)

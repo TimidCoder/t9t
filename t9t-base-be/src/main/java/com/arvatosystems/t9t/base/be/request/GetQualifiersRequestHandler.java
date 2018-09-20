@@ -15,6 +15,8 @@
  */
 package com.arvatosystems.t9t.base.be.request;
 
+import java.util.HashSet;
+
 import com.arvatosystems.t9t.base.T9tException;
 import com.arvatosystems.t9t.base.request.GetQualifiersRequest;
 import com.arvatosystems.t9t.base.request.GetQualifiersResponse;
@@ -30,13 +32,17 @@ public class GetQualifiersRequestHandler extends AbstractReadOnlyRequestHandler<
 
     @Override
     public GetQualifiersResponse execute(GetQualifiersRequest rq) {
+        final GetQualifiersResponse resp = new GetQualifiersResponse();
+        resp.setQualifiers(new HashSet<>());
         try {
-            Class<?> type = Class.forName(rq.getFullyQualifiedClassName());
-            GetQualifiersResponse resp = new GetQualifiersResponse();
-            resp.setQualifiers(Jdp.getQualifiers(type));
-            return resp;
+            // perform lookup for a list of classes
+            for (String fqcn: rq.getFullyQualifiedClassNames()) {
+                Class<?> type = Class.forName(fqcn);
+                resp.getQualifiers().addAll(Jdp.getQualifiers(type));
+            }
         } catch (Exception e) {
             throw new T9tException(T9tException.INVALID_REQUEST_PARAMETER_TYPE, ExceptionUtil.causeChain(e));
         }
+        return resp;
     }
 }
