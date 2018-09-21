@@ -17,8 +17,6 @@ package com.arvatosystems.t9t.bpmn2;
 
 import java.util.Map;
 
-import javax.annotation.Nonnull;
-
 import com.arvatosystems.t9t.bpmn.IWorkflowStep;
 
 /**
@@ -45,6 +43,6 @@ public interface IBPMNObjectFactory<T> {
      *            Modifiable map of process instance variables.
      * @return Workflow data object to use.
      */
-    T create(@Nonnull Map<String, Object> variables);
+    T create(Map<String, Object> variables);
 
 }

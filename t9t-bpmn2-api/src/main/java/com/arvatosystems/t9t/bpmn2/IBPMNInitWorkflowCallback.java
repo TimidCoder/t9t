@@ -17,8 +17,6 @@ package com.arvatosystems.t9t.bpmn2;
 
 import java.util.Map;
 
-import javax.annotation.Nonnull;
-
 /**
  * <p>
  * Callback interface triggered during process instance startup to initialize process variables.
@@ -42,6 +40,6 @@ public interface IBPMNInitWorkflowCallback {
      * @param properties
      *            Unmodifiable map of workflow parameters as defined on start event activity.
      */
-    void init(@Nonnull Map<String, Object> variables, @Nonnull Map<String, String> properties);
+    void init(Map<String, Object> variables, Map<String, String> properties);
 
 }
