@@ -84,10 +84,15 @@ public class CamelContextProvider implements StartupShutdown, Provider<CamelCont
             List<DataSinkDTO> dataSinkDTOList = iOutPersistenceAccess.getDataSinkDTOsForEnvironment(environment);
             LOGGER.info("Looking for Camel import routes for environment {}: {} routes found", environment, dataSinkDTOList.size());
             for (DataSinkDTO dataSinkDTO : dataSinkDTOList) {
-                try {
-                    camelService.addRoutes(dataSinkDTO);
-                } catch (Exception e) {
-                    LOGGER.error("Could not add Camel route for {} due to {}", dataSinkDTO.getDataSinkId(), ExceptionUtil.causeChain(e));
+                if (dataSinkDTO.getIsActive()) {
+                    LOGGER.info("Starting Camel route {}", dataSinkDTO.getDataSinkId());
+                    try {
+                        camelService.addRoutes(dataSinkDTO);
+                    } catch (Exception e) {
+                        LOGGER.error("Could not add Camel route for {} due to {}", dataSinkDTO.getDataSinkId(), ExceptionUtil.causeChain(e));
+                    }
+                } else {
+                    LOGGER.info("Not starting inactive Camel route {}", dataSinkDTO.getDataSinkId());
                 }
             }
             camelContext.start();
