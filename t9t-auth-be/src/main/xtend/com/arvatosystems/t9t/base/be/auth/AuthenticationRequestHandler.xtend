@@ -36,6 +36,8 @@ import de.jpaw.annotations.AddLogger
 import de.jpaw.bonaparte.pojos.api.auth.JwtInfo
 import de.jpaw.dp.Inject
 import de.jpaw.util.ApplicationException
+import java.util.Map
+import java.util.HashMap
 
 @AddLogger
 class AuthenticationRequestHandler extends AbstractRequestHandler<AuthenticationRequest> {
@@ -88,6 +90,17 @@ class AuthenticationRequestHandler extends AbstractRequestHandler<Authentication
 //            permissionsMax = new Permissionset(0xfffff)
     }
 
+    def protected Map<String, Object> mergeZs(Map<String, Object> userVal, Map<String, Object> tenantVal) {
+        if (userVal === null)
+            return tenantVal;
+        if (tenantVal === null)
+            return userVal;
+        // both are populated, merge them
+        val result = new HashMap<String, Object>(tenantVal)
+        result.putAll(userVal)
+        return result
+    }
+
     def protected JwtInfo createJwt(UserDTO user, TenantDTO tenantDTO) {
         val p = user.permissions
         return new JwtInfo => [
@@ -100,6 +113,7 @@ class AuthenticationRequestHandler extends AbstractRequestHandler<Authentication
             tenantId            = tenantDTO.tenantId
             tenantRef           = tenantDTO.objectRef
             roleRef             = user.roleRef?.objectRef
+            z                   = mergeZs(user.z, tenantDTO.z)
             if (p !== null) {
                 permissionsMin      = p.minPermissions
                 permissionsMax      = p.maxPermissions
@@ -126,6 +140,7 @@ class AuthenticationRequestHandler extends AbstractRequestHandler<Authentication
             tenantId            = tenantDTO.tenantId
             tenantRef           = tenantDTO.objectRef
             roleRef             = apiKey.roleRef?.objectRef ?: user.roleRef?.objectRef
+            z                   = mergeZs(user.z, tenantDTO.z)
             if (p !== null) {
                 permissionsMin      = p.minPermissions ?: pu?.minPermissions
                 permissionsMax      = p.maxPermissions ?: pu?.maxPermissions
