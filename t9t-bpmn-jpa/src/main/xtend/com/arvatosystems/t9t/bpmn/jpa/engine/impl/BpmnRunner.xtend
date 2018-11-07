@@ -340,6 +340,8 @@ class BpmnRunner implements IBpmnRunner {
                         gotCommit = true
                     case ERROR:
                         return dealWithError(statusEntity, parameters)
+                    case DONE:
+                        return theCode
                     default:
                         {}
                 }
